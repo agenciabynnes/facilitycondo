@@ -11,7 +11,7 @@
 <allow-navigation href="*"/>
 <allow-intent href="*"/>
 
-<preference name="phonegap-version" value="cli-7.0.0" />
+<preference name="phonegap-version" value="cli-7.0.1" />
 <plugin name="cordova-plugin-crosswalk-webview" spec="^1.8.0">
     <variable name="XWALK_VERSION" value="18+"/>
     <variable name="XWALK_LITEVERSION" value="xwalk_core_library_canary:17+"/>
