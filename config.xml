@@ -87,19 +87,19 @@
     <preference name="AndroidLaunchMode" value="singleTop"/>
     <preference name="android-signed" value="true"/>
 
-    <splash src="res/screen/android/splash-port-ldpi.png" density="port-ldpi"/><!-- 200x320px -->
-    <splash src="res/screen/android/splash-port-mdpi.png" density="port-mdpi"/><!-- 320x480px -->
-    <splash src="res/screen/android/splash-port-hdpi.png" density="port-hdpi"/><!-- 480x800px -->
-    <splash src="res/screen/android/splash-port-xhdpi.png" density="port-xhdpi"/><!-- 720px1280px -->
-    <splash src="res/screen/android/splash-port-xxhdpi.png" density="port-xxhdpi"/><!-- 960px1600px -->
-    <splash src="res/screen/android/splash-port-xxxhdpi.png" density="port-xxxhdpi"/><!-- 1280px1920px -->
+    <splash src="package-assets/splash-port-ldpi.png" density="port-ldpi"/><!-- 200x320px -->
+    <splash src="package-assets/splash-port-mdpi.png" density="port-mdpi"/><!-- 320x480px -->
+    <splash src="package-assets/splash-port-hdpi.png" density="port-hdpi"/><!-- 480x800px -->
+    <splash src="package-assets/splash-port-xhdpi.png" density="port-xhdpi"/><!-- 720px1280px -->
+    <splash src="package-assets/splash-port-xxhdpi.png" density="port-xxhdpi"/><!-- 960px1600px -->
+    <splash src="package-assets/splash-port-xxxhdpi.png" density="port-xxxhdpi"/><!-- 1280px1920px -->
 
-    <splash src="res/screen/android/splash-land-ldpi.png" density="land-ldpi"/><!-- 320x200px -->
-    <splash src="res/screen/android/splash-land-mdpi.png" density="land-mdpi"/><!-- 480x320px -->
-    <splash src="res/screen/android/splash-land-hdpi.png" density="land-hdpi"/><!-- 800x480px -->
-    <splash src="res/screen/android/splash-land-xhdpi.png" density="land-xhdpi"/><!-- 1280x720px -->
-    <splash src="res/screen/android/splash-land-xxhdpi.png" density="land-xxhdpi"/><!-- 1600x960px -->
-    <splash src="res/screen/android/splash-land-xxxhdpi.png" density="land-xxxhdpi"/><!-- 1920x1280px -->
+    <splash src="package-assets/splash-land-ldpi.png" density="land-ldpi"/><!-- 320x200px -->
+    <splash src="package-assets/splash-land-mdpi.png" density="land-mdpi"/><!-- 480x320px -->
+    <splash src="package-assets/splash-land-hdpi.png" density="land-hdpi"/><!-- 800x480px -->
+    <splash src="package-assets/splash-land-xhdpi.png" density="land-xhdpi"/><!-- 1280x720px -->
+    <splash src="package-assets/splash-land-xxhdpi.png" density="land-xxhdpi"/><!-- 1600x960px -->
+    <splash src="package-assets/splash-land-xxxhdpi.png" density="land-xxxhdpi"/><!-- 1920x1280px -->
 </platform>
 
 <platform name="ios">
@@ -107,12 +107,12 @@
     <preference name="deployment-target" value="8.0"/>
     <preference name="Orientation" value="all"/>
 
-    <splash src="res/screen/ios/Default@2x~universal~anyany.png" /><!-- 2732x2732 -->
-    <splash src="res/screen/ios/Default@2x~universal~comany.png" /><!-- 1278x2732 -->
-    <splash src="res/screen/ios/Default@2x~universal~comcom.png" /><!-- 1334x750 -->
-    <splash src="res/screen/ios/Default@3x~universal~anyany.png" /><!-- 2208x2208 -->
-    <splash src="res/screen/ios/Default@3x~universal~anycom.png" /><!-- 2208x1242 -->
-    <splash src="res/screen/ios/Default@3x~universal~comany.png" /><!-- 2208x1242 -->
+    <splash src="package-assets/Default@2x~universal~anyany.png" /><!-- 2732x2732 -->
+    <splash src="package-assets/Default@2x~universal~comany.png" /><!-- 1278x2732 -->
+    <splash src="package-assets/Default@2x~universal~comcom.png" /><!-- 1334x750 -->
+    <splash src="package-assets/Default@3x~universal~anyany.png" /><!-- 2208x2208 -->
+    <splash src="package-assets/Default@3x~universal~anycom.png" /><!-- 2208x1242 -->
+    <splash src="package-assets/Default@3x~universal~comany.png" /><!-- 2208x1242 -->
 </platform>
 
 <icon platform="android" src="package-assets/icon-36.png" density="ldpi" width="36" height="36"/>
