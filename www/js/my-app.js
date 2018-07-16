@@ -61,7 +61,7 @@ function mplaca(v){
 var $$ = Dom7;
 
 var $server = 'https://aptohome.com.br/admin/';
-var $apiKey = 'AIzaSyDs1AR8W4K-PYahMSJdG38kAbu-m_BgAM4';
+var $apiKey = 'AIzaSyBy1QrMk23lmGlOsUOM3yryiEQ9SpEsRS0';
 var imagemPerf;
 var tabindex = 1;
 var bannerview = 0;
@@ -11588,10 +11588,10 @@ function limpar()
 
             var push = PushNotification.init({
                 android: {
-                    senderID: "62871723324",
+                    senderID: "975722403631",
                 },
                 ios: {
-                    senderID: "62871723324",
+                    senderID: "975722403631",
                     gcmSandbox: "true", // false para producao true para desenvolvimento
                     alert: "true",
                     sound: "true",

@@ -7,21 +7,21 @@
 	<key>AD_UNIT_ID_FOR_INTERSTITIAL_TEST</key>
 	<string>ca-app-pub-3940256099942544/4411468910</string>
 	<key>CLIENT_ID</key>
-	<string>62871723324-vtcvpoomphg3ekk2ombg3hrdapp4slr0.apps.googleusercontent.com</string>
+	<string>975722403631-hk8tcnafnuehsl7t8csl9vlf5kv5180k.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.62871723324-vtcvpoomphg3ekk2ombg3hrdapp4slr0</string>
+	<string>com.googleusercontent.apps.975722403631-hk8tcnafnuehsl7t8csl9vlf5kv5180k</string>
 	<key>API_KEY</key>
-	<string>AIzaSyBT35a_jOJysZb-jt3n9XUmFEJSHcbuOi8</string>
+	<string>AIzaSyAhG5ByupbL61hYWrFzw9QIw5nf3tyWoBc</string>
 	<key>GCM_SENDER_ID</key>
-	<string>62871723324</string>
+	<string>975722403631</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>com.facilitycondo.ios</string>
 	<key>PROJECT_ID</key>
-	<string>facilitycondo</string>
+	<string>soy-storm-210422</string>
 	<key>STORAGE_BUCKET</key>
-	<string>facilitycondo.appspot.com</string>
+	<string>soy-storm-210422.appspot.com</string>
 	<key>IS_ADS_ENABLED</key>
 	<true></true>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -33,8 +33,8 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:62871723324:ios:6d69a422be87cd2c</string>
+	<string>1:975722403631:ios:6d69a422be87cd2c</string>
 	<key>DATABASE_URL</key>
-	<string>https://facilitycondo.firebaseio.com</string>
+	<string>https://soy-storm-210422.firebaseio.com</string>
 </dict>
 </plist>
