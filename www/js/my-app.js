@@ -3656,35 +3656,35 @@ function transparenciadecontastipo(){
             for (var i = 0; i < qtd; i++) {
                 switch(data.transparencia[i].idTipo) {
                     case "1":
-                    //console.log("docsfinanceiros");
+                    console.log("docsfinanceiros");
                         $$(".docsfinanceiros").removeClass("invisivel");
                         break;
                     case "2":
-                    //console.log("docsprojetos");
+                    console.log("docsprojetos");
                         $$(".docsprojetos").removeClass("invisivel");
                         break;
                     case "3":
-                    //console.log("docsinformativos");
+                    console.log("docsinformativos");
                         $$(".docsinformativos").removeClass("invisivel");
                         break;
                     case "4":
-                    //console.log("docseditais");
+                    console.log("docseditais");
                         $$(".docseditais").removeClass("invisivel");
                         break;
                     case "5":
-                    //console.log("docsatas");
+                    console.log("docsatas");
                         $$(".docsatas").removeClass("invisivel");
                         break;
                     case "6":
-                    //console.log("docsregulamentos");
+                    console.log("docsregulamentos");
                         $$(".docsregulamentos").removeClass("invisivel");
                         break;
                     case "7":
-                    //console.log("docsdiversos");
+                    console.log("docsdiversos");
                         $$(".docsdiversos").removeClass("invisivel");
                         break;
                     default:
-                    //console.log("default");
+                    console.log("default");
                         $$(".docsdiversos").removeClass("invisivel");
                 }
             }
@@ -3695,7 +3695,10 @@ function transparenciadecontastipo(){
                 }
             }, 2000);
         myApp.hideIndicator();
-        }
+        },error:function(data){
+            $('.docstipo').html("<li class='semregistro'>Nenhum registro cadastrado</li>");
+            myApp.hideIndicator();
+         }
     });
 
 }
@@ -11565,7 +11568,7 @@ function limpar()
         document.addEventListener('app.Ready', onDeviceReady, true);
         function onDeviceReady() {
 
-            setTimeout("alertadechegada()",2000);
+            setTimeout("alertadechegada()",10000);
 
             window.ga.startTrackerWithId("UA-122480317-1", 10);
 
