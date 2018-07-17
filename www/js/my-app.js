@@ -11565,7 +11565,7 @@ function limpar()
         document.addEventListener('app.Ready', onDeviceReady, true);
         function onDeviceReady() {
 
-            setTimeout("alertadechagada()",2000);
+            setTimeout("alertadechegada()",2000);
 
             window.ga.startTrackerWithId("UA-122480317-1", 10);
 
