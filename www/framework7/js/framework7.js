@@ -14036,16 +14036,6 @@ return t7;
                 '{{else}}' +
                 '<li class="notification-item notification-hidden">' +
                     '<div class="item-content">' +
-                        '{{#if material}}' +
-                            '<div class="item-inner">' +
-                                '<div class="item-title">{{js "this.message || this.title || this.subtitle"}}</div>' +
-                                '{{#if ../button}}{{#button}}' +
-                                '<div class="item-after">' +
-                                    '<a href="#" class="button {{#if color}}color-{{color}}{{/if}} {{#js_compare "this.close !== false"}}close-notification{{/js_compare}}">{{text}}</a>' +
-                                '</div>' +
-                                '{{/button}}{{/if}}' +
-                            '</div>' +
-                        '{{else}}' +
                             '{{#if media}}' +
                             '<div class="item-media">{{media}}</div>' +
                             '{{/if}}' +
