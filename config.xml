@@ -12,7 +12,13 @@
 <allow-intent href="*"/>
 
 <preference name="phonegap-version" value="cli-6.5.0" />
-<plugin name="cordova-plugin-crosswalk-webview"/>
+<plugin name="cordova-plugin-crosswalk-webview" spec="^1.8.0">
+<variable name="XWALK_VERSION" value="18+"/>
+<variable name="XWALK_LITEVERSION" value="xwalk_core_library_canary:17+"/>
+<variable name="XWALK_COMMANDLINE" value="--disable-pull-to-refresh-effect"/>
+<variable name="XWALK_MODE" value="embedded"/>
+<variable name="XWALK_MULTIPLEAPK" value="true"/>
+</plugin>
 
 <plugin name="cordova-plugin-device" spec="1.1.2"/>
 <plugin name="cordova-plugin-network-information" spec="1.2.1"/>
@@ -64,6 +70,10 @@
 <preference  name="UIWebViewBounce" value="false"/>
 <preference  name="AndroidExtraFilesystems" value="files,files-external,documents,sdcard,cache,cache-external,assets,root"/>
 <preference name="AndroidPersistentFileLocation" value="Compatibility" />
+
+<preference name="xwalkVersion" value="18+"/>
+<preference  name="xwalkCommandLine" value="--disable-pull-to-refresh-effect --ignore-gpu-blacklist"/>
+<preference name="xwalkMode" value="embedded"/>
 <preference name="xwalkMultipleApk" value="true"/>
 
 <platform name="android">
