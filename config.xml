@@ -27,10 +27,12 @@
 <plugin name="ionic-plugin-keyboard" spec="2.2.1"/>
 <plugin name="cordova-plugin-dialogs" spec="1.2.1"/>
 
-<plugin name="cordova-plugin-geolocation" spec="^2.2.0"/>
+<plugin name="cordova-plugin-geolocation" spec="^3.0.0">
+    <variable name="GEOLOCATION_USAGE_DESCRIPTION" value="Usamos a sua localização, quando autorizado, para enviar alertas de chegada para portaria" />
+</plugin>
 
 <edit-config target="NSLocationWhenInUseUsageDescription" file="*-Info.plist" mode="merge">
-    <string>Usamos a sua localização para enviar alertas de chegada para portaria</string>
+    <string>Usamos a sua localização, quando autorizado, para enviar alertas de chegada para portaria</string>
 </edit-config>
 
 <plugin name="cordova-plugin-inappbrowser" spec="1.4.0"/>
