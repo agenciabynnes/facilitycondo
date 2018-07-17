@@ -20,7 +20,7 @@
     <variable name="XWALK_MULTIPLEAPK" value="false"/>
 </plugin>
 
-<plugin name="cordova-plugin-geolocation" spec="^3.0.0">
+<plugin name="cordova-plugin-geolocation" spec="^3.0.0"/>
 
 <edit-config target="NSLocationWhenInUseUsageDescription" file="*-Info.plist" mode="merge">
     <string>Usamos a sua localização, quando autorizado, para enviar alertas de chegada para portaria</string>
