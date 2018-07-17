@@ -3638,6 +3638,14 @@ function transparenciadecontastipo(){
 
     myApp.showIndicator();
 
+    // retirar botão inserir
+    if (localStorage.getItem("moradorIdmorador")) {
+        $('.inserirtransparenciadecontas').addClass('invisivel');
+    }
+    if (localStorage.getItem("administradoraIdadministradora") || localStorage.getItem("sindicoIdsindico")) {
+        $('.inserirtransparenciadecontas').removeClass('invisivel');
+    }
+
     $.ajax({
         url: $server+"functionAppTransparencia.php?idcondominio="+localStorage.getItem("condominioId")+"&action=list",
         dataType : "json",
