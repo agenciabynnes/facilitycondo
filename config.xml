@@ -20,9 +20,7 @@
     <variable name="XWALK_MULTIPLEAPK" value="false"/>
 </plugin>
 
-<plugin name="cordova-plugin-geolocation" spec="^2.2.0">
-    <variable name="GEOLOCATION_USAGE_DESCRIPTION" value="Usamos a sua localização, quando autorizado, para enviar alertas de chegada para portaria" />
-</plugin>
+<plugin name="cordova-plugin-geolocation" spec="^2.2.0"/>
 <edit-config target="NSLocationWhenInUseUsageDescription" file="*-Info.plist" mode="merge">
     <string>Usamos a sua localização, quando autorizado, para enviar alertas de chegada para portaria</string>
 </edit-config>
@@ -48,6 +46,7 @@
 <plugin name="cordova-plugin-google-analytics" spec="1.8.3"/>
 <plugin name="cordova-plugin-file-transfer" spec="1.5.1"/>
 <plugin name="cordova-plugin-media" spec="2.3.0"/>
+
 
 <preference  name="AutoHideSplashScreen" value="true"/>
 <preference  name="SplashScreenDelay" value="3000"/>
