@@ -38,8 +38,9 @@
 <plugin name="cordova-plugin-splashscreen" spec="3.2.2"/>
 
 <plugin name="phonegap-plugin-push" spec="2.1.0"/>
-<plugin name="cordova-android-firebase-gradle-release" spec="1.0.2"/>
-
+<plugin name="cordova-android-firebase-gradle-release" spec="1.0.2">
+    <variable name="ANDROID_SUPPORT_VERSION" value="27+"/>
+</plugin>
 <plugin name="cordova-plugin-x-socialsharing" spec="5.1.8"/>
 <plugin name="cordova-plugin-app-version" spec="0.1.9"/>
 <plugin name="cordova-plugin-google-analytics" spec="1.8.3"/>
@@ -80,7 +81,7 @@
 <platform name="android">
     <resource-file src="google-services.json" target="google-services.json" />
     <preference name="android-minSdkVersion" value="16"/>
-    <preference name="android-targetSdkVersion" value="26"/>
+    <preference name="android-targetSdkVersion" value="27"/>
     <preference name="android-installLocation" value="auto"/>
     <preference name="Fullscreen" value="false"/>
     <preference name="Orientation" value="default"/>
