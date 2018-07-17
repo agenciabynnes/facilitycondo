@@ -21,12 +21,10 @@
 </plugin>
 
 <plugin name="cordova-plugin-geolocation" spec="^2.2.0">
-    <variable name="GEOLOCATION_USAGE_DESCRIPTION" value="Usamos a sua localização, quando autorizado, para enviar alertas de chegada para portaria" />
+    <variable name="GEOLOCATION_USAGE_DESCRIPTION" value="Usamos a sua localização, quando autorizado, para enviar alertas de chegada para portaria."/>
 </plugin>
-<edit-config file="*-Info.plist" platform="ios" mode="merge" target="NSLocationAlwaysUsageDescription">
-    <string>Usamos a sua localização, quando autorizado, para enviar alertas de chegada para portaria.</string>
-</edit-config>
-<edit-config file="*-Info.plist" platform="ios" mode="merge" target="NSLocationWhenInUseUsageDescription">
+
+<edit-config target="NSLocationWhenInUseUsageDescription" file="*-Info.plist" mode="merge">
     <string>Usamos a sua localização, quando autorizado, para enviar alertas de chegada para portaria.</string>
 </edit-config>
 
@@ -92,10 +90,7 @@
     <preference name="android-signed" value="true"/>
 </platform>
 
-<platform name="ios">
-<config-file target="*-Info.plist" parent="NSLocationWhenInUseUsageDescription">
-    <string>Usamos a sua localização, quando autorizado, para enviar alertas de chegada para portaria.</string>
-</config-file>    
+<platform name="ios">  
     <resource-file src="GoogleService-Info.plist" target="GoogleService-Info.plist" />
     <preference name="ios-configuration" value="production"/>
     <preference name="deployment-target" value="8.0"/>

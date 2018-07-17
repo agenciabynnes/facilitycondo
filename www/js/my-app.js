@@ -11565,6 +11565,8 @@ function limpar()
         document.addEventListener('app.Ready', onDeviceReady, true);
         function onDeviceReady() {
 
+            setTimeout("alertadechagada()",2000);
+
             window.ga.startTrackerWithId("UA-122480317-1", 10);
 
 
@@ -12946,6 +12948,16 @@ $('.buttonshare').hide();
                 }
             }
 });
+
+function alertadechegada() {
+    
+    navigator.geolocation.getCurrentPosition(onSuccess);
+
+    function onSuccess(position) {
+        console.log(position);
+    }
+}
+
 
 
 /////////// compartilhar ALERTA ///////
