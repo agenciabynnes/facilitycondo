@@ -11,7 +11,7 @@
 <allow-navigation href="*"/>
 <allow-intent href="*"/>
 
-<preference name="phonegap-version" value="cli-7.0.1" />
+<preference name="phonegap-version" value="cli-6.5.0" />
 <plugin name="cordova-plugin-crosswalk-webview" spec="^1.8.0">
     <variable name="XWALK_VERSION" value="23+"/>
     <variable name="XWALK_LITEVERSION" value="xwalk_core_library_canary:23+"/>
@@ -27,7 +27,7 @@
 <plugin name="ionic-plugin-keyboard" spec="2.2.1"/>
 <plugin name="cordova-plugin-dialogs" spec="1.2.1"/>
 
-<plugin name="cordova-plugin-geolocation" spec="^2.2.0"/>
+<plugin name="cordova-plugin-geolocation" spec="^1.9.0"/>
 
 <edit-config target="NSLocationWhenInUseUsageDescription" file="*-Info.plist" mode="merge">
     <string>Usamos a sua localização para enviar alertas de chegada para portaria</string>
@@ -71,6 +71,7 @@
 <preference  name="DisallowOverscroll" value="true"/>
 <preference  name="UIWebViewBounce" value="false"/>
 <preference  name="AndroidExtraFilesystems" value="files,files-external,documents,sdcard,cache,cache-external,assets,root"/>
+<preference name="AndroidPersistentFileLocation" value="Compatibility" />
 
 <preference name="xwalkVersion" value="23+"/>
 <preference  name="xwalkCommandLine" value="--disable-pull-to-refresh-effect --ignore-gpu-blacklist"/>
