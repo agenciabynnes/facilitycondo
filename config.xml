@@ -64,12 +64,12 @@
 <preference  name="UIWebViewBounce" value="false"/>
 <preference  name="AndroidExtraFilesystems" value="files,files-external,documents,sdcard,cache,cache-external,assets,root"/>
 <preference name="AndroidPersistentFileLocation" value="Compatibility" />
-
+<preference name="xwalkMultipleApk" value="true"/>
 
 <platform name="android">
     <resource-file src="google-services.json" target="google-services.json" />
     <preference name="android-minSdkVersion" value="16"/>
-    <preference name="android-targetSdkVersion" value="19"/>
+    <preference name="android-targetSdkVersion" value="21"/>
     <preference name="android-installLocation" value="auto"/>
     <preference name="Fullscreen" value="false"/>
     <preference name="Orientation" value="default"/>
