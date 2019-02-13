@@ -16,6 +16,111 @@
 	font-family: "Roboto Bold";
 	src: url("framework7/fonts/Roboto-Bold.ttf") format("truetype");
 }
+
+/* infinite scroll */
+.infinite-scroll-preloader {
+  margin-top:-60px;
+  margin-bottom: 10px;
+  text-align: center;
+  display: none;
+}
+.infinite-scroll-preloader .preloader {
+  width:34px;
+  height:34px;
+}  
+
+/* enquete */
+#enquetes-cont li a .item-media{
+	margin: 10px 0 10px;
+}
+#enquetescont-cont li .card-header{
+	min-height: 60px;	
+}
+#enquetescont-cont li .card-content-inner{
+	padding: 0 16px;
+}
+#enquetescont-cont li .card-content-inner label .item-media{
+	height: auto;
+}
+#enquetescont-cont li label .item-media{
+	width: 40px;
+}
+#enquetescont-cont li label .item-inner{
+	margin-left: 0;
+}
+#enquetesresultado-cont li .card-header{
+	padding: 10px 10px 24px!important;
+}
+#enquetescont-cont li label div .item-title-visitante{
+	min-height: 34px!important;
+	white-space: normal!important;
+	height: auto!important;
+}
+.item-media-enquete{
+	padding-top: 14px!important;
+    padding-bottom: 14px!important;
+    margin-top: 0!important;
+    line-height: 62px;
+    min-height: 62px;
+    text-align: center;
+    background: #373388;
+    color: white;
+    border-radius: 0!important;
+    float: left;
+    font-size: 12px;
+}
+.label-radio-enquete{
+    color: white;
+    margin-left: 0;
+    display: block;
+    margin-bottom: 5px;
+    padding-left: 0!important;
+}
+.enquetes-votos-percente{
+float: left;
+    padding-left: 10px;
+    padding-right: 0!important;
+    margin-left: 0!important;
+    z-index: 0;
+    left: 50px;
+    position: absolute!important;
+    height: 62px;
+    line-height: 62px;
+}
+.bg-enquetes-votos{
+    float: left;
+    padding-left: 10px;
+    padding-right: 0!important;
+    margin-left: 0!important;
+    position: absolute!important;
+    z-index: 9;
+    left: 50px;
+    height: 62px;
+    line-height: 62px;
+}
+.total-votos{
+	text-align: center;
+	color: black;
+	font-size: 16px;
+    font-weight: 500;
+}
+.ks-facebook-card .ks-facebook-name{
+	font-size: 16px;
+}
+
+/* boletos */
+.iframe-boleto{
+	width: 100%!important;
+	height: 100%!important;
+	border: none;
+}
+.co-login-section>div:first-child {
+    display: none;
+}
+.boletos-100{
+	height: 100%;
+}
+
 .version{
 	text-align: center;
 	padding: 20px;
@@ -117,7 +222,9 @@ ul#alertavisitanteshome-cont {
 	top: 56px;
 }
 .list-block .item-title{
-	max-width: 60vw!important;
+	//max-width: 60vw!important;
+	height: 34px;
+    line-height: 34px;
 }
 .list-block .item-after{
 	top: 5px;

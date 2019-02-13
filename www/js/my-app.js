@@ -1,7 +1,7 @@
 // Initialize your app
 var myApp = new Framework7({
     // Default title for modals
-    modalTitle: 'Carneiros',
+    modalTitle: 'FacilityCondo',
     tapHold: true,
     tapHoldPreventClicks: true,
      // Enable Material theme
@@ -158,12 +158,10 @@ myApp.onPageReinit('index', function (page) {
     if (localStorage.getItem("portariaIdportaria")) {
         console.log("onPageReinit Portaria");
 
-        // limpa settimes das internas
-        clearTimeout(atualizamaptime);
-
         comunportariahome();
         alertadechegadahome();
         searchhomeportaria();
+        visitantealerthome();
 
         if (localStorage.getItem("sindicoIdsindico") && localStorage.getItem("moradorIdmorador")) {
             atualizartoken(localStorage.getItem("token"));
@@ -585,6 +583,7 @@ $$('#entrar').on('click', function(){
                             localStorage.setItem("sindicoCondominioCityname", dados.condominio[0].condominio_cityname);
                             localStorage.setItem("sindicoCondominioUf", dados.condominio[0].condominio_uf);*/
 
+                            localStorage.setItem("sindicoCondominioId", dados.condominio[0].idcondominio);
                             localStorage.setItem("sindicoCondominioNome", localStorage.getItem("condominioNome"));
                             localStorage.setItem("sindicoCondominioStreet", localStorage.getItem("condominioStreet"));
                             localStorage.setItem("sindicoCondominioNumber", localStorage.getItem("condominioNumber"));
@@ -708,6 +707,8 @@ $$('#entrar').on('click', function(){
                         //localStorage.setItem("sindicoIdbloco", dados.bloco.idbloco);
                         //localStorage.setItem("blocoNum", dados.condominio.bloco_num);
                         //localStorage.setItem("sindicoCondominioId", dados.condominio[0].idcondominio);
+
+                        localStorage.setItem("sindicoCondominioId", dados.condominio[0].idcondominio);
                         localStorage.setItem("sindicoCondominioNome", dados.condominio[0].condominio_nome);
                         localStorage.setItem("sindicoCondominioStreet", dados.condominio[0].condominio_street);
                         localStorage.setItem("sindicoCondominioNumber", dados.condominio[0].condominio_number);
@@ -783,7 +784,8 @@ $$('#entrar').on('click', function(){
                         localStorage.setItem("condominioId", dados.condominio[0].idcondominio);
                         //localStorage.setItem("sindicoIdbloco", dados.bloco.idbloco);
                         //localStorage.setItem("blocoNum", dados.condominio.bloco_num);
-                        //localStorage.setItem("sindicoCondominioId", dados.condominio[0].idcondominio);
+                        
+                        localStorage.setItem("administradoraCondominioId", dados.condominio[0].idcondominio);
                         localStorage.setItem("administradoraCondominioNome", dados.condominio[0].condominio_nome);
                         localStorage.setItem("administradoraCondominioStreet", dados.condominio[0].condominio_street);
                         localStorage.setItem("administradoraCondominioNumber", dados.condominio[0].condominio_number);
@@ -1027,7 +1029,8 @@ function atualizartokenSair(data){
             data: "action=tokenSair&token=&guid="+localStorage.getItem("guid"),
         })
         .fail(function() {
-
+            localStorage.clear();
+            window.location = "index.html";
         })     
         .done(function(data) {
             console.log("Token sair gravado: "+localStorage.getItem("token"));
@@ -1044,7 +1047,8 @@ function atualizartokenSindicoSair(data){
             data: "action=tokenSair&token=&guid="+localStorage.getItem("sindicoGuid"),
         })
         .fail(function() {
-
+            localStorage.clear();
+            window.location = "index.html";
         })     
         .done(function(data) {
             console.log("Token sair gravado: "+localStorage.getItem("token"));
@@ -1061,7 +1065,8 @@ function atualizartokenAdministradoraSair(data){
             data: "action=tokenSair&token=&guid="+localStorage.getItem("administradoraGuid"),
         })
         .fail(function() {
-
+            localStorage.clear();
+            window.location = "index.html";
         })     
         .done(function(data) {
             console.log("Token sair gravado: "+localStorage.getItem("token"));
@@ -1078,7 +1083,8 @@ function atualizartokenPortariaSair(data){
             data: "action=tokenSair&token=&guid="+localStorage.getItem("guid"),
         })
         .fail(function() {
-
+            localStorage.clear();
+            window.location = "index.html";
         })     
         .done(function(data) {
             console.log("Token sair gravado: "+data);
@@ -1233,6 +1239,7 @@ function modulos(){
         if (localStorage.getItem("sindicoIdsindico") && !localStorage.getItem("moradorIdmorador")) {
             $$(".menualerta").addClass("invisivel");
             $$(".menucadastros").addClass("invisivel");
+            $$("#butinserirrespenquetes").hide();
             //alert("sindico");
         }
 
@@ -1251,6 +1258,7 @@ function modulos(){
             $$('.menucamera').addClass('invisivel');
             $$('.menuanuncios').addClass('invisivel');
             $$('.menubanner').addClass('invisivel');
+            $$("#butinserirrespenquetes").hide();
             //alert("admin");
         }
 
@@ -1264,6 +1272,8 @@ function modulos(){
             $$('.menuanuncios').addClass('invisivel');
             $$('.menuobanner').addClass('invisivel');
             $$('.menucronograma').addClass('invisivel');
+            $$('.menuboletos').addClass('invisivel');
+            $$('.menuenquetes').addClass('invisivel');
             //alert("portaria");
         }
 
@@ -1325,13 +1335,16 @@ function modulos(){
                                 localStorage.setItem("popupView",true);
                             break;
                             case '16':
-                                $$(".menuassembleia").addClass("invisivel");
+                                $$(".menuenquetes").addClass("invisivel");
                             break;
                             case '17':
                                 $$(".menuinterfone").addClass("invisivel");
                             break;
                             case '18':
                                 $$(".menupagamentos").addClass("invisivel");
+                            break;
+                            case '19':
+                                $$(".menuboletos").addClass("invisivel");
                             break;
                         }
                     }
@@ -1433,6 +1446,7 @@ function updateCond(id,push){
             $$.each(data.condominio, function (chave,dados)
             {
                 localStorage.setItem("condominioId", dados.idcondominio);
+                localStorage.setItem("sindicoCondominioId", dados.idcondominio);
                 localStorage.setItem("sindicoCondominioNome", dados.condominio_nome);
                 localStorage.setItem("sindicoCondominioStreet", dados.condominio_street);
                 localStorage.setItem("sindicoCondominioNumber", dados.condominio_number);
@@ -1506,6 +1520,7 @@ function updateCondAdministradora(id,push){
             $$.each(data.condominio, function (chave,dados)
             {
                 localStorage.setItem("condominioId", dados.idcondominio);
+                localStorage.setItem("administradoraCondominioId", dados.idcondominio);
                 localStorage.setItem("administradoraCondominioNome", dados.condominio_nome);
                 localStorage.setItem("administradoraCondominioStreet", dados.condominio_street);
                 localStorage.setItem("administradoraCondominioNumber", dados.condominio_number);
@@ -1531,7 +1546,6 @@ function updateCondAdministradora(id,push){
 
 ////////////////////////////  profile portaria ///////////////////
 function profilePortaria(){
-
     // seleciona itens menu portaria
     
     $$('.menucomunicado').addClass('invisivel');
@@ -1583,7 +1597,7 @@ function searchhomeportaria(){
         //customSearch: true,
 
         onEnable: function(s){
-            //console.log('enable');
+            console.log('enable');
             //searchhomeportaria();
             //$('.inputsearchportariahome').attr("disabled", true);
         },
@@ -1604,6 +1618,7 @@ function searchhomeportaria(){
     // limpa campo de pesquisa
     //mySearchbar.clear();
     mySearchbar.disable();
+
         $.ajax({
             url: $server+"functionAppSearch.php?idcondominio="+localStorage.getItem("condominioId")+"&action=listall",
             dataType : "json",
@@ -1620,34 +1635,36 @@ function searchhomeportaria(){
                     var qtdveiculo = "";
                     var qtdmorador = "";
 
-                    if (data.search.visitante.visitanteAberto) {
+                    /*if (data.search.visitante.visitanteAberto) {
                         qtdvisitanteaberto = data.search.visitante.visitanteAberto.length;
                         var delvisitante ="";
                         var cor="";
 
                         var name ="";
                         var email ="";
+                        var rg = "";
                         var cpf = "";
                         var exibecont = "";
                         var textnomebloco = "";
                         var textbloco = "";
                         var urlVisitante = "";
 
-                        datasearch += '<li class="item-divider"> Visitantes no Condomínio</li>';
+                        datasearch += '<li class="item-divider"> Visitantes no Condomíni</li>';
 
                         for (var i = 0; i < qtdvisitanteaberto; i++) {
 
                             name = data.search.visitante.visitanteAberto[i].name ? data.search.visitante.visitanteAberto[i].name : "";
                             email = data.search.visitante.visitanteAberto[i].email ? data.search.visitante.visitanteAberto[i].email : "";
                             cpf = data.search.visitante.visitanteAberto[i].cpf ? 'CPF: ' + data.search.visitante.visitanteAberto[i].cpf+'<br>' : "";
+                            rg = data.search.visitante.visitanteAberto[i].rg ? 'RG: ' + data.search.visitante.visitanteAberto[i].rg+'<br>' : "";
 
                             cpfexib = cpf ? cpf : "";
+                            rgexib = rg ? rg : "";
                             cor="#4caf50";
-                            exibecont = cpfexib;
 
                             // Verifica se o condomínio é sem bloco
                             if(data.search.visitante.visitanteAberto[i].num_bloco!="Sem bloco"){
-                                var num_bloco = " Bloco: " + data.search.visitante.visitanteAberto[i].num_bloco;
+                                var num_bloco = "/" + data.search.visitante.visitanteAberto[i].num_bloco;
                             }
                             // Verifica se é visitante para o condomínio
                             if (data.search.visitante.visitanteAberto[i].num_domicilio!="") {
@@ -1671,7 +1688,8 @@ function searchhomeportaria(){
                                                           '<div class="item-title-row">'+
                                                             '<div class="item-title">'+textnomebloco+'</div>'+
                                                           '</div>'+
-                                                          '<div class="item-text">'+exibecont+'</div>'+
+                                                          '<div class="item-text">'+rgexib+'</div>'+
+                                                          '<div class="item-text">'+cpfexib+'</div>'+
                                                           '<div class="item-text">'+textbloco+'</div>'+
                                                         '</div>'+
                                                       '</a>'+
@@ -1679,84 +1697,185 @@ function searchhomeportaria(){
                                                         '<a href="#inserirvisitante" onclick = "editarvisitante('+data.search.visitante.visitanteAberto[i].idvisitante+')"" class="action2 bg-orange">Editar</a>'+
                                                       '</div>'+
                                                     '</li>';
-
                         }
-                    }
+                    }*/
 
                     if (data.search.visitante.visitante) {
-                        qtdvisitante = data.search.visitante.visitante.length;
-                        var delvisitante ="";
-                        var cor="";
 
-                        var name ="";
-                        var email ="";
-                        var cpf = "";
-                        var exibecont = "";
-                        var textnomebloco = "";
-                        var textbloco = "";
-                        var urlVisitante = "";
+                        myArray = data.search.visitante.visitante;
 
-                        datasearch += '<li class="item-divider"> Visitantes Cadastrados</li>';
+                        function dentro(myArray) {
+                          if (myArray.visitanteaberto===1){
+                            return myArray;
+                          }
+                        }
+                        var arrayVisitantedentro = myArray.filter(dentro);
 
-                        for (var i = 0; i < qtdvisitante; i++) {
+                        function fora(myArray) {
+                          if (myArray.visitanteaberto===0){
+                            return myArray;
+                          }
+                        }
+                        var arrayVisitantefora = myArray.filter(fora);
 
-                            name = data.search.visitante.visitante[i].name ? data.search.visitante.visitante[i].name : "";
-                            email = data.search.visitante.visitante[i].email ? data.search.visitante.visitante[i].email : "";
-                            cpf = data.search.visitante.visitante[i].cpf ? 'CPF: ' + data.search.visitante.visitante[i].cpf+'<br>' : "";
-                            dataini = data.search.visitante.visitante[i].horaini ? data.search.visitante.visitante[i].horaini : "";
-                            horater = data.search.visitante.visitante[i].horater ? data.search.visitante.visitante[i].horater : "";
-                            datainiexib = dataini ? 'Início: '+convertMysqldate(dataini) : "";
-                            dataterexib = horater ? '<br> Término: '+convertMysqldate(horater) : "";
-                            datavisit = datainiexib+dataterexib;
+                        //console.log("Fora do condominio = "+arrayVisitantefora[0].name);
+                        //console.log("No condominio = "+arrayVisitantedentro[0].name);
 
-                            cpfexib = cpf ? cpf : "";
+                        if (arrayVisitantedentro.length>0){
+                            qtdvisitante = arrayVisitantedentro.length;
+                            var delvisitante ="";
+                            var cor="";
 
-                            if (data.search.visitante.visitante[i].tipo=="1") {
-                                cor="#3f51b5";
-                                exibecont = cpf;
-                            } else if (data.search.visitante.visitante[i].tipo=="2") {
-                                cor="#f44336";
-                                exibecont = cpfexib+datavisit;
-                            }else{
-                                cor="#4caf50";
-                                exibecont = cpf;
-                            }
+                            var name ="";
+                            var email ="";
+                            var rg = "";
+                            var cpf = "";
+                            var exibecont = "";
+                            var textnomebloco = "";
+                            var textbloco = "";
+                            var urlVisitante = "";
 
-                            // Verifica se o condomínio é sem bloco
-                            if(data.search.visitante.visitante[i].num_bloco!="Sem bloco"){
-                                var num_bloco = " Bloco: " + data.search.visitante.visitante[i].num_bloco;
-                            }
-                            // Verifica se é visitante para o condomínio
-                            if (data.search.visitante.visitante[i].num_domicilio!="") {
-                                textnomebloco = name+' ('+data.search.visitante.visitante[i].num_domicilio+num_bloco+')';
-                            }else{
-                                textnomebloco = name+' (Condomínio)';
-                            }
-                            if (data.search.visitante.visitante[i].num_domicilio) {
-                                textbloco = 'Apto: '+data.search.visitante.visitante[i].num_domicilio+num_bloco;
-                            }else{
-                                textbloco = "Condomínio";
-                            }
+                            datasearch += '<li class="item-divider"> Visitantes no Condomínio</li>';
 
-                            urlVisitante = data.search.visitante.visitante[i].urlVisitante.replace("http://","https://");
-                            datasearch += '<li class="swipeout item-content">'+
-                                                      '<a href="#visitantecont" onclick="visitantecont('+data.search.visitante.visitante[i].idvisitante+')" class="swipeout-content item-link item-content">'+
-                                                        '<div class="item-media" style="border:solid 4px '+cor+'">'+
-                                                          '<img src="'+urlVisitante+'" >'+
-                                                        '</div>'+
-                                                        '<div class="item-inner">'+
-                                                          '<div class="item-title-row">'+
-                                                            '<div class="item-title">'+textnomebloco+'</div>'+
+                            for (var i = 0; i < qtdvisitante; i++) {
+
+                                name = arrayVisitantedentro[i].name ? arrayVisitantedentro[i].name : "";
+                                email = arrayVisitantedentro[i].email ? arrayVisitantedentro[i].email : "";
+                                rg = arrayVisitantedentro[i].rg ? 'RG: ' + arrayVisitantedentro[i].rg+'<br>' : "";
+                                cpf = arrayVisitantedentro[i].cpf ? 'CPF: ' + arrayVisitantedentro[i].cpf+'<br>' : "";
+                                dataini = arrayVisitantedentro[i].horaini ? arrayVisitantedentro[i].horaini : "";
+                                horater = arrayVisitantedentro[i].horater ? arrayVisitantedentro[i].horater : "";
+                                datainiexib = dataini ? 'Início: '+convertMysqldate(dataini) : "";
+                                dataterexib = horater ? '<br> Término: '+convertMysqldate(horater) : "";
+                                datavisit = datainiexib+dataterexib;
+
+                                cpfexib = cpf ? cpf : "";
+                                rgexib = rg ? rg : "";
+
+                                if (arrayVisitantedentro[i].tipo=="1") {
+                                    cor="#4caf50";
+                                    exibecont = cpf;
+                                } else if (arrayVisitantedentro[i].tipo=="2") {
+                                    cor="#4caf50";
+                                    exibecont = cpfexib+datavisit;
+                                }else{
+                                    cor="#4caf50";
+                                    exibecont = cpf;
+                                }
+
+                                // Verifica se o condomínio é sem bloco
+                                if(arrayVisitantedentro[i].num_bloco!="Sem bloco"){
+                                    var num_bloco = "/" + arrayVisitantedentro[i].num_bloco;
+                                }
+                                // Verifica se é visitante para o condomínio
+                                if (arrayVisitantedentro[i].num_domicilio!="") {
+                                    textnomebloco = name+' ('+arrayVisitantedentro[i].num_domicilio+num_bloco+')';
+                                }else{
+                                    textnomebloco = name+' (Condomínio)';
+                                }
+                                if (arrayVisitantedentro[i].num_domicilio) {
+                                    textbloco = 'Apto: '+arrayVisitantedentro[i].num_domicilio+num_bloco;
+                                }else{
+                                    textbloco = "Condomínio";
+                                }
+
+                                urlVisitante = arrayVisitantedentro[i].urlVisitante.replace("http://","https://");
+                                datasearch += '<li class="swipeout item-content">'+
+                                                          '<a href="#visitantecont" onclick="visitantecont('+arrayVisitantedentro[i].idvisitante+')" class="swipeout-content item-link item-content">'+
+                                                            '<div class="item-media" style="border:solid 4px '+cor+'">'+
+                                                              '<img src="'+urlVisitante+'" >'+
+                                                            '</div>'+
+                                                            '<div class="item-inner">'+
+                                                              '<div class="item-title-row">'+
+                                                                '<div class="item-title">'+textnomebloco+'</div>'+
+                                                              '</div>'+
+                                                              '<div class="item-text">'+rgexib+'</div>'+
+                                                              '<div class="item-text">'+exibecont+'</div>'+
+                                                              '<div class="item-text">'+textbloco+'</div>'+
+                                                            '</div>'+
+                                                          '</a>'+
+                                                          '<div class="swipeout-actions-right">'+
+                                                            '<a href="#inserirvisitante" onclick = "editarvisitante('+arrayVisitantedentro[i].idvisitante+')"" class="action2 bg-orange">Editar</a>'+
                                                           '</div>'+
-                                                          '<div class="item-text">'+exibecont+'</div>'+
-                                                          '<div class="item-text">'+textbloco+'</div>'+
-                                                        '</div>'+
-                                                      '</a>'+
-                                                      '<div class="swipeout-actions-right">'+
-                                                        '<a href="#inserirvisitante" onclick = "editarvisitante('+data.search.visitante.visitante[i].idvisitante+')"" class="action2 bg-orange">Editar</a>'+
-                                                      '</div>'+
-                                                    '</li>';
+                                                        '</li>';
+                            }
+                        }
 
+                        if (arrayVisitantefora.length>0){
+                            qtdvisitante = arrayVisitantefora.length;
+                            var delvisitante ="";
+                            var cor="";
+
+                            var name ="";
+                            var email ="";
+                            var rg = "";
+                            var cpf = "";
+                            var exibecont = "";
+                            var textnomebloco = "";
+                            var textbloco = "";
+                            var urlVisitante = "";
+
+                            datasearch += '<li class="item-divider"> Visitantes Cadastrados</li>';
+
+                            for (var i = 0; i < qtdvisitante; i++) {
+
+                                name = arrayVisitantefora[i].name ? arrayVisitantefora[i].name : "";
+                                email = arrayVisitantefora[i].email ? arrayVisitantefora[i].email : "";
+                                rg = arrayVisitantefora[i].rg ? 'RG: ' + arrayVisitantefora[i].rg+'<br>' : "";
+                                cpf = arrayVisitantefora[i].cpf ? 'CPF: ' + arrayVisitantefora[i].cpf+'<br>' : "";
+                                dataini = arrayVisitantefora[i].horaini ? arrayVisitantefora[i].horaini : "";
+                                horater = arrayVisitantefora[i].horater ? arrayVisitantefora[i].horater : "";
+                                datainiexib = dataini ? 'Início: '+convertMysqldate(dataini) : "";
+                                dataterexib = horater ? '<br> Término: '+convertMysqldate(horater) : "";
+                                datavisit = datainiexib+dataterexib;
+
+                                cpfexib = cpf ? cpf : "";
+                                rgexib = rg ? rg : "";
+
+                                if (arrayVisitantefora[i].tipo=="1") {
+                                    cor="#3f51b5";
+                                    exibecont = cpf;
+                                } else if (arrayVisitantefora[i].tipo=="2") {
+                                    cor="#f44336";
+                                    exibecont = cpfexib+datavisit;
+                                }
+
+                                // Verifica se o condomínio é sem bloco
+                                if(arrayVisitantefora[i].num_bloco!="Sem bloco"){
+                                    var num_bloco = " Bloco: " + arrayVisitantefora[i].num_bloco;
+                                }
+                                // Verifica se é visitante para o condomínio
+                                if (arrayVisitantefora[i].num_domicilio!="") {
+                                    textnomebloco = name+' ('+arrayVisitantefora[i].num_domicilio+num_bloco+')';
+                                }else{
+                                    textnomebloco = name+' (Condomínio)';
+                                }
+                                if (arrayVisitantefora[i].num_domicilio) {
+                                    textbloco = 'Apto: '+arrayVisitantefora[i].num_domicilio+num_bloco;
+                                }else{
+                                    textbloco = "Condomínio";
+                                }
+
+                                urlVisitante = arrayVisitantefora[i].urlVisitante.replace("http://","https://");
+                                datasearch += '<li class="swipeout item-content">'+
+                                                          '<a href="#visitantecont" onclick="visitantecont('+arrayVisitantefora[i].idvisitante+')" class="swipeout-content item-link item-content">'+
+                                                            '<div class="item-media" style="border:solid 4px '+cor+'">'+
+                                                              '<img src="'+urlVisitante+'" >'+
+                                                            '</div>'+
+                                                            '<div class="item-inner">'+
+                                                              '<div class="item-title-row">'+
+                                                                '<div class="item-title">'+textnomebloco+'</div>'+
+                                                              '</div>'+
+                                                              '<div class="item-text">'+rgexib+'</div>'+
+                                                              '<div class="item-text">'+exibecont+'</div>'+
+                                                              '<div class="item-text">'+textbloco+'</div>'+
+                                                            '</div>'+
+                                                          '</a>'+
+                                                          '<div class="swipeout-actions-right">'+
+                                                            '<a href="#inserirvisitante" onclick = "editarvisitante('+arrayVisitantefora[i].idvisitante+')"" class="action2 bg-orange">Editar</a>'+
+                                                          '</div>'+
+                                                        '</li>';
+                            }
                         }
                     }
 
@@ -1838,13 +1957,14 @@ function searchhomeportaria(){
                         //console.log("datasearch = "+qtdvisitanteaberto+" + "+qtdvisitante+" + "+qtdveiculo+" + "+qtdmorador+" = "+totalqtd);
                         //console.log("searchportariahome = "+ qtdsearchportariahome);
                         $('#searchportariahome-cont').html(datasearch);
+                        mySearchbar.disable();
                     //}
 
                 }else{
                     //myApp.hideIndicator();
                     //$('#visitante-cont').html("<li class='semregistro'>Nenhum registro cadastrado</li>");
                 }
-                setTimeout(searchhomeportaria, 60000);
+                //setTimeout(searchhomeportaria, 60000);
             },error: function(data) {
                 //myApp.hideIndicator();
                 //$('#visitante-cont').html("<li class='semregistro'>Nenhum registro cadastrado</li>");
@@ -1888,6 +2008,7 @@ function editarvisitante(idvisitante,action){
 
                     var name ="";
                     var email ="";
+                    var rg = "";
                     var cpf = "";
                     var phone = "";
                     var dataini = "";
@@ -1896,6 +2017,7 @@ function editarvisitante(idvisitante,action){
 
                     name = data.visitante[0].name ? data.visitante[0].name : "";
                     email = data.visitante[0].email ? data.visitante[0].email : "";
+                    rg = data.visitante[0].rg ? data.visitante[0].rg : "";
                     cpf = data.visitante[0].cpf ? data.visitante[0].cpf : "";
                     phone = data.visitante[0].phone ? data.visitante[0].phone : "";
                     horaini = data.visitante[0].horaini ? data.visitante[0].horaini : "";
@@ -1907,6 +2029,7 @@ function editarvisitante(idvisitante,action){
 
                     //datavisit = 'Início: '+convertMysqldate(dataini)+'<br> Término: '+convertMysqldate(horater);
                     $("#txtnomevisitante").val(name);
+                    $("#txtrgvisitante").val(rg);
                     $("#txtcpfvisitante").val(cpf);
                     $("#txtphonevisitante").val(phone);
                     $("#txtemailvisitante").val(email);
@@ -2326,6 +2449,36 @@ function exibecamerasdeseguranca(data){
     
 }
 
+//////////////////////////////// boleto ////////////////////////////////
+function boleto(){
+    myApp.showIndicator();
+
+        $.ajax({
+            url: $server+"functionAppBoleto.php?idcondominio="+localStorage.getItem("condominioId")+"&action=list",
+            dataType : "json",
+            success: function(data) {
+                //console.log(data);
+                if (data!=null) {
+                    var qtd = data.boleto.length;
+
+                    for (var i = 0; i < qtd; i++) {
+
+                        $(".iframe-boleto").attr("src",data.boleto[i].url);
+                        //$(".iframe-boleto").attr("src","https://actaapp.com21.com.br");
+
+                        $('.iframe-boleto').on("load", function() {
+                            myApp.hideIndicator();
+                        });
+                    }
+                }
+            }
+             ,error:function(data){
+                console.log(data);
+                myApp.hideIndicator();
+             }
+        });
+}
+
 // Pull to refresh content
 var ptrContent = $$('.pagamentos');
  
@@ -2731,7 +2884,7 @@ function muraldeanuncios(){
                                                 '</div>'+
                                             '</a>'+
                                             '<div class="'+invisivel+' swipeout-actions-right">'+
-                                                '<a href="#" '+delanuncio+' class="action1 bg-red">Delete</a>'+
+                                                '<a href="#" '+delanuncio+' class="action1 bg-red">Apagar</a>'+
                                             '</div>'+
                                         '</li>';
                         //$('#muraldeanuncios-cont').append('<li><a href="#muraldeanuncioscont" onclick="muraldeanuncioscont('+data.anuncio[i].idAnuncio+');" class="item-link"><div class="card-cont ks-facebook-card"><div class="card-header"><div class="ks-facebook-avatar"><img src="'+data.anuncio[i].urlAvatar+'" width="34"></div><div class="ks-facebook-name">'+data.anuncio[i].nameMorador+'</div><div class="ks-facebook-date">'+data.anuncio[i].numBlocoApto+'</div></div>'+imgAnuncio+'<div class="card-content-inner"><div class="facebook-date">'+data.anuncio[i].dataAnuncio+'</div><p class="facebook-title">'+data.anuncio[i].titleAnuncio+'</p><p class="color-green facebook-price">'+data.anuncio[i].priceAnuncio+'</p></div></div></div></a></li>');
@@ -3161,7 +3314,7 @@ function livroocorrencias(){
                                                 '</div>'+
                                               '</a>'+
                                                   '<div class="'+invisivel+' swipeout-actions-right">'+
-                                                    '<a href="#" '+delocorrencia+' class="action1 bg-red">Delete</a>'+
+                                                    '<a href="#" '+delocorrencia+' class="action1 bg-red">Apagar</a>'+
                                                   '</div>'+
                                             '</li>';
                     $('#ocorrencias-cont').html(dataocorrencia);
@@ -3633,7 +3786,7 @@ function enviarocorrencias()
         }
 }
 
-
+///////////////////// documentos /////////////////////
 function transparenciadecontastipo(){
 
     myApp.showIndicator();
@@ -3698,7 +3851,7 @@ function transparenciadecontastipo(){
         },error:function(data){
             $('.docstipo').html("<li class='semregistro'>Nenhum registro cadastrado</li>");
             myApp.hideIndicator();
-         }
+        }
     });
 
 }
@@ -3765,7 +3918,7 @@ function transparenciadecontas(idTipo){
                                                 '</div>'+
                                               '</a>'+
                                               '<div class="'+invisivel+' swipeout-actions-right">'+
-                                                '<a href="#" '+deltransparencia+' class="action1 bg-red">Delete</a>'+
+                                                '<a href="#" '+deltransparencia+' class="action1 bg-red">Apagar</a>'+
                                               '</div>'+                                            
                                             '</li>';
                     $('#transparenciadecontas-cont').html(datatransparencia);
@@ -4155,7 +4308,7 @@ function enquetes(){
                                                     '</div>'+
                                                   '</a>'+
                                                     '<div class="'+invisivel+'swipeout-actions-right">'+
-                                                    '<a href="#" '+delservico+' class="action1 bg-red">Delete</a>'+
+                                                    '<a href="#" '+delservico+' class="action1 bg-red">Apagar</a>'+
                                                   '</div>'+
                                                 '</li>';
                         $('#servico-cont').html(dataservico);
@@ -4172,15 +4325,100 @@ function enquetes(){
     //alert("Entrei");
 }
 
-/////////////////////////////////////  deletar servico ///////////////////////////
-function delservico(guid,eq){
 
-    myApp.confirm('Deseja deletar esse item?', function () {
+// Pull to refresh content
+var ptrContent = $$('.enquetes');
+ 
+// Add 'refresh' listener on it
+ptrContent.on('refresh', function (e) {
+
+        enquetes();
+        // When loading done, we need to reset it
+        myApp.pullToRefreshDone();
+});
+
+///////////////////////////////////// enquetes ///////////////////////////
+function enquetes(){
+
+    myApp.showIndicator();
+    //var datatransparencia;
+    //$('#servico-cont').html("");
+
+        // retirar botão inserir
+        if (localStorage.getItem("moradorIdmorador")) {
+            $('.inserirenquetes').addClass('invisivel');
+        }
+        if (localStorage.getItem("administradoraIdadministradora") || localStorage.getItem("sindicoIdsindico")) {
+            $('.inserirenquetes').removeClass('invisivel');
+        }
+
+        $.ajax({
+            url: $server+"functionAppEnquete.php?idcondominio="+localStorage.getItem("condominioId")+"&action=list",
+            dataType : "json",
+            success: function(data) {
+                if (data!=null) {
+                    myApp.hideIndicator();
+                    var dataenquetes = "";
+                    var qtd = data.enquetes.length;
+                    var delenquetes = "";
+                    var datafim = "";
+                    var invisivel ="invisivel ";
+                    var swipeout ="";
+
+                    for (var i = 0; i < qtd; i++) {
+
+                    if (localStorage.getItem("administradoraIdadministradora") || localStorage.getItem("sindicoIdsindico")) {
+                        swipeout = "swipeout ";
+                        invisivel="";
+                    }
+                    console.log(data.enquetes[i].dataFim);
+                    if (data.enquetes[i].dataFim!="00/00/0000 ") {
+                        datafim = '<div class="item-text"> Prazo final: '+data.enquetes[i].dataFim+'</div>';
+                    }else{
+                        datafim = "";
+                    }
+                        
+                        delenquetes = "onclick = delenquetes('"+data.enquetes[i].guid+"',"+i+");"
+                        dataenquetes += '<li class="'+swipeout+' swipeout-enquetes" data-index="'+i+'">'+
+                                                  '<a href="#enquetescont" onclick="enquetescont('+data.enquetes[i].idEnquete+')" class="swipeout-content item-link item-content">'+
+                                                    '<div class="item-media">'+
+                                                      '<img src="images/enquete_icone.png" >'+
+                                                    '</div>'+
+                                                    '<div class="item-inner">'+
+                                                      '<div class="item-title-row">'+
+                                                        '<div class="item-title">'+data.enquetes[i].perguntaEnquete+'</div>'+
+                                                      '</div>'+
+                                                      datafim+
+                                                    '</div>'+
+                                                  '</a>'+
+                                                    '<div class="'+invisivel+'swipeout-actions-right">'+
+                                                    '<a href="#" '+delenquetes+' class="action1 bg-red">Encerrar</a>'+
+                                                  '</div>'+
+                                                '</li>';
+                        $('#enquetes-cont').html(dataenquetes);
+                    }
+                }else{
+                    myApp.hideIndicator();
+                    $('#enquetes-cont').html("<li class='semregistro'>Nenhum registro cadastrado</li>");
+                }
+            },error: function(data) {
+                myApp.hideIndicator();
+                $('#enquetes-cont').html("<li class='semregistro'>Nenhum registro cadastrado</li>");
+                //myApp.alert('Erro! Tente novamente.');
+            }
+        });
+    //alert("Entrei");
+}
+
+/////////////////////////////////////  deletar enquetes ///////////////////////////
+function delenquetes(guid,eq){
+
+    myApp.confirm('Deseja encerrar essa enquete?', function () {
 
         myApp.showIndicator();
 
         $.ajax({
-            url: $server+"functionAppServico.php?guid="+guid+"&action=deletar",
+            url: $server+"functionAppEnquete.php?guid="+guid+"&action=encerrar",
             data : "get",
             success: function(data) {
             if (data!="ok") {
@@ -4188,7 +4426,7 @@ function delservico(guid,eq){
                 myApp.alert('Erro! Tente novamente ='+data);
             } else {
                 myApp.hideIndicator();
-                myApp.swipeoutDelete($$('li.swipeout-servico').eq($("li.swipeout-servico[data-index="+eq+"]").index()));
+                myApp.swipeoutDelete($$('li.swipeout-enquetes').eq($("li.swipeout-enquetes[data-index="+eq+"]").index()));
                 //myApp.swipeoutDelete($$('li.swipeout-servico').eq(eq));
             }
             
@@ -4201,69 +4439,66 @@ function delservico(guid,eq){
 
 }
 
-///////////////////////////////////// servico conteudo ///////////////////////////
-function servicocont(id){
+///////////////////////////////////// enquete conteudo ///////////////////////////
+function enquetescont(id){
 
     myApp.showIndicator();
     //var dataservico;
-    $('#servicocont-cont').html("");
+    $('#enquetecont-cont').html("");
 
         $.ajax({
-            url: $server+"functionAppServico.php?idservico="+id+"&action=list",
+            url: $server+"functionAppEnquete.php?idenquete="+id+"&idmorador="+localStorage.getItem("moradorIdmorador")+"&action=listcont",
             dataType : "json",
             success: function(data) {
-            myApp.hideIndicator();
-                var dataservico = "";
-                var qtd = data.servico.length;
-                var imgServico = "";
-                var imgZoom;
-                for (var i = 0; i < qtd; i++) {
+                myApp.hideIndicator();
 
-                       myPhotoBrowserServicos = myApp.photoBrowser({
-                            theme: 'dark',
-                            ofText: 'de',
-                            backLinkText: '',
-                            spaceBetween: 0,
-                            navbar: true,
-                            toolbar: false,
-                            photos : [data.servico[i].urlServico],
-                            type: 'popup'
-                        });
-                        imgZoom = "onclick=myPhotoBrowserServicos.open();";
+                $("#butverresultadoenquetes").attr("onclick","enquetesresultado(\'"+id+"\')");
+            
 
-                if (data.servico[i].urlServico!="images/sem_foto_icone.jpg") {
-                    imgServico = '<div class="card-content-cont"><i '+imgZoom+' class="fa fa-search-plus fa-3x"></i>'+
-                                                '<img src="'+data.servico[i].urlServico+'" '+imgZoom+' width="100%">'+
-                                            '</div>';
+                if (data.enquetes.javotou==1) {
+                    $("#butinserirrespenquetes").attr("disabled","disabled");
+                    $("#butinserirrespenquetes").html("VOCÊ JÁ PARTICIPOU!");
+                }else{
+                    $("#butinserirrespenquetes").removeAttr("disabled","disabled");
+                    $("#butinserirrespenquetes").html("ENVIAR RESPOSTA");
                 }
-                var condominioNome = "";
-                if (localStorage.getItem("condominioNome")) {
-                    condominioNome = localStorage.getItem("condominioNome");
-                }else if (localStorage.getItem("sindicoCondominioNome")){
-                    condominioNome = localStorage.getItem("sindicoCondominioNome");
-                }else if (localStorage.getItem("administradoraCondominioNome")) {
-                    condominioNome = localStorage.getItem("administradoraCondominioNome");
-                }
-                dataservico += '<li>'+
-                                        '<div class="card-cont ks-facebook-card">'+ imgServico +
-                                            '<div class="card-header">'+
-                                                '<div class="ks-facebook-avatar">'+
-                                                    '<img src="'+data.servico[i].urlSindico+'" width="34">'+
+                var dataenquetes = "";
+                var datafim = "";
+                var qtd = data.enquetes.enqueteop.length;
+                    if (data.enquetes.dataEnqueteFim!="00/00/0000 ") {
+                        datafim = '<div class="ks-facebook-date"> Prazo final: '+data.enquetes.dataEnqueteFim+'</div>';
+                    }else{
+                        datafim = "";
+                    }
+
+                    dataenquetes += '<li>'+
+                                            '<div class="card-cont ks-facebook-card">'+
+                                                '<div class="card-header">'+
+                                                    '<div class="ks-facebook-avatar">'+
+                                                        '<input type="hidden" id="idenquete" value="'+data.enquetes.idEnquete+'">'+
+                                                        '<img src="images/enquete_icone.png" width="34">'+
+                                                    '</div>'+
+                                                    '<div class="ks-facebook-name">'+data.enquetes.perguntaEnquete+'</div>'+
+                                                    datafim+
                                                 '</div>'+
-                                                '<div class="ks-facebook-name">'+data.servico[i].nameSindico+'</div>'+
-                                                '<div class="ks-facebook-date">Condomínio: '+condominioNome+'</div>'+
                                             '</div>'+
-                                            '<div class="card-content-inner">'+
-                                                '<p class="facebook-title">'+data.servico[i].tituloServico+'</p>'+
-                                                '<p class="item-text">'+data.servico[i].descricaoServico+'</p>'+
-                                                '<div class="facebook-date">Fone: '+data.servico[i].phoneServico+'</div>'+
-                                            '</div>'+
-                                        '</div>'+
-                                    '</li>';
-                    imgServico = "";
-                $('#servicocont-cont').html(dataservico);
-                $('.tel-anuncio').attr('onclick','openURL("tel:'+trimespaco(data.servico[i].phoneServico)+'")');
-                }
+                                        '</li>';
+
+                    for (var i = 0; i < qtd; i++) {
+                        
+                        dataenquetes += '<li>'+
+                                            '<label class="label-radio label-radio-visitante-per item-content">'+
+                                              '<input type="radio" name="respenquete" id="respenquete" value="'+data.enquetes.enqueteop[i].idEnqueteOp+'">'+
+                                              '<div class="item-media item-media-visitante">'+
+                                                '<i class="icon icon-form-radio"></i>'+
+                                              '</div>'+
+                                              '<div class="item-inner">'+
+                                                '<div class="item-title item-title-visitante">'+data.enquetes.enqueteop[i].nomeEnqueteOpcoes+'</div>'+
+                                              '</div>'+
+                                            '</label>'+
+                                        '</li>';
+                    }
+                    $('#enquetescont-cont').html(dataenquetes);
             
             },error: function(data) {
                 myApp.hideIndicator();
@@ -4273,90 +4508,158 @@ function servicocont(id){
     //alert("Entrei");
 }
 
-///////////////////////////// camera servico ///////////////////////////
-
-function cameraServico() {
-// Take picture using device camera and retrieve image as base64-encoded string
-    navigator.camera.getPicture(onSuccessServico, onFailServico, {
-    quality: 80,
-    allowEdit : true,
-    targetWidth: 1500,
-    correctOrientation: true,
-    destinationType: Camera.DestinationType.DATA_URL,
-    saveToPhotoAlbum: true
-    });
-}
-
- 
-function cameraFileServico(source) {
-// Retrieve image file location from specified source
-    navigator.camera.getPicture(onSuccessServico, onFailServico, {
-    quality: 50,
-    allowEdit: true,
-    targetWidth: 1000,
-    destinationType: Camera.DestinationType.DATA_URL,
-    sourceType: Camera.PictureSourceType.PHOTOLIBRARY
-    });
-}
-// Called if something bad happens.
-//
-function onSuccessServico(imageData) {
-    var image = document.getElementById('preview-servico');
-    image.src = "data:image/jpeg;base64," + imageData;
-}
-function onFailServico(message) {
-//alert('Failed because: ' + message);
-}
-
-///////////////////////////// camera servico options ///////////////////////////
-
-/* ===== Action sheet, we use it on few pages ===== */
-myApp.onPageInit('inserirservico', function (page) {
-    var actionOptionCameraServico = [
-        // First buttons group
-        [
-            // Group Label
-            {
-                text: 'Selecione uma opção',
-                label: true
-            },
-            // First button
-            {
-                text: 'Câmera',
-                onClick: function () {
-                    cameraServico();
-                }
-            },
-            // Second button
-            {
-                text: 'Galeria',
-                onClick: function () {
-                    cameraFileServico();
-                }
-            },
-        ],
-        // Second group
-        [
-            {
-                text: 'Cancel',
-                color: 'red'
-            }
-        ]
-    ];
-    $$('.optionCameraServico').on('click', function (e) {
-        // We need to pass additional target parameter (this) for popover
-        myApp.actions(actionOptionCameraServico);
-    });
-    
-});
-
-///////////////////////////// acao inserir servico ///////////////////////////
-$('#butinserirservico').on('click', function(){
+///////////////////////////// acao inserir enquete ///////////////////////////
+$('#butinserirrespenquetes').on('click', function(){
     //alert("enviar");
 
-    if (($$('#txttitservico').val()!="") && ($$('#txtdescricaoservico').val()!="") && ($$('#txtphoneservico').val()!="")) {
+    if ($('#respenquete:checked').val()) {
 
-            enviarservico();
+            enviarrespostaenquetes();
+
+    }else{
+        myApp.alert('Selecione uma opção');    
+    }
+
+});
+
+///////////////////////////// enviar resposta enquete ///////////////////////////
+function enviarrespostaenquetes()
+{
+ 
+ //alert("entrei");
+        $$idmorador = localStorage.getItem("moradorIdmorador");
+        $$idenquete = $$('#idenquete').val();
+        $$idenqueteopcoes = $('#respenquete:checked').val();
+
+
+        $('#forminserirenquetes').each (function(){
+          this.reset();
+        });
+
+        myApp.showIndicator();
+        
+        $.ajax($server+'functionAppEnquete.php?', {
+            type: "post",
+            data: "idmorador="+$$idmorador+"&idenquete="+$$idenquete+"&idenqueteopcoes="+$$idenqueteopcoes+"&action=addVoto",
+        })
+          .fail(function() {
+            myApp.hideIndicator();
+            myApp.alert('Erro! Tente novamente.');
+          })     
+          .done(function(data) {
+            if (data=="ok") {
+                myApp.hideIndicator();
+                myApp.alert('Resposta inserida com sucesso!', function () { mainView.router.load({pageName: 'enquetesresultado'}); enquetesresultado($$idenquete);});
+            }else if(data=="not"){
+                myApp.hideIndicator();
+                myApp.alert('Ops! Você já participou.', function () { mainView.router.back();});
+            }else{
+                myApp.hideIndicator();
+                myApp.alert('Erro! Tente novamente.');
+            }
+          });
+}
+
+///////////////////////////////////// enquete resultado ///////////////////////////
+function enquetesresultado(id){
+
+    myApp.showIndicator();
+    //var dataservico;
+    $('#enquetesresultado-cont').html("");
+    //$('#idenquete').val("");
+        $.ajax({
+            url: $server+"functionAppEnquete.php?idenquete="+id+"&action=listresult",
+            dataType : "json",
+            success: function(data) {
+            myApp.hideIndicator();
+
+                var dataenquetes = "";
+                var datafim = "";
+                var qtd = data.enquetes.enqueteop.length;
+                var auxTotal;
+                var totalvotos;
+                var colorOp = "";
+                    
+                    if (data.enquetes.dataEnqueteFim!="00/00/0000 ") {
+                        datafim = '<div class="ks-facebook-date"> Prazo final: '+data.enquetes.dataEnqueteFim+'</div>';
+                    }else{
+                        datafim = "";
+                    }
+
+                    dataenquetes += '<li>'+
+                                            '<div class="card-cont ks-facebook-card">'+
+                                                '<div class="card-header">'+
+                                                    '<div class="ks-facebook-avatar">'+
+                                                        '<img src="images/enquete_icone.png" width="34">'+
+                                                    '</div>'+
+                                                    '<div class="ks-facebook-name">'+data.enquetes.perguntaEnquete+'</div>'+
+                                                    datafim+
+                                                '</div>'+
+                                            '</div>'+
+                                        '</li>';
+
+                    for (var i = 0; i < qtd; i++) {
+                        if (data.enquetes.totalVotos!=0) {
+                            auxTotal = (data.enquetes.enqueteop[i].countVotos / data.enquetes.totalVotos) * 100;
+                            totalvotos = data.enquetes.totalVotos;
+                        }else{
+                            auxTotal = 0;
+                            totalvotos = 0;
+                        }
+                        //console.log("auxTotal = "+auxTotal);
+                        if (auxTotal==0) {
+                            stylepercent = "display: none;"
+                        }else{
+                            stylepercent = "width: calc("+auxTotal.toFixed(0)+"% - 40px);"
+                        }
+                        if (i == 0) {
+                            colorOp = "bg-deeporange";
+                        }
+                        if (i == 1) {
+                            colorOp = "bg-lightgreen";
+                        }
+                        if (i == 2) {
+                            colorOp = "bg-amber";
+                        }
+                        if (i == 3) {
+                            colorOp = "bg-purple";
+                        }
+                        if (i == 4) {
+                            colorOp = "bg-brown";
+                        }
+                        dataenquetes += '<li>'+
+                                            '<label class="label-radio label-radio-enquete item-content bg-blue">'+
+                                              '<div class="item-media item-media-enquete">'+auxTotal.toFixed(0)+'%</div>'+
+                                              '<div class="item-inner bg-enquetes-votos">'+
+                                                '<div class="item-title item-title-visitante">'+data.enquetes.enqueteop[i].nomeEnqueteOpcoes+'</div>'+
+                                              '</div>'+
+                                              '<div class="item-inner enquetes-votos-percente '+colorOp+'" style="'+stylepercent+'"></div>'+
+                                            '</label>'+
+                                        '</li>';
+                    }
+                        dataenquetes += '<li>'+
+                                            '<label class="label-radio label-radio-enquete item-content">'+
+                                              '<div class="item-inner">'+
+                                                '<div class="item-title item-title-visitante total-votos">Total de votos = '+totalvotos+'</div>'+
+                                              '</div>'+
+                                            '</label>'+
+                                        '</li>';
+                    $('#enquetesresultado-cont').html(dataenquetes);
+            },error: function(data) {
+                myApp.hideIndicator();
+                myApp.alert('Erro! Tente novamente.', function () { mainView.router.back();});
+            }
+        });
+    //alert("Entrei");
+}
+
+///////////////////////////// acao inserir enquete ///////////////////////////
+$('#butinserirenquetes').on('click', function(){
+    //alert("enviar");
+
+    if (($$('#txtdatainicioenquetes').val()!="") && ($$('#txttitenquetes').val()!="") && ($$('#txtresp1').val()!="")) {
+
+            enviarenquetes();
 
     }else{
         myApp.alert('Preencha todos os campos.');    
@@ -4364,32 +4667,31 @@ $('#butinserirservico').on('click', function(){
 
 });
 
-///////////////////////////// inserir servico ///////////////////////////
-function enviarservico()
+///////////////////////////// inserir enquete ///////////////////////////
+function enviarenquetes()
 {
  
  //alert("entrei");
-        imagem = $('#preview-servico').attr("src");
         $$idcondominio = localStorage.getItem("condominioId");
-        $$idbloco = localStorage.getItem("moradorIdbloco");
         $$idsindico = localStorage.getItem("sindicoIdsindico");
-        $$txtTitulo = $$('#txttitservico').val();
-        $$txtDescricao = $$('#txtdescricaoservico').val();
-        $$txtPhone = $$('#txtphoneservico').val();
-        //$$fileUpload = dataURL;
-        //$$fileUpload = "fterte";
-        //myApp.showPreloader();
+        $$datainicio = $$('#txtdatainicioenquetes').val();
+        $$datafim = $$('#txtdatafimenquetes').val();
+        $$txtTitulo = $$('#txttitenquetes').val();
+        $$txtresp1 = $$('#txtresp1').val();
+        $$txtresp2 = $$('#txtresp2').val();
+        $$txtresp3 = $$('#txtresp3').val();
+        $$txtresp4 = $$('#txtresp4').val();
+        $$txtresp5 = $$('#txtresp5').val();
 
-        $('#forminserirservico').each (function(){
+        $('#forminserirenquetes').each (function(){
           this.reset();
         });
-        $("#preview-servico").attr('src',"");
 
         myApp.showIndicator();
-        // Salvando imagem no servidor
-        $.ajax($server+'functionAppServico.php?', {
+        
+        $.ajax($server+'functionAppEnquete.php?', {
             type: "post",
-            data: "imagem="+imagem+"&idsindico="+$$idsindico+"&idcondominio="+$$idcondominio+"&idbloco="+$$idbloco+"&txtTitulo="+$$txtTitulo+"&txtPhone="+$$txtPhone+"&txtDescricao="+$$txtDescricao+"&action=add",
+            data: "idsindico="+$$idsindico+"&idcondominio="+$$idcondominio+"&datainicio="+$$datainicio+"&datafim="+$$datafim+"&txtTitulo="+$$txtTitulo+"&txtresp1="+$$txtresp1+"&txtresp2="+$$txtresp2+"&txtresp3="+$$txtresp3+"&txtresp4="+$$txtresp4+"&txtresp5="+$$txtresp5+"&action=add",
         })
           .fail(function() {
             myApp.hideIndicator();
@@ -4401,12 +4703,10 @@ function enviarservico()
                 myApp.alert('Erro! Tente novamente.');
             } else {
                 myApp.hideIndicator();
-                myApp.alert('Serviço inserido com sucesso!', function () { mainView.router.load({pageName: 'servico'}); servico();});
+                myApp.alert('Enquete inserida com sucesso!', function () { mainView.router.load({pageName: 'enquetes'}); enquetes();});
             }
           });
 }
-
-
 
 // Pull to refresh content
 var ptrContent = $$('.servico');
@@ -4467,7 +4767,7 @@ function servico(){
                                                     '</div>'+
                                                   '</a>'+
                                                     '<div class="'+invisivel+'swipeout-actions-right">'+
-                                                    '<a href="#" '+delservico+' class="action1 bg-red">Delete</a>'+
+                                                    '<a href="#" '+delservico+' class="action1 bg-red">Apagar</a>'+
                                                   '</div>'+
                                                 '</li>';
                         $('#servico-cont').html(dataservico);
@@ -4548,13 +4848,17 @@ function servicocont(id){
                                                 '<img src="'+data.servico[i].urlServico+'" '+imgZoom+' width="100%">'+
                                             '</div>';
                 }
-                var condominioNome = "";
-                if (localStorage.getItem("condominioNome")) {
-                    condominioNome = localStorage.getItem("condominioNome");
-                }else if (localStorage.getItem("sindicoCondominioNome")){
-                    condominioNome = localStorage.getItem("sindicoCondominioNome");
+                var $$condominioNome = "";
+                if (localStorage.getItem("condominioNome") && localStorage.getItem("sindicoCondominioNome")) {
+                    $$condominioNome = localStorage.getItem("sindicoCondominioNome");
+                }else if (localStorage.getItem("condominioNome") && localStorage.getItem("administradoraCondominioNome")) {
+                    $$condominioNome = localStorage.getItem("administradoraCondominioNome");
+                }else if (localStorage.getItem("condominioNome")) {
+                    $$condominioNome = localStorage.getItem("condominioNome");
+                }else if (localStorage.getItem("sindicoCondominioNome")) {
+                    $$condominioNome = localStorage.getItem("sindicoCondominioNome");
                 }else if (localStorage.getItem("administradoraCondominioNome")) {
-                    condominioNome = localStorage.getItem("administradoraCondominioNome");
+                    $$condominioNome = localStorage.getItem("administradoraCondominioNome");
                 }
                 dataservico += '<li>'+
                                         '<div class="card-cont ks-facebook-card">'+ imgServico +
@@ -4563,7 +4867,7 @@ function servicocont(id){
                                                     '<img src="'+data.servico[i].urlSindico+'" width="34">'+
                                                 '</div>'+
                                                 '<div class="ks-facebook-name">'+data.servico[i].nameSindico+'</div>'+
-                                                '<div class="ks-facebook-date">Condomínio: '+condominioNome+'</div>'+
+                                                '<div class="ks-facebook-date">Condomínio: '+$$condominioNome+'</div>'+
                                             '</div>'+
                                             '<div class="card-content-inner">'+
                                                 '<p class="facebook-title">'+data.servico[i].tituloServico+'</p>'+
@@ -4800,7 +5104,7 @@ function cronograma(){
                                                     '</div>'+
                                                   '</a>'+
                                                   '<div class="'+invisivel+'swipeout-actions-right">'+
-                                                    '<a href="#" '+delcronograma+' class="action1 bg-red">Delete</a>'+
+                                                    '<a href="#" '+delcronograma+' class="action1 bg-red">Apagar</a>'+
                                                   '</div>'+
                                                 '</li>';
                         $('#cronograma-cont').html(datacronograma);
@@ -4850,7 +5154,12 @@ function delcronograma(guid,eq){
 function cronogramacont(id){
 
     myApp.showIndicator();
-    if (localStorage.getItem("condominioNome")) {
+    var $$condominioNome = "";
+    if (localStorage.getItem("condominioNome") && localStorage.getItem("sindicoCondominioNome")) {
+        $$condominioNome = localStorage.getItem("sindicoCondominioNome");
+    }else if (localStorage.getItem("condominioNome") && localStorage.getItem("administradoraCondominioNome")) {
+        $$condominioNome = localStorage.getItem("administradoraCondominioNome");
+    }else if (localStorage.getItem("condominioNome")) {
         $$condominioNome = localStorage.getItem("condominioNome");
     }else if (localStorage.getItem("sindicoCondominioNome")) {
         $$condominioNome = localStorage.getItem("sindicoCondominioNome");
@@ -5122,7 +5431,7 @@ function morador(){
                                                     '</div>'+
                                                   '</a>'+
                                                   '<div class="'+invisivel+' swipeout-actions-right">'+
-                                                    '<a href="#" '+delmorador+' class="action1 bg-red">Delete</a>'+
+                                                    '<a href="#" '+delmorador+' class="action1 bg-red">Apagar</a>'+
                                                   '</div>'+
                                                 '</li>';
                         $('#morador-cont').html(datamorador);
@@ -5366,44 +5675,97 @@ function enviaraddmorador()
 
 ///////////////////////////// inserir morador teste///////////////////////////
 $$('#cadastro-teste').on('click', function(){
- 
-        $$idcondominio = "58";
-        $$idbloco = "1997";
-        $$iddomicilio = "9337";
-        $$txtNomeAddMorador = $$('#txtnomeaddmoradorteste').val();
-        $$txtEmailAddMorador = $$('#txtemailaddmoradorteste').val();
-        $$cellPhoneaddMorador = $$('#cellphoneaddmoradorteste').val();
-        //$$fileUpload = dataURL;
-        //$$fileUpload = "fterte";
-        //myApp.showPreloader();
-
-        $('#formaddmoradorteste').each (function(){
-          this.reset();
-        });
 
         myApp.showIndicator();
-        // Salvando imagem no servidor
-        $.ajax($server+'functionAppMorador.php?', {
-            type: "post",
-            data: "idcondominio="+$$idcondominio+"&idbloco="+$$idbloco+"&iddomicilio="+$$iddomicilio+"&txtNomeAddMorador="+$$txtNomeAddMorador+"&txtEmailAddMorador="+$$txtEmailAddMorador+"&cellPhoneaddMorador="+$$cellPhoneaddMorador+"&action=addMorador",
-        })
-          .fail(function() {
-            myApp.hideIndicator();
-            myApp.alert('Erro! Tente novamente.');
-          })     
-          .done(function(data) {
-            if (data=="ok") {
-               myApp.hideIndicator();
-                myApp.alert('Morador teste cadastrado com sucesso!<br><br>Você receberá um email de confirmação para criar sua senha (Caso não receba, verificar na pasta SPAM).', function () { myApp.closeModal('.popup.modal-in');});
-            } else if (data=="erro"){
+ 
+        if ($$('#txtcodcondominio').val()=="") {
+            $$idcondominio = "58";
+            $$idbloco = "1997";
+            $$iddomicilio = "9337";
+            $$txtNomeAddMorador = $$('#txtnomeaddmoradorteste').val();
+            $$txtEmailAddMorador = $$('#txtemailaddmoradorteste').val();
+            $$cellPhoneaddMorador = $$('#cellphoneaddmoradorteste').val();
+
+            $('#formaddmoradorteste').each (function(){
+              this.reset();
+            });
+
+            // Salvando imagem no servidor
+            $.ajax($server+'functionAppMorador.php?', {
+                type: "post",
+                data: "idcondominio="+$$idcondominio+"&idbloco="+$$idbloco+"&iddomicilio="+$$iddomicilio+"&txtNomeAddMorador="+$$txtNomeAddMorador+"&txtEmailAddMorador="+$$txtEmailAddMorador+"&cellPhoneaddMorador="+$$cellPhoneaddMorador+"&action=addMorador",
+            })
+              .fail(function() {
                 myApp.hideIndicator();
                 myApp.alert('Erro! Tente novamente.');
-            } else {
-                myApp.hideIndicator();
-                myApp.alert(data);
-            }
+              })     
+              .done(function(data) {
+                if (data=="ok") {
+                   myApp.hideIndicator();
+                    myApp.alert('Morador cadastrado com sucesso!<br><br>Você receberá um email de confirmação para criar sua senha (Caso não receba, verificar na pasta SPAM).', function () { myApp.closeModal('.popup.modal-in');});
+                } else if (data=="erro"){
+                    myApp.hideIndicator();
+                    myApp.alert('Erro! Tente novamente.');
+                } else {
+                    myApp.hideIndicator();
+                    myApp.alert(data);
+                }
 
-          });
+              });
+
+        }else{
+
+            // verifica se cod do condomínio existe
+            $.ajax({
+                url: $server+"functionAppCondominio.php?codCond="+$$('#txtcodcondominio').val()+"&action=codcond",
+                dataType : "json",
+                success: function(data) {
+                    console.log("cod cond = "+data);
+                    if (data!="erro") {
+
+                        $$idcondominio = data;
+                        $$txtNomeAddMorador = $$('#txtnomeaddmoradorteste').val();
+                        $$txtEmailAddMorador = $$('#txtemailaddmoradorteste').val();
+                        $$cellPhoneaddMorador = $$('#cellphoneaddmoradorteste').val();
+
+                        $('#formaddmoradorteste').each (function(){
+                          this.reset();
+                        });
+
+
+                        // Salvando morador
+                        $.ajax($server+'functionAppMorador.php?', {
+                            type: "post",
+                            data: "idcondominio="+$$idcondominio+"&txtNomeAddMorador="+$$txtNomeAddMorador+"&txtEmailAddMorador="+$$txtEmailAddMorador+"&cellPhoneaddMorador="+$$cellPhoneaddMorador+"&action=addMorador",
+                        })
+                          .fail(function() {
+                            myApp.hideIndicator();
+                            myApp.alert('Erro! Tente novamente.');
+                          })     
+                          .done(function(data) {
+                            if (data=="ok") {
+                               myApp.hideIndicator();
+                                myApp.alert('Morador cadastrado com sucesso!<br><br>Você receberá um email de confirmação para criar sua senha (Caso não receba, verificar na pasta SPAM).', function () { myApp.closeModal('.popup.modal-in');});
+                            } else if (data=="erro"){
+                                myApp.hideIndicator();
+                                myApp.alert('Erro! Tente novamente.');
+                            } else {
+                                myApp.hideIndicator();
+                                myApp.alert(data);
+                            }
+
+                          });
+                    }else{
+                        myApp.hideIndicator();
+                        myApp.alert('Condomínio não encontrado! Informe outro código ou deixe esse campo em branco para se cadastrar no condomínio MODELO.');
+                    }
+                },error: function(data) {
+                        myApp.hideIndicator();
+                        myApp.alert('Condomínio não encontrado! Informe outro código ou deixe esse campo em branco para se cadastrar no condomínio MODELO.');
+                }
+            });
+        }
+
 });
 
 // Pull to refresh content
@@ -5523,7 +5885,7 @@ $('#alertavisitanteshome-cont').html("");
                 }
             });
             
-            setTimeout(visitantealerthome, 300000);
+            //setTimeout(visitantealerthome, 300000);
             //console.log("datavisitante="+$$datavisitante);
         }
 
@@ -5670,7 +6032,7 @@ function visitante(){
                                                     '</div>'+
                                                   '</a>'+
                                                   '<div class="swipeout-actions-right">'+
-                                                    '<a href="#" '+delvisitante+' class="action1 bg-red">Delete</a>'+
+                                                    '<a href="#" '+delvisitante+' class="action1 bg-red">Apagar</a>'+
                                                   '</div>'+
                                                 '</li>';
                         $('#visitante-cont').html(datavisitante);
@@ -5755,6 +6117,7 @@ function visitantecont(id,action,active){
                 var num_domicilio = "";
                 var name = "";
                 var cpf = "";
+                var rg = "";
                 var phone ="";
                 var email ="";
                 for (var i = 0; i < qtd; i++) {
@@ -5764,6 +6127,7 @@ function visitantecont(id,action,active){
                 num_bloco = data.visitante[i].num_bloco ? "/"+data.visitante[i].num_bloco : "";
                 name = data.visitante[i].name ? data.visitante[i].name : "";
                 cpf = data.visitante[i].cpf ? 'CPF: '+data.visitante[i].cpf : "";
+                rg = data.visitante[i].rg ? 'RG: '+data.visitante[i].rg : "";
                 phone = data.visitante[i].phone ? 'Fone: '+data.visitante[i].phone : "";
                 email = data.visitante[i].email ? 'Email: '+data.visitante[i].email : "";
 
@@ -5823,6 +6187,7 @@ function visitantecont(id,action,active){
                                                 '<div class="ks-facebook-number" style="background:'+cor+'">'+num_domicilio+num_bloco+'</div>'+
                                                 '<div class="ks-facebook-name">'+name+'</div>'+
                                                 '<div class="ks-facebook-date">'+cpf+'</div>'+
+                                                '<div class="ks-facebook-date">'+rg+'</div>'+
                                                 editarvisitantebut+
                                             '</div>'+
                                             infoVisitante+
@@ -6164,6 +6529,7 @@ function enviarvisitante()
         }
         $$txtNomeVisitante = $$('#txtnomevisitante').val();
         $$txtEmailVisitante = $$('#txtemailvisitante').val();
+        $$txtRgVisitante = $$('#txtrgvisitante').val();
         $$txtCpfVisitante = $$('#txtcpfvisitante').val();
         $$txtPhoneVisitante = $$('#txtphonevisitante').val();
         if (localStorage.getItem("portariaIdportaria")) {
@@ -6187,7 +6553,7 @@ function enviarvisitante()
         // Salvando visitante servidor
         $.ajax($server+'functionAppVisitante.php?', {
             type: "post",
-            data: "portaria="+$$portaria+"&imagem="+imagem+"&idcondominio="+$$idcondominio+"&guid="+$$guid+"&idbloco="+$$idbloco+"&iddomicilio="+$$iddomicilio+"&txtNomeVisitante="+$$txtNomeVisitante+"&txtEmailVisitante="+$$txtEmailVisitante+"&txtCpfVisitante="+$$txtCpfVisitante+"&txtPhoneVisitante="+$$txtPhoneVisitante+"&txtTipoVisitante="+$$txtTipoVisitante+"&txtHoraInicio="+$$txtHoraInicio+"&txtHoraTermino="+$$txtHoraTermino+"&action=add",
+            data: "portaria="+$$portaria+"&imagem="+imagem+"&idcondominio="+$$idcondominio+"&guid="+$$guid+"&idbloco="+$$idbloco+"&iddomicilio="+$$iddomicilio+"&txtNomeVisitante="+$$txtNomeVisitante+"&txtEmailVisitante="+$$txtEmailVisitante+"&txtCpfVisitante="+$$txtCpfVisitante+"&txtRgVisitante="+$$txtRgVisitante+"&txtPhoneVisitante="+$$txtPhoneVisitante+"&txtTipoVisitante="+$$txtTipoVisitante+"&txtHoraInicio="+$$txtHoraInicio+"&txtHoraTermino="+$$txtHoraTermino+"&action=add",
         })
           .fail(function() {
             myApp.hideIndicator();
@@ -6328,7 +6694,7 @@ function veiculo(){
                                                     '</div>'+
                                                   '</a>'+
                                                   '<div class="swipeout-actions-right">'+
-                                                    '<a href="#" '+delveiculo+' class="action1 bg-red">Delete</a>'+
+                                                    '<a href="#" '+delveiculo+' class="action1 bg-red">Apagar</a>'+
                                                   '</div>'+
                                                 '</li>';
                         $('#veiculo-cont').html(dataveiculo);
@@ -7636,8 +8002,6 @@ function teste (){
 
 function comunportariahome(alvo){
 
-alertadechegadahome();
-
     //var datatransparencia;
     $('.badgecomunicado').html();
     badgecomunicado=0;
@@ -7742,16 +8106,16 @@ alertadechegadahome();
                         $.each(listitems, function(idx, itm) { mylist.append(itm); });  
                     }
 
-                    setTimeout(comunportariahome, 5000);
+                    //setTimeout(comunportariahome, 5000);
                 }else{
 
                     $('#comunportariahome-cont').html("<li class='semregistro'>Nenhum registro cadastrado</li>");
-                    setTimeout(comunportariahome, 5000);
+                    //setTimeout(comunportariahome, 5000);
                 }            
             },error: function(data) {
 
                 $('#comunportariahome-cont').html("<li class='semregistro'>Nenhum registro cadastrado</li>");
-                    setTimeout(comunportariahome, 5000);
+                    //setTimeout(comunportariahome, 5000);
             }
         });
     //alert("Entrei");
@@ -10053,10 +10417,12 @@ console.log("alertadechegadahome");
                 guidAlerta=[];
 
             }else{
-                $('#alertadechegadahome-cont').html("<li class='semregistro'>*Nenhum registro cadastrado</li>");
+                $('#alertadechegadahome-cont').html("<li class='semregistro'>Nenhum registro cadastrado</li>");
+                clearTimeout(alertadechegadahome);
             }            
         },error: function(data) {
             $('#alertadechegadahome-cont').html("<li class='semregistro'>Nenhum registro cadastrado</li>");
+            clearTimeout(alertadechegadahome);
         }
     });
 
@@ -10103,17 +10469,22 @@ console.log("alertadechegadahome");
         var qtd = origin.length;
         console.log("atualizatempoalertageo qtd = "+qtd);
         $.ajax({
-            url: "https://maps.googleapis.com/maps/api/distancematrix/json?origins="+origin.join('|')+"&destinations="+destination.join('|')+"&language=pt-BR",
+            url: "https://maps.googleapis.com/maps/api/distancematrix/json?key=AIzaSyDuyZZJSUxIPv3lVWWQhcl8drGzxFUunCk&origins="+origin.join('|')+"&destinations="+destination.join('|')+"&language=pt-BR",
             dataType : "json",
             success: function(data) {
 
                 if (data!=null) {
                     for (var i = 0; i < qtd; i++) {
-                            //console.log(data.rows[0].elements[0].duration.value);
+                            console.log(data.rows[0].elements[0].duration.value);
+                            console.log(data);
+
                             var time = data.rows[i].elements[i].duration.value;
                             var total = data.rows[i].elements[i].distance.value / 1000;
                             var totalformat = total.toString().replace(".", ",");
-console.log("array guidAlerta = "+guidAlerta);
+                            
+                            console.log("array guidAlerta = "+guidAlerta);
+                            
+                            // se chegar no destino cancela o alerta
                             if (total<0.1) {
                                 console.log("cancela alerta");
                                $.ajax({
@@ -10259,7 +10630,7 @@ function alertadechegadacont(id){
             function initializeMap()
             {
                 console.log("initializeMap ");
-                document.getElementById('map-canvas-cont').html = "";
+                //document.getElementById('map-canvas-cont').html = "";
                 directionsService = new google.maps.DirectionsService;
                 //directionsDisplay = new google.maps.DirectionsRenderer;
                 map = "";
@@ -10365,7 +10736,7 @@ function alertadechegadacont(id){
 
             function watchCurrentPosition() {
                 console.log("watchCurrentPosition ");
-                var positionTimer = navigator.geolocation.watchPosition(
+                positionTimer = navigator.geolocation.watchPosition(
                     function (position) {
                         setMarkerPosition(
                             currentPositionMarker,
@@ -10434,7 +10805,13 @@ myApp.onPageReinit('alertadechegadacont', function (page) {
                     data : "get",
                     success: function(data) {
                         console.log("del tracking");
-                        localStorage.removeItem('idalertadechegadacont');
+                        localStorage.removeItem('tracking');
+                        localStorage.removeItem('deltraking');
+                        localStorage.removeItem('guidtracking');
+                        localStorage.removeItem('guidalerta');
+                        localStorage.removeItem('idalerta');
+                        localStorage.removeItem('idveiculoalerta');
+                        localStorage.removeItem('trackingactive');
                     },error: function(data) {
 
                     }
@@ -10878,36 +11255,38 @@ console.log("dia = "+dia+" local = "+idlocalespaco);
             dataType : "json",
             success: function(data) {
                 myApp.hideIndicator();
-                var dataespaco = "";
-                var qtd = data.espaco.length;
-                for (var i = 0; i < qtd; i++) {
+                if (data) {
+                    var dataespaco = "";
+                    var qtd = data.espaco.length;
+                    for (var i = 0; i < qtd; i++) {
 
-                    var splithoraini = data.espaco[i].horaIni;
-                    splithoraini = splithoraini.split(" ");
+                        var splithoraini = data.espaco[i].horaIni;
+                        splithoraini = splithoraini.split(" ");
 
-                    var splithorater = data.espaco[i].horaTer;
-                    splithorater = splithorater.split(" ");
+                        var splithorater = data.espaco[i].horaTer;
+                        splithorater = splithorater.split(" ");
 
-                    var horater = splithorater[1];
-                    var horaini = splithoraini[1];
-                    var dataini = splithoraini[0];
+                        var horater = splithorater[1];
+                        var horaini = splithoraini[1];
+                        var dataini = splithoraini[0];
 
-                    //console.log(horaini+" - "+dataini);
+                        //console.log(horaini+" - "+dataini);
 
-                    dataini = dataini.split("-");
-                    dataini[1] = dataini[1]-1;
-                    if (dataini[2]<10) {
-                        dataini[2] = dataini[2].substring(1); 
+                        dataini = dataini.split("-");
+                        dataini[1] = dataini[1]-1;
+                        if (dataini[2]<10) {
+                            dataini[2] = dataini[2].substring(1); 
+                        }
+
+                        dataini = dataini[0]+"-"+dataini[1]+"-"+dataini[2];
+
+                        horaini = horaini.substring(0,5);
+                        horater = horater.substring(0,5);
+
+
+                        $$('#calendar-inline-container div[data-date="'+dataini+'"] span').addClass("marcado");
+                        
                     }
-
-                    dataini = dataini[0]+"-"+dataini[1]+"-"+dataini[2];
-
-                    horaini = horaini.substring(0,5);
-                    horater = horater.substring(0,5);
-
-
-                    $$('#calendar-inline-container div[data-date="'+dataini+'"] span').addClass("marcado");
-                    
                 }
             
             },error: function(data) {
@@ -10927,10 +11306,13 @@ console.log("dia = "+dia+" local = "+idlocalespaco);
         }
 
         //se sindico for morador do condominio selecionado
-        if (localStorage.getItem("sindicoIdsindico")) {
+        /*if (localStorage.getItem("sindicoIdsindico")) {
             if (localStorage.getItem("moradorIdCondominio")!=localStorage.getItem("condominioId")) {
                 $('.inseriragendamentodeespaco').addClass('invisivel');
             }
+        }*/
+        if (localStorage.getItem("sindicoCondominioId") || localStorage.getItem("administradoraCondominioId")) {
+            $('.inseriragendamentodeespaco').removeClass('invisivel');
         }
 
 
@@ -11013,7 +11395,7 @@ console.log("dia = "+dia+" local = "+idlocalespaco);
                                             '</a>'+
                                               '<div class="'+invisivel+'swipeout-actions-right">'+
                                                 confespaco+
-                                                '<a href="#" '+delespaco+' class="action2 bg-red">Delete</a>'+
+                                                '<a href="#" '+delespaco+' class="action2 bg-red">Cancelar</a>'+
                                               '</div>'+
                                         '</li>';
                         $('#espaco-cont').html(dataespaco);
@@ -11154,7 +11536,9 @@ function espacocont(id,push){
                         dataini[2] = dataini[2].substring(1); 
                     }
 
-                    dataini = dataini[0]+"-"+dataini[1]+"-"+dataini[2];
+                    // hack subtrai 1 do mês (que vem da console), futuramente zerar hack aqui e na console
+                    var meshack = dataini[1]-1;
+                    dataini = dataini[0]+"-"+meshack+"-"+dataini[2];
 
                     horaini = horaini.substring(0,5);
                     horater = horater.substring(0,5);
@@ -11201,7 +11585,7 @@ function espacocont(id,push){
 
 $('.inseriragendamentodeespaco').on('click', function(){
     console.log("inseriragendamentodeespaco");
-    if (localStorage.getItem("portariaIdportaria")) {
+    if (localStorage.getItem("portariaIdportaria") || localStorage.getItem("sindicoCondominioId") || localStorage.getItem("administradoraCondominioId")) {
         $('.blocolistagendamentoli').show();
         $('.domiciliolistagendamentoli').hide();
         $('.moradorlistagendamentoli').hide();
@@ -11391,16 +11775,32 @@ function valorestaxasagendamento(){
 ///////////////////////////// acao inserir espaco ///////////////////////////
 $$('#butinseriragendamento').on('click', function(){
 
+    $$okportsind = true;
+    if (localStorage.getItem("portariaIdportaria") || localStorage.getItem("sindicoCondominioId") || localStorage.getItem("administradoraCondominioId")) {
+        if ($$("#domiciliolistagendamento").val()!="" && $$("#moradorlistagendamento").val()!=""){
+            $$okportsind = true;
+        }else{
+            myApp.alert('Selecione um Bloco, Apto e Morador.'); 
+            $$okportsind = false;
+        }
+    }
     if (($$('#horainicoagendamento').val()!="00:00") &&  ($$('#horaterminoagendamento').val()!="00:00")) {
         if ($$('#horaterminoagendamento').val()<$$('#horainicoagendamento').val()) {
-            myApp.alert('Hora término deve ser maior que hora início'); 
+            myApp.alert('Hora término deve ser maior que hora início.');
+            $$ok = false;
         } else if ($$('#horaterminoagendamento').val()==$$('#horainicoagendamento').val()) {
-             myApp.alert('Hora início e término devem ser diferentes'); 
-        } else{
-            enviarespaco();
+            myApp.alert('Hora início e término devem ser diferentes.'); 
+            $$ok = false;
+        }else{
+            $$ok = true;
         }
     }else{
-        myApp.alert('Preencha todos os campos.');    
+        myApp.alert('Selecione a Hora de início e término.'); 
+        $$ok = false;
+    }
+
+    if ($$ok==true && $$okportsind==true) {
+        enviarespaco();
     }
 
 });
@@ -11410,7 +11810,7 @@ function enviarespaco()
 {
         $$idcondominio = localStorage.getItem("condominioId");
     
-        if (localStorage.getItem("portariaIdportaria")) {
+        if (localStorage.getItem("portariaIdportaria") || localStorage.getItem("sindicoCondominioId") || localStorage.getItem("administradoraCondominioId")) {
             $$iddomicilio = $$("#domiciliolistagendamento").val();
             $$idmorador = $$("#moradorlistagendamento").val();
         }else{
@@ -11568,9 +11968,7 @@ function limpar()
         document.addEventListener('app.Ready', onDeviceReady, true);
         function onDeviceReady() {
 
-            setTimeout("alertadechegada()",10000);
-
-            window.ga.startTrackerWithId("UA-122480317-1", 10);
+            //window.ga.startTrackerWithId("UA-122480317-1", 10);
 
 
             function TrackButtonClicked() {
@@ -11624,7 +12022,25 @@ function limpar()
                 //$('#push').html(data);
                 if (data.additionalData.foreground) {
 
-                    console.log('CAPTURADO PUSH COM APP ABERTO!');
+                    switch( data.additionalData.info ){
+
+                        case 'comunportaria':
+                            comunportariahome();
+                        break;
+
+                        case 'alertadechegada':
+                            alertadechegadahome();
+                        break;
+
+                        case 'alertaportaria':
+                            visitantealerthome();
+                        break;
+
+                        case 'searchhomeportaria':
+                            searchhomeportaria();
+                        break;
+                    }
+
                     if (data.title==data.additionalData.summaryText) {
                         data.additionalData.summaryText="";
                     }
@@ -11694,12 +12110,26 @@ function limpar()
                                 break;
 
                                 case 'alertadechegada':
-                                mainView.router.load({pageName: 'alertadechegadacont'});
-                                alertadechegadacont(data.additionalData.id,true);
+                                if (data.additionalData.id) {
+                                    mainView.router.load({pageName: 'alertadechegadacont'});
+                                    alertadechegadacont(data.additionalData.id,true);
+                                }
+                                break;
+
+                                case 'alertaportaria':
+                                mainView.router.load({pageName: 'alertaportariahomecont'});
+                                alertaportariacont(data.additionalData.id,true);
+                                break;
+
+                                case 'enquete':
+                                mainView.router.load({pageName: 'enquetescont'});
+                                enquetescont(data.additionalData.id,true);
                                 break;
                             }
                         }
                     });
+
+                    console.log('CAPTURADO PUSH COM APP ABERTO!');
                 } else if (data.additionalData.coldstart){
                             switch( data.additionalData.info ){
                                 case 'comuncomunicado':
@@ -11735,6 +12165,16 @@ function limpar()
                                 case 'alertadechegada':
                                 mainView.router.load({pageName: 'alertadechegadacont'});
                                 alertadechegadacont(data.additionalData.id,true);
+                                break;
+
+                                case 'alertaportaria':
+                                mainView.router.load({pageName: 'alertaportariahomecont'});
+                                alertaportariacont(data.additionalData.id,true);
+                                break;
+
+                                case 'enquete':
+                                mainView.router.load({pageName: 'enquetescont'});
+                                enquetescont(data.additionalData.id,true);
                                 break;
                             }
 
@@ -11775,6 +12215,17 @@ function limpar()
                                 mainView.router.load({pageName: 'alertadechegadacont'});
                                 alertadechegadacont(data.additionalData.id,true);
                                 break;
+
+                                case 'alertaportaria':
+                                mainView.router.load({pageName: 'alertaportariahomecont'});
+                                alertaportariacont(data.additionalData.id,true);
+                                break;
+
+                                case 'enquete':
+                                mainView.router.load({pageName: 'enquetescont'});
+                                enquetescont(data.additionalData.id,true);
+                                break;
+
                             }
                         console.log('CAPTURADO PUSH COM APP EM BACKGROUND!');  
                 }
@@ -11824,7 +12275,10 @@ var deltraking;
 var guidtracking;
 var aux = 0;
 var bgGeo = window.backgroundGeolocation;
-myApp.onPageInit('alertadechegada', function (page) {
+var positionTimer;
+var auxAlertaCancelado = 0;
+//myApp.onPageInit('alertadechegada', function (page) {
+function alertadechegada() {
 
 $('.buttonshare').hide();
 ////// lista de veiculos ////////
@@ -11898,17 +12352,19 @@ $('.buttonshare').hide();
                             //cordova.plugins.backgroundMode.setDefaults({ title: 'Aviso de chegada ativado', ticker: 'Ticker', text:'Clique para voltar ao Aptohome'});
                             // Enable background mode
                             //cordova.plugins.backgroundMode.enable();
-                                      var bgGeo = window.backgroundGeoLocation;
-                                      var callbackFn = function(location) {
-                                          console.log('BackgroundGeoLocation ativo');
+                            
+                            /*
+                              var bgGeo = window.backgroundGeoLocation;
+                              var callbackFn = function(location) {
+                                  console.log('BackgroundGeoLocation ativo');
 
-                                            //bgGeo.finish();
+                                    //bgGeo.finish();
 
-                                      };
-                                      var failureFn = function(error) {
-                                          console.log('BackgroundGeoLocation error');
-                                          console.log(error);
-                                      };
+                              };
+                              var failureFn = function(error) {
+                                  console.log('BackgroundGeoLocation error');
+                                  console.log(error);
+                              };
 
                             if (device.platform=="iOS") {
                                     // BackgroundGeoLocation is highly configurable.
@@ -11940,6 +12396,7 @@ $('.buttonshare').hide();
                             var bgAtivo = function(location) {
                               console.log('BackgroundGeoLocation já ativo');
                             };
+                            */
                         }
                       }
                     ]
@@ -11956,27 +12413,32 @@ $('.buttonshare').hide();
                             localStorage.removeItem('tracking');
                             localStorage.removeItem('deltraking');
                             localStorage.removeItem('guidtracking');
+                            localStorage.removeItem('guidalerta');
                             localStorage.removeItem('idalerta');
+                            localStorage.removeItem('idveiculoalerta');
                             localStorage.removeItem('trackingactive');
                         },error: function(data) {
-
+                            /*myApp.hideIndicator();
+                            myApp.alert('Erro! Tente novamente.');*/
                         }
                     });
 
                 $('.buttonalertadechegada').html("ENVIAR AVISO");
+                $('.buttonpanico').html("PÂNICO");
                 $('.buttonshare').hide();
                 //cordova.plugins.backgroundMode.disable();
-                                      var bgGeo = window.backgroundGeoLocation;
-                                      var callbackFn = function(location) {
-                                          console.log('BackgroundGeoLocation cancelado');
+                              /*
+                              var bgGeo = window.backgroundGeoLocation;
+                              var callbackFn = function(location) {
+                                  console.log('BackgroundGeoLocation cancelado');
 
-                                            bgGeo.finish();
+                                    bgGeo.finish();
 
-                                      };
-                                      var failureFn = function(error) {
-                                          console.log('BackgroundGeoLocation error');
-                                          console.log(error);
-                                      };
+                              };
+                              var failureFn = function(error) {
+                                  console.log('BackgroundGeoLocation error');
+                                  console.log(error);
+                              };
 
                             if (device.platform=="iOS") {
                                     // BackgroundGeoLocation is highly configurable.
@@ -12004,7 +12466,8 @@ $('.buttonshare').hide();
                                         fastestInterval: 120000
                                     });
                             }
-                bgGeo.stop();
+                            bgGeo.stop();
+                            */
             });
         }
     });
@@ -12044,18 +12507,19 @@ $('.buttonshare').hide();
                             //cordova.plugins.backgroundMode.setDefaults({ title: 'Aviso de chegada ativado', ticker: 'Ticker', text:'Clique para voltar ao Aptohome'});
                             // Enable background mode
                             //cordova.plugins.backgroundMode.enable();
-                                      var bgGeo = window.backgroundGeoLocation;
-                                      var callbackFn = function(location) {
-                                          console.log('BackgroundGeoLocation panico ativo');
+                            /*
+                              var bgGeo = window.backgroundGeoLocation;
+                              var callbackFn = function(location) {
+                                  console.log('BackgroundGeoLocation panico ativo');
 
 
-                                            //bgGeo.finish();
+                                    //bgGeo.finish();
 
-                                      };
-                                      var failureFn = function(error) {
-                                          console.log('BackgroundGeoLocation error');
-                                          console.log(error);
-                                      };
+                              };
+                              var failureFn = function(error) {
+                                  console.log('BackgroundGeoLocation error');
+                                  console.log(error);
+                              };
 
                             if (device.platform=="iOS") {
                                     // BackgroundGeoLocation is highly configurable.
@@ -12087,6 +12551,7 @@ $('.buttonshare').hide();
                             var bgAtivo = function(location) {
                               console.log('BackgroundGeoLocation já ativo');
                             };
+                            */
                         }
                       }
                     ]
@@ -12109,11 +12574,14 @@ $('.buttonshare').hide();
                             localStorage.removeItem('tracking');
                             localStorage.removeItem('deltraking');
                             localStorage.removeItem('guidtracking');
+                            localStorage.removeItem('guidalerta');
                             localStorage.removeItem('idalerta');
+                            localStorage.removeItem('idveiculoalerta');
                             localStorage.removeItem('trackingactive');
                             localStorage.removeItem('panico');
                         },error: function(data) {
-
+                            /*myApp.hideIndicator();
+                            myApp.alert('Erro! Tente novamente.');*/
                         }
                     });
 
@@ -12124,17 +12592,18 @@ $('.buttonshare').hide();
                 $('.buttonshare').hide();
                 //cordova.plugins.backgroundMode.disable();
 
-                                      var bgGeo = window.backgroundGeoLocation;
-                                      var callbackFn = function(location) {
-                                          console.log('BackgroundGeoLocation panico cancelado');
+                            /*
+                              var bgGeo = window.backgroundGeoLocation;
+                              var callbackFn = function(location) {
+                                  console.log('BackgroundGeoLocation panico cancelado');
 
-                                            bgGeo.finish();
+                                    bgGeo.finish();
 
-                                      };
-                                      var failureFn = function(error) {
-                                          console.log('BackgroundGeoLocation error');
-                                          console.log(error);
-                                      };
+                              };
+                              var failureFn = function(error) {
+                                  console.log('BackgroundGeoLocation error');
+                                  console.log(error);
+                              };
 
                             if (device.platform=="iOS") {
                                     // BackgroundGeoLocation is highly configurable.
@@ -12162,7 +12631,8 @@ $('.buttonshare').hide();
                                         fastestInterval: 120000
                                     });
                             }
-                bgGeo.stop();
+                            bgGeo.stop();
+                            */
             });
         }
     });
@@ -12174,24 +12644,27 @@ $('.buttonshare').hide();
                 currentPositionMarker,
                 directionsService,
                 mapCenter,
-                directionsDisplay;
-                //mapCenter = new google.maps.LatLng(40.700683, -73.925972);
+                directionsDisplay,
+                mapCenter = new google.maps.LatLng(-14.384672, -51.929947);
 
-            navigator.geolocation.getCurrentPosition(mapCenterInt);
+            var auxHide = 0;
+            /*navigator.geolocation.getCurrentPosition(mapCenterInt);
                 function mapCenterInt(){
                     mapCenter = new google.maps.LatLng(pos.coords.latitude,pos.coords.longitude);
-                }
+                }*/
 
             function initializeMap()
             {
                 console.log("initializeMap ");
-                document.getElementById('map-canvas').html = "";
+                //document.getElementById('map-canvas').html = "";
+                $("#map-canvas").html("");
                 directionsService = new google.maps.DirectionsService;
                 directionsDisplay = new google.maps.DirectionsRenderer;
+                mapCenter = new google.maps.LatLng(-14.384672, -51.929947);
                 map = "";
                 map = new google.maps.Map(document.getElementById('map-canvas'), {
-                   //zoom: 17,
-                   //center: mapCenter,
+                   zoom: 4,
+                   center: mapCenter,
                    disableDefaultUI: true,
                    mapTypeId: google.maps.MapTypeId.ROADMAP
                  });
@@ -12239,143 +12712,168 @@ $('.buttonshare').hide();
                 //time = time / 60;
                 document.getElementById('total').innerHTML = 'Distância = ' + totalformat + ' km | Tempo = ' + formatTime(time) + 'min';
             }
-
+            var auxPanico = 0;
             function calculateAndDisplayRoute(directionsService, directionsDisplay) {
             
                 var onSuccess = function(position) {
 
+                    console.log("calculateAndDisplayRoute onSuccess");
                     /////////// verificar se existe alerta //////////
                     if (localStorage.getItem('tracking')) {
                         console.log("tracking true");
                         $.ajax({
                             url: $server+"functionAppAlerta.php?idmorador="+localStorage.getItem("moradorIdmorador")+"&action=list",
+                            async: false,
                             dataType : "json",
                             success: function(data) {
-                                if (data.alerta.length==1) {
+                                if (data.alerta.length>0) {
                                     
                                     localStorage.setItem("trackingactive", true);
                                     localStorage.setItem("idalerta", data.alerta[0].idalerta);
                                     localStorage.setItem("guidalerta", data.alerta[0].guid);
                                     localStorage.setItem("guidtracking", data.alerta[0].guid);
                                     console.log("verificar se existe alerta"+ "idalerta= " + data.alerta[0].idalerta);
+                                }else{
+                                    console.log("não existe alerta - deltraking");
+                                    localStorage.removeItem('tracking');
+                                    localStorage.removeItem('deltraking');
+                                    localStorage.removeItem('guidtracking');
+                                    localStorage.removeItem('guidalerta');
+                                    localStorage.removeItem('idveiculoalerta');
+                                    localStorage.removeItem('idalerta');
+                                    localStorage.removeItem('trackingactive');
 
+                                    $('.buttonalertadechegada').html("ENVIAR AVISO");
+                                    $('.buttonpanico').html("PÂNICO");
                                 }
                             },error: function(data) {
+                                    console.log("error! não existe alerta - deltraking");
+                                    if (localStorage.getItem("trackingactive")) {
+                                        localStorage.removeItem('tracking');
+                                        localStorage.removeItem('deltraking');
+                                        localStorage.removeItem('guidtracking');
+                                        localStorage.removeItem('guidalerta');
+                                        localStorage.removeItem('idalerta');
+                                        localStorage.removeItem('idveiculoalerta');
+                                        localStorage.removeItem('trackingactive');
 
+                                        $('.buttonalertadechegada').html("ENVIAR AVISO");
+                                        $('.buttonpanico').html("PÂNICO");
+                                        auxAlertaCancelado = 1;
+                                    }
                             }
                         });
 
                         if (!localStorage.getItem('trackingactive')) {
                             console.log("trackingactive false");
 
-                            /////// inserir alerta ///////
-                            $$idcondominio = localStorage.getItem("condominioId");
-                            $$idbloco = localStorage.getItem("moradorIdbloco");
-                            $$idveiculo = localStorage.getItem("idveiculoalerta");
-                            $$iddomicilio = localStorage.getItem("moradorIddomicilio");
-                            $$idmorador = localStorage.getItem("moradorIdmorador");
+                            // verifica se alerta foi cancelado
+                            if (auxAlertaCancelado==0) {
+                                /////// inserir alerta ///////
+                                $$idcondominio = localStorage.getItem("condominioId");
+                                $$idbloco = localStorage.getItem("moradorIdbloco");
+                                $$idveiculo = localStorage.getItem("idveiculoalerta");
+                                $$iddomicilio = localStorage.getItem("moradorIddomicilio");
+                                $$idmorador = localStorage.getItem("moradorIdmorador");
 
-                            // Salvando dados no servidor
-                            $.ajax($server+'functionAppAlerta.php?', {
-                                type: "post",
-                                dataType: "json",
-                                data: "idcondominio="+$$idcondominio+"&idbloco="+$$idbloco+"&iddomicilio="+$$iddomicilio+"&idmorador="+$$idmorador+"&idveiculo="+$$idveiculo+"&panico="+localStorage.getItem("panico")+"&action=add",
-                                 async: false,
-                                 beforeSend: function(x) {
-                                  if(x && x.overrideMimeType) {
-                                   x.overrideMimeType("application/j-son;charset=UTF-8");
-                                  }
-                                },
-                                success: function(data){
-                                console.log("inserir alerta");
-                                console.log("idalerta= " + data.alerta[0].idalerta);
-                                console.log('coordenadas trackingactive false= '+position.coords.latitude+','+position.coords.longitude);
-                                
-                                localStorage.setItem("idalerta", data.alerta[0].idalerta);
-                                localStorage.setItem("guidalerta", data.alerta[0].guid);
-                                localStorage.setItem("guidtracking", data.alerta[0].guid);
-                                localStorage.setItem("trackingactive", true);
-
-
-
-                                    /////// inserir coordenadas ///////
-                                    /*$.ajax($server+'functionAppTracking.php?', {
-                                        type: "post",
-                                        data: "idalerta="+localStorage.getItem("idalerta")+"&lat="+position.coords.latitude+"&long="+position.coords.longitude+"&action=add",
-                                    })
-                                      .fail(function() {
-
-                                      })   
-                                      .done(function(data) {
-                                        console.log("inserir coordenadas");
-                                        console.log('coordenadas= '+position.coords.latitude+','+position.coords.longitude);
-                                      });*/
-
-  
-                                      var bgGeo = window.backgroundGeoLocation;
-                                      var callbackFn = function(location) {
-                                          console.log('BackgroundGeoLocation trackingactive false  ' + location.latitude + ',' + location.longitude);
+                                // Salvando dados no servidor
+                                $.ajax($server+'functionAppAlerta.php?', {
+                                    type: "post",
+                                    dataType: "json",
+                                    data: "idcondominio="+$$idcondominio+"&idbloco="+$$idbloco+"&iddomicilio="+$$iddomicilio+"&idmorador="+$$idmorador+"&idveiculo="+$$idveiculo+"&panico="+localStorage.getItem("panico")+"&action=add",
+                                     async: false,
+                                     beforeSend: function(x) {
+                                      if(x && x.overrideMimeType) {
+                                       x.overrideMimeType("application/j-son;charset=UTF-8");
+                                      }
+                                    },
+                                    success: function(data){
+                                    console.log("inserir alerta");
+                                    console.log("idalerta= " + data.alerta[0].idalerta);
+                                    console.log('coordenadas trackingactive false= '+position.coords.latitude+','+position.coords.longitude);
+                                    
+                                    localStorage.setItem("idalerta", data.alerta[0].idalerta);
+                                    localStorage.setItem("guidalerta", data.alerta[0].guid);
+                                    localStorage.setItem("guidtracking", data.alerta[0].guid);
+                                    localStorage.setItem("trackingactive", true);
 
 
-                                                                /////// inserir coordenadas ///////
-                                                                $.ajax($server+'functionAppTracking.php?', {
-                                                                    type: "post",
-                                                                    data: "idalerta="+localStorage.getItem("idalerta")+"&lat="+location.latitude+"&long="+location.longitude+"&action=add",
-                                                                })
-                                                                  .fail(function() {
 
-                                                                  })   
-                                                                  .done(function(data) {
-                                                                    console.log("inserir coordenadas");
-                                                                    $('.buttonshare').show();
-                                                                    console.log('coordenadas= '+location.latitude+','+location.longitude);
-                                                                  });
-                                            //bgGeo.finish();
+                                        /////// inserir coordenadas ///////
+                                        $.ajax($server+'functionAppTracking.php?', {
+                                            type: "post",
+                                            data: "idalerta="+localStorage.getItem("idalerta")+"&lat="+position.coords.latitude+"&long="+position.coords.longitude+"&action=add",
+                                        })
+                                          .fail(function() {
 
-                                      };
-                                      var failureFn = function(error) {
-                                          console.log('BackgroundGeoLocation error');
-                                          console.log(error);
-                                      };
+                                          })   
+                                          .done(function(data) {
+                                            console.log("inserir coordenadas");
+                                            console.log('coordenadas= '+position.coords.latitude+','+position.coords.longitude);
+                                          });
 
-                            if (device.platform=="iOS") {
-                                    // BackgroundGeoLocation is highly configurable.
-                                    bgGeo.configure(callbackFn, failureFn, {
-                                        // Geolocation config
-                                        desiredAccuracy: 0,
-                                        stationaryRadius: 1,
-                                        distanceFilter: 1,
-                                        activityType: 'AutomotiveNavigation',
-                                        // Application config
-                                        ///debug: true, // <-- enable this hear sounds for background-geolocation life-cycle.
-                                        stopOnTerminate: true
-                                    });
-                            } else if (device.platform=="Android") {
-                                    bgGeo.configure(callbackFn, failureFn, {
-                                        desiredAccuracy: 0,
-                                        notificationIconColor: '#1F4D91',
-                                        notificationTitle: 'Aviso de chegada',
-                                        notificationText: 'ATIVADO',
-                                        notificationIcon: 'res/drawable-hdpi-v4/icon.png',
-                                        //debug: true, // <-- enable this hear sounds for background-geolocation life-cycle.
-                                        stopOnTerminate: true, // <-- enable this to clear background location settings when the app terminates
-                                        locationService: bgGeo.service.ANDROID_DISTANCE_FILTER,
-                                        interval: 60000, // <!-- poll for position every minute
-                                        fastestInterval: 120000
-                                    });
+      
+                                          /*var bgGeo = window.backgroundGeoLocation;
+                                          var callbackFn = function(location) {
+                                              console.log('BackgroundGeoLocation trackingactive false  ' + location.latitude + ',' + location.longitude);
+
+
+                                                                    /////// inserir coordenadas ///////
+                                                                    $.ajax($server+'functionAppTracking.php?', {
+                                                                        type: "post",
+                                                                        data: "idalerta="+localStorage.getItem("idalerta")+"&lat="+location.latitude+"&long="+location.longitude+"&action=add",
+                                                                    })
+                                                                      .fail(function() {
+
+                                                                      })   
+                                                                      .done(function(data) {
+                                                                        console.log("inserir coordenadas");
+                                                                        $('.buttonshare').show();
+                                                                        console.log('coordenadas= '+location.latitude+','+location.longitude);
+                                                                      });
+                                                //bgGeo.finish();
+
+                                          };
+                                          var failureFn = function(error) {
+                                              console.log('BackgroundGeoLocation error');
+                                              console.log(error);
+                                          };*/
+
+                                        /*if (device.platform=="iOS") {
+                                                // BackgroundGeoLocation is highly configurable.
+                                                bgGeo.configure(callbackFn, failureFn, {
+                                                    // Geolocation config
+                                                    desiredAccuracy: 0,
+                                                    stationaryRadius: 1,
+                                                    distanceFilter: 1,
+                                                    activityType: 'AutomotiveNavigation',
+                                                    // Application config
+                                                    ///debug: true, // <-- enable this hear sounds for background-geolocation life-cycle.
+                                                    stopOnTerminate: true
+                                                });
+                                        } else if (device.platform=="Android") {
+                                                bgGeo.configure(callbackFn, failureFn, {
+                                                    desiredAccuracy: 0,
+                                                    notificationIconColor: '#1F4D91',
+                                                    notificationTitle: 'Aviso de chegada',
+                                                    notificationText: 'ATIVADO',
+                                                    notificationIcon: 'res/drawable-hdpi-v4/icon.png',
+                                                    //debug: true, // <-- enable this hear sounds for background-geolocation life-cycle.
+                                                    stopOnTerminate: true, // <-- enable this to clear background location settings when the app terminates
+                                                    locationService: bgGeo.service.ANDROID_DISTANCE_FILTER,
+                                                    interval: 60000, // <!-- poll for position every minute
+                                                    fastestInterval: 120000
+                                                });
+                                        }
+                                        bgGeo.isLocationEnabled(bgAtivo, bgGeo.start());
+                                        var bgAtivo = function(location) {
+                                          console.log('BackgroundGeoLocation já ativo');
+                                        };*/
+                                    }
+                                    ,error:function(data){
+                                    }  
+                                });
                             }
-                            bgGeo.isLocationEnabled(bgAtivo, bgGeo.start());
-                            var bgAtivo = function(location) {
-                              console.log('BackgroundGeoLocation já ativo');
-                            };
-
-
-                                }
-                                ,error:function(data){
-                                }
-                                 
-                              });
-
 
                         } else {
                             console.log("trackingactive true");
@@ -12383,7 +12881,7 @@ $('.buttonshare').hide();
                             console.log("inserir coordenadas de alerta já ativo");
 
                                     /////// inserir coordenadas ///////
-                                    /*$.ajax($server+'functionAppTracking.php?', {
+                                    $.ajax($server+'functionAppTracking.php?', {
                                         type: "post",
                                         data: "idalerta="+localStorage.getItem("idalerta")+"&lat="+position.coords.latitude+"&long="+position.coords.longitude+"&action=add",
                                     })
@@ -12393,10 +12891,10 @@ $('.buttonshare').hide();
                                       .done(function(data) {
                                         console.log("inserir coordenadas");
                                         console.log('coordenadas= '+position.coords.latitude+','+position.coords.longitude);
-                                      });*/
+                                      });
 
           
-                              var bgGeo = window.backgroundGeoLocation;
+                              /*var bgGeo = window.backgroundGeoLocation;
                               var callbackFn = function(location) {
                                   console.log('BackgroundGeoLocation trackingactive true  ' + location.latitude + ',' + location.longitude);
 
@@ -12453,10 +12951,11 @@ $('.buttonshare').hide();
                             bgGeo.isLocationEnabled(bgAtivo, bgGeo.start());
                             var bgAtivo = function(location) {
                               console.log('BackgroundGeoLocation já ativo');
-                            };
+                            };*/
 
 
-                            if (localStorage.getItem("panico")) {
+                            if (localStorage.getItem("panico") && auxPanico==0) {
+                                console.log("panico = "+auxPanico);
                                 $.ajax($server+'functionAppAlerta.php?', {
                                     type: "post",
                                     data: "guid="+localStorage.getItem("guidtracking")+"&panico="+localStorage.getItem("panico")+"&action=add",
@@ -12466,6 +12965,7 @@ $('.buttonshare').hide();
                                   })     
                                   .done(function(data) {
                                   });
+                                auxPanico++;
                             }
 
                         }
@@ -12486,12 +12986,21 @@ $('.buttonshare').hide();
                         });
                 }
 
-                navigator.geolocation.getCurrentPosition(onSuccess);
+                navigator.geolocation.getCurrentPosition(onSuccess,onError, { enableHighAccuracy: true });
+
+                function onError(error) {
+                    // the current position could not be located
+                    console.log(error.message+" onError = The current position could not be found!");
+                }
             }
 
             function locError(error) {
                 // the current position could not be located
-                //alert("The current position could not be found!");
+                myApp.hidePreloader();
+                myApp.alert('Você precisa autorizar o acesso a sua localização', function () {
+                    initLocationProcedure();
+                });
+                console.log(error.message+" locError = The current position could not be found!");
             }
 
             function setCurrentPosition(pos) {
@@ -12519,7 +13028,11 @@ $('.buttonshare').hide();
 
             function watchCurrentPosition() {
                 console.log("watchCurrentPosition ");
-                var positionTimer = navigator.geolocation.watchPosition(
+                console.log("auxHide = "+auxHide);
+                if (auxHide==0) {
+                    myApp.hidePreloader();
+                }
+                positionTimer = navigator.geolocation.watchPosition(
                     function (position) {
                         setMarkerPosition(
                             currentPositionMarker,
@@ -12527,7 +13040,8 @@ $('.buttonshare').hide();
                         );
                         calculateAndDisplayRoute(directionsService, directionsDisplay);
                         //mapCenterInt();
-                    });
+                    }, locError, { enableHighAccuracy: true });
+                auxHide++;
             }
 
             function setMarkerPosition(marker, position) {
@@ -12542,424 +13056,26 @@ $('.buttonshare').hide();
 
             function initLocationProcedure() {
                 console.log("initLocationProcedure ");
+                myApp.showPreloader("Buscando localização.");
                 initializeMap();
                 if (navigator.geolocation) {
                     console.log("Your browser support the Geolocation API");
-                    navigator.geolocation.getCurrentPosition(displayAndWatch, locError);
+                    navigator.geolocation.getCurrentPosition(displayAndWatch, locError, { enableHighAccuracy: true });
                 } else {
                     console.log("Your browser does not support the Geolocation API");
                 }
             }
-});
-
-
-myApp.onPageReinit('alertadechegada', function (page) {
-$('.buttonshare').hide();
-////// lista de veiculos ////////
-    $.ajax({
-        url: $server+"functionAppVeiculo.php?idcondominio="+localStorage.getItem("condominioId")+"&iddomicilio="+localStorage.getItem("moradorIddomicilio")+"&idbloco="+localStorage.getItem("moradorIdbloco")+"&action=listall",
-        dataType : "json",
-        success: function(data) {
-
-            if (data!=null) {
-                var qtd = data.veiculo.length;
-                var dataveiculoalerta="";
-
-                dataveiculoalerta += '<select id="idveiculoalerta">'+
-                                    '<option value="" selected="selected">Não estou em meu veículo</option>';
-                
-                for (var i = 0; i < qtd; i++) {
-                    dataveiculoalerta += '<option value="'+data.veiculo[i].idveiculo+'" >'+data.veiculo[i].marca+' - '+data.veiculo[i].modelo+' | '+data.veiculo[i].placa+'</option>';
-
-                }
-
-                dataveiculoalerta += '</select>';
-
-                localStorage.setItem("listveiculoalerta", dataveiculoalerta);
-            }else{
-                //$('#veiculo-cont').html("<li class='semregistro'>Nenhum registro cadastrado</li>");
-            }
-        },error: function(data) {
-
-        }
-    });
-
-
-
-    if (localStorage.getItem("tracking")) {
-
-        $('.buttonalertadechegada').html("CANCELAR AVISO");
-    } 
-
-    if (localStorage.getItem('panico')) {
-
-        $('.buttonpanico').html("CANCELAR PÂNICO");
-        $('.buttonalertadechegada').addClass("invisivel");
-    }
-
-
-        initLocationProcedure();
-        // Resultado para quando conseguir capturar a posição GPS...
-            var map,
-                currentPositionMarker,
-                directionsService,
-                mapCenter,
-                directionsDisplay;
-                //mapCenter = new google.maps.LatLng(40.700683, -73.925972);
-
-            navigator.geolocation.getCurrentPosition(mapCenterInt);
-                function mapCenterInt(){
-                    mapCenter = new google.maps.LatLng(pos.coords.latitude,pos.coords.longitude);
-                }
-
-            function initializeMap()
-            {
-                console.log("initializeMap ");
-                document.getElementById('map-canvas').html = "";
-                directionsService = new google.maps.DirectionsService;
-                directionsDisplay = new google.maps.DirectionsRenderer;
-                map = "";
-                map = new google.maps.Map(document.getElementById('map-canvas'), {
-                   //zoom: 17,
-                   //center: mapCenter,
-                   disableDefaultUI: true,
-                   mapTypeId: google.maps.MapTypeId.ROADMAP
-                 });
-
-                directionsDisplay.setMap(map);
-                calculateAndDisplayRoute(directionsService, directionsDisplay);
-                
-                directionsDisplay.addListener('directions_changed', function() {
-                    computeTotalDistance(directionsDisplay.getDirections());
-                });
-            }
-
-
-            function formatTime(secs){
-               var times = new Array(3600, 60, 1);
-               var time = '';
-               var tmp;
-               for(var i = 0; i < times.length; i++){
-                  tmp = Math.floor(secs / times[i]);
-                  if(tmp < 1){
-                     tmp = '00';
-                  }
-                  else if(tmp < 10){
-                     tmp = '0' + tmp;
-                  }
-                  time += tmp;
-                  if(i < 2){
-                     time += ':';
-                  }
-                  secs = secs % times[i];
-               }
-               return time;
-            }
-
-            function computeTotalDistance(result) {
-                var total = 0;
-                var time = 0;
-                var myroute = result.routes[0];
-                for (var i = 0; i < myroute.legs.length; i++) {
-                    total += myroute.legs[i].distance.value;
-                    time += myroute.legs[i].duration.value;
-                }
-                total = total / 1000;
-                var totalformat = total.toString().replace(".", ",");
-                //time = time / 60;
-                document.getElementById('total').innerHTML = 'Distância = ' + totalformat + ' km | Tempo = ' + formatTime(time) + 'min';
-            }
-
-            function calculateAndDisplayRoute(directionsService, directionsDisplay) {
-            
-                var onSuccess = function(position) {
-
-                    /////////// verificar se existe alerta //////////
-                    if (localStorage.getItem('tracking')) {
-                        console.log("tracking true");
-                        $.ajax({
-                            url: $server+"functionAppAlerta.php?idmorador="+localStorage.getItem("moradorIdmorador")+"&action=list",
-                            dataType : "json",
-                            success: function(data) {
-                                if (data.alerta.length==1) {
-                                    localStorage.setItem("trackingactive", true);
-                                    localStorage.setItem("idalerta", data.alerta[0].idalerta);
-                                    localStorage.setItem("guidalerta", data.alerta[0].guid);
-                                    localStorage.setItem("guidtracking", data.alerta[0].guid);
-                                    console.log("verificar se existe alerta"+ "idalerta= " + data.alerta[0].idalerta);
-                                }
-                            },error: function(data) {
-
-                            }
-                        });
-
-                        if (!localStorage.getItem('trackingactive')) {
-                            console.log("trackingactive false");
-
-                            /////// inserir alerta ///////
-                            $$idcondominio = localStorage.getItem("condominioId");
-                            $$idbloco = localStorage.getItem("moradorIdbloco");
-                            $$idveiculo = localStorage.getItem("idveiculoalerta");
-                            $$iddomicilio = localStorage.getItem("moradorIddomicilio");
-                            $$idmorador = localStorage.getItem("moradorIdmorador");
-
-                            // Salvando dados no servidor
-                            $.ajax($server+'functionAppAlerta.php?', {
-                                type: "post",
-                                dataType: "json",
-                                data: "idcondominio="+$$idcondominio+"&idbloco="+$$idbloco+"&iddomicilio="+$$iddomicilio+"&idmorador="+$$idmorador+"&idveiculo="+$$idveiculo+"&panico="+localStorage.getItem("panico")+"&action=add",
-                                 async: false,
-                                 beforeSend: function(x) {
-                                  if(x && x.overrideMimeType) {
-                                   x.overrideMimeType("application/j-son;charset=UTF-8");
-                                  }
-                                },
-                                success: function(data){
-                                console.log("inserir alerta");
-                                console.log("idalerta= " + data.alerta[0].idalerta);
-                                console.log('coordenadas trackingactive false= '+position.coords.latitude+','+position.coords.longitude);
-                                localStorage.setItem("idalerta", data.alerta[0].idalerta);
-                                localStorage.setItem("guidalerta", data.alerta[0].guid);
-                                localStorage.setItem("guidtracking", data.alerta[0].guid);
-                                localStorage.setItem("trackingactive", true);
-
-  
-                                    var bgGeo = window.backgroundGeoLocation;
-                                  var callbackFn = function(location) {
-                                      console.log('BackgroundGeoLocation trackingactive false  ' + location.latitude + ',' + location.longitude);
-
-
-                                    /////// inserir coordenadas ///////
-                                    $.ajax($server+'functionAppTracking.php?', {
-                                        type: "post",
-                                        data: "idalerta="+localStorage.getItem("idalerta")+"&lat="+location.latitude+"&long="+location.longitude+"&action=add",
-                                    })
-                                      .fail(function() {
-
-                                      })   
-                                      .done(function(data) {
-                                        console.log("inserir coordenadas");
-                                        console.log('coordenadas= '+location.latitude+','+location.longitude);
-                                        $('.buttonshare').show();
-                                      });
-
-                                    //bgGeo.finish();
-
-                                  };
-                                  var failureFn = function(error) {
-                                      console.log('BackgroundGeoLocation error');
-                                      console.log(error);
-                                  };
-
-
-                            if (device.platform=="iOS") {
-                                    // BackgroundGeoLocation is highly configurable.
-                                    bgGeo.configure(callbackFn, failureFn, {
-                                        // Geolocation config
-                                        desiredAccuracy: 0,
-                                        stationaryRadius: 1,
-                                        distanceFilter: 1,
-                                        activityType: 'AutomotiveNavigation',
-                                        // Application config
-                                        ///debug: true, // <-- enable this hear sounds for background-geolocation life-cycle.
-                                        stopOnTerminate: true
-                                    });
-                            } else if (device.platform=="Android") {
-                                    bgGeo.configure(callbackFn, failureFn, {
-                                        desiredAccuracy: 0,
-                                        notificationIconColor: '#1F4D91',
-                                        notificationTitle: 'Aviso de chegada',
-                                        notificationText: 'ATIVADO',
-                                        notificationIcon: 'res/drawable-hdpi-v4/icon.png',
-                                        //debug: true, // <-- enable this hear sounds for background-geolocation life-cycle.
-                                        stopOnTerminate: true, // <-- enable this to clear background location settings when the app terminates
-                                        locationService: bgGeo.service.ANDROID_DISTANCE_FILTER,
-                                        interval: 60000, // <!-- poll for position every minute
-                                        fastestInterval: 120000
-                                    });
-                            }
-                            bgGeo.isLocationEnabled(bgAtivo, bgGeo.start());
-                            var bgAtivo = function(location) {
-                              console.log('BackgroundGeoLocation já ativo');
-                            };
-
-                                }
-                                ,error:function(data){
-                                }
-                                 
-                              });
-
-
-                        } else {
-                            console.log("trackingactive true");
-                            console.log('coordenadas trackingactive true= '+position.coords.latitude+','+position.coords.longitude);
-                            console.log("inserir coordenadas de alerta já ativo");
-
-
-          
-                              var bgGeo = window.backgroundGeoLocation;
-                              var callbackFn = function(location) {
-                                  console.log('BackgroundGeoLocation trackingactive true  ' + location.latitude + ',' + location.longitude);
-
-
-                                    /////// inserir coordenadas ///////
-                                    $.ajax($server+'functionAppTracking.php?', {
-                                        type: "post",
-                                        data: "idalerta="+localStorage.getItem("idalerta")+"&lat="+location.latitude+"&long="+location.longitude+"&action=add",
-                                    })
-                                      .fail(function() {
-
-                                      })   
-                                      .done(function(data) {
-                                        console.log("inserir coordenadas");
-                                        console.log('coordenadas= '+location.latitude+','+location.longitude);
-                                        $('.buttonshare').show();
-                                      });
-                                        //bgGeo.finish();
-
-                              };
-                              var failureFn = function(error) {
-                                  console.log('BackgroundGeoLocation error');
-                                  console.log(error);
-                              };
-
-
-                            if (device.platform=="iOS") {
-                                    // BackgroundGeoLocation is highly configurable.
-                                    bgGeo.configure(callbackFn, failureFn, {
-                                        // Geolocation config
-                                        desiredAccuracy: 0,
-                                        stationaryRadius: 1,
-                                        distanceFilter: 1,
-                                        activityType: 'AutomotiveNavigation',
-                                        // Application config
-                                        ///debug: true, // <-- enable this hear sounds for background-geolocation life-cycle.
-                                        stopOnTerminate: true
-                                    });
-                            } else if (device.platform=="Android") {
-                                    bgGeo.configure(callbackFn, failureFn, {
-                                        desiredAccuracy: 0,
-                                        notificationIconColor: '#1F4D91',
-                                        notificationTitle: 'Aviso de chegada',
-                                        notificationText: 'ATIVADO',
-                                        notificationIcon: 'res/drawable-hdpi-v4/icon.png',
-                                        //debug: true, // <-- enable this hear sounds for background-geolocation life-cycle.
-                                        stopOnTerminate: true, // <-- enable this to clear background location settings when the app terminates
-                                        locationService: bgGeo.service.ANDROID_DISTANCE_FILTER,
-                                        interval: 60000, // <!-- poll for position every minute
-                                        fastestInterval: 120000
-                                    });
-                            }
-
-                            bgGeo.isLocationEnabled(bgAtivo, bgGeo.start());
-                            var bgAtivo = function(location) {
-                              console.log('BackgroundGeoLocation já ativo');
-                            };
-
-
-                            if (localStorage.getItem("panico")) {
-                                $.ajax($server+'functionAppAlerta.php?', {
-                                    type: "post",
-                                    data: "guid="+localStorage.getItem("guidtracking")+"&panico="+localStorage.getItem("panico")+"&action=add",
-                                })
-                                  .fail(function() {
-
-                                  })     
-                                  .done(function(data) {
-                                  });
-                            }
-
-                        }
-                    }
-
-                        directionsService.route({
-                            origin: position.coords.latitude+','+position.coords.longitude,
-                            destination: localStorage.getItem("condominioStreet")+', '+localStorage.getItem("condominioNumber")+', '+localStorage.getItem("condominioDistrict")+', '+localStorage.getItem("condominioCityname")+', '+localStorage.getItem("condominioUf"),
-                            /*origin: document.getElementById('start').value,
-                            destination: document.getElementById('end').value,*/
-                            travelMode: google.maps.TravelMode.DRIVING
-                            }, function(response, status) {
-                            if (status === google.maps.DirectionsStatus.OK) {
-                              directionsDisplay.setDirections(response);
-                            } else {
-                              //window.alert('Directions request failed due to ' + status);
-                            }
-                        });
-                }
-
-                navigator.geolocation.getCurrentPosition(onSuccess);
-            }
-
-            function locError(error) {
-                // the current position could not be located
-                //alert("The current position could not be found!");
-            }
-
-            function setCurrentPosition(pos) {
-                console.log("setCurrentPosition ");
-
-                var image = 'http://iconizer.net/files/Brightmix/orig/monotone_location_pin_marker.png';
-                currentPositionMarker = new google.maps.Marker({
-                    position: new google.maps.LatLng(
-                        pos.coords.latitude,
-                        pos.coords.longitude
-                    )
-
-                    //map: map,
-                });
-
-            }
-
-            function displayAndWatch(position) {
-                console.log("displayAndWatch ");
-                // set current position
-                setCurrentPosition(position);
-                // watch position
-                watchCurrentPosition();
-            }
-
-            function watchCurrentPosition() {
-                console.log("watchCurrentPosition ");
-                var positionTimer = navigator.geolocation.watchPosition(
-                    function (position) {
-                        setMarkerPosition(
-                            currentPositionMarker,
-                            position
-                        );
-                        calculateAndDisplayRoute(directionsService, directionsDisplay);
-                        //mapCenterInt();
-                    });
-            }
-
-            function setMarkerPosition(marker, position) {
-                console.log("setMarkerPosition ");
-                marker.setPosition(
-                    new google.maps.LatLng(
-                        position.coords.latitude,
-                        position.coords.longitude)
-                );
-                //map.panTo(marker.getPosition());
-            }
-
-            function initLocationProcedure() {
-                console.log("initLocationProcedure ");
-                initializeMap();
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(displayAndWatch, locError);
-                } else {
-                    //alert("Your browser does not support the Geolocation API");
-                }
-            }
-});
-
-function alertadechegada() {
-    
-    navigator.geolocation.getCurrentPosition(onSuccess);
-
-    function onSuccess(position) {
-        console.log(position);
-    }
 }
+
+
+myApp.onPageReinit('index', function (page) {
+    console.log("página anterior = "+myApp.mainView.history[myApp.mainView.history.length - 2]);
+    if ((myApp.mainView.history[myApp.mainView.history.length - 2]) == "#alertadechegada" || (myApp.mainView.history[myApp.mainView.history.length - 2] == "#alertadechegadacont")) {
+        console.log("onPageReinit clearWatch");
+        clearTimeout(atualizamaptime);
+        navigator.geolocation.clearWatch(positionTimer);
+    }
+});
 
 
 
