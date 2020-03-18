@@ -16,6 +16,10 @@
 	font-family: "Roboto Bold";
 	src: url("framework7/fonts/Roboto-Bold.ttf") format("truetype");
 }
+/* texto bold */
+.textbold{
+	font-weight: bold;
+}
 
 /* infinite scroll */
 .infinite-scroll-preloader {
@@ -230,6 +234,11 @@ ul#alertavisitanteshome-cont {
 	top: 5px;
 	position: relative;
 }
+.list-block  .icon-view {
+    top: 52px;
+    position: absolute;
+    right: 15px;
+}
 .list-block .swipeout-content{
 	width: 100%;
 }
@@ -299,6 +308,21 @@ ul#alertavisitanteshome-cont {
 .ks-facebook-edit i{
 	color: gray;
 }
+.ks-facebook-view{
+	position: absolute;
+    top: 10px;
+    right: 10px;
+}
+.ks-facebook-view a {
+    display: block;
+    height: 30px;
+	width: 60px;
+    text-align: right;
+    margin-top: 10px;
+}
+.ks-facebook-view a i {
+    margin-left: 5px;
+}
 .card-content-cont i {
 	color: white;
 	position: absolute;
@@ -313,11 +337,32 @@ ul#alertavisitanteshome-cont {
 	display: none;
 }
 .preloader-indicator-overlay {
-	opacity: 0.2!important;
+	opacity: 0.5!important;
 	background: black!important;
 }
 .invisivel{
 	display: none!important;
+}
+.badgecomuncondominio, .badgecomunportaria, .badgecomunportariahome, .badgecomunmorador {
+    height: auto!important;
+}
+.badgecomuncondominio.icon .badge, .badgecomunportaria.icon .badge, .badgecomunportariahome.icon .badge, .badgecomunmorador.icon .badge{
+	top: -8px!important;
+}
+.badgecomuncondominio.icon .badge {
+    left: 48px;
+}
+.badgecomunportaria.icon .badge{
+    left: 38px;
+}
+.badgecomunportariahome.icon .badge{
+	left: 55px;	
+}
+.badgecomunmorador.icon .badge {
+    left: 40px;
+}
+.tabbar a.tab-link{
+	height: 50px;
 }
 .toolbar.tabbar {
 	background: #2196f3!important;
@@ -371,6 +416,11 @@ a.tab-link.active{
 .icon .badge{
 	border-radius:11px;
 	top: 27px!important;
+	font-family: Roboto, Noto, Helvetica, Arial, sans-serif;
+    width: 20px;
+    height: 20px;
+    line-height: 18px;
+    text-align: center;
 }
 .media-list {
 	margin: 0 0 80px!important;
@@ -491,6 +541,28 @@ textarea {
     margin-left: -20px;
 }
 /* video full */
+#camerasdeseguranca-cont iframe{
+	background: black;
+	padding: 0!important;
+	border: 0;
+	width: 100%;
+	height: 138px;
+}
+.row.no-gutter .col-50{
+	width: -webkit-calc((100% - 5px*1) / 2);
+	width: calc((100% - 5px*1) / 2);
+}
+#camerasdeseguranca-cont .card-content-inner{
+	padding: 0px 10px 10px;
+}
+#camerasdeseguranca-cont .cam-title{
+	font-weight: bold;
+	margin-bottom: 5px;
+}
+#camerasdeseguranca-cont .cam-desc{
+	margin-top: 0;
+	line-height: 20px;
+}
 .video-full {
 	background: black;
 	padding: 0!important;
@@ -980,8 +1052,15 @@ position: fixed;
 	width: 100%;
 }
 .profile_foto img{
-	min-height: 60px;
-	width: 100%;
+	//min-height: 60px;
+	//width: 100%;
+transform: translate(-50%,-50%);
+    min-width: 60px;
+    max-height: 60px;
+    position: relative;
+    overflow: hidden;
+    top: 50%;
+    left: 50%;
 }
 .edit_morador{
 	width: 100%;
@@ -1061,8 +1140,18 @@ position: fixed;
 	color: #8e8e93;
 }
 .ks-facebook-avatar img {
-	min-width: 34px;
-	min-height: 34px;
+	//min-width: 34px;
+	//min-height: 34px;
+    transform: translate(-50%,-50%);
+    min-width: 54px;
+    max-height: 54px;
+    position: relative;
+    overflow: hidden;
+    top: 50%;
+    left: 50%;
+}
+.ks-facebook-card .card-content-inner {
+    text-align: justify;
 }
 .card-content {
 	overflow: hidden;
@@ -1171,19 +1260,46 @@ position: fixed;
 	padding: 0!important;
 }
 /* agendamento */
+.actionOptionAgendamento .item-content{
+	height: 70px;
+}
+.actionOptionAgendamento .item-content .item-title{
+	font-weight: 500;
+}
+.picker-calendar-day-selected span{
+	background-color: #3f51b5!important;
+}
+.label-agendamento {
+    min-height: 20px!important;
+    font-size: 11px;
+    color: darkgray;
+}
+.label-icon-agendamento{
+
+}
+.picker-calendar-week-days + .picker-calendar-months {
+    height: -webkit-calc(100% - 100% / 6)!important;
+    height: -moz-calc(100% - 100% / 6)!important;
+    height: calc(100% - 100% / 6)!important;
+}
+input[type="date"]:not(.has-value):before, input[type="datetime-local"]:not(.has-value):before{
+  color: lightgray;
+  content: attr(placeholder);
+}
 .marcado{
 	background: #f44336;
 	color: white;
 }
 .legendaespaco{
-	width: 20px;
-	height: 20px;
+	width: 15px;
+	height: 15px;
 	float: left;
 	margin-right: 10px;
 	border-radius: 100%;
 }
 .legendaespacotext{
-
+    line-height: 16px;
+    font-size: 14px;
 }
 .espacoinserir{
 	width: 65%!important;
@@ -1202,6 +1318,7 @@ position: fixed;
 .img-banner a img{
 	width: 100%;
 	margin-bottom: -7px!important;
+	height: 265px;
 }
 .banner-full{
 	width: 100%;
@@ -1218,6 +1335,7 @@ position: fixed;
 	display: block;
 	/*margin-bottom: -6px!important;*/
 	padding: 2px;
+	height: 180px;
 }
 .img-banner a div {
 	display: block;
@@ -1228,6 +1346,9 @@ position: fixed;
     position: relative;
     white-space: nowrap;
     font-size: 12px;
+position: absolute!important;
+    width: calc(100% - 14px);
+    bottom: 0;
 }
 .img-banner {
 	width: 33.333%;
@@ -1244,7 +1365,7 @@ position: fixed;
 @media (min-height: 630px) and (min-width: 630px){
 
 	.maps-size {
-
+		height: 500px!important;
 	}
 	.card-content {
 		min-height: 350px!important;
@@ -1266,6 +1387,9 @@ position: fixed;
 	}
 	.media-list {
 	    margin-bottom: 80px!important;
+	}
+	.img-banner a{
+		height: 260px;
 	}
 }
 

@@ -52,14 +52,14 @@ function execmascara(){
 function mplaca(v){
     v=v.replace(/([a-zA-Z]{3})(\d{1,2})$/,"$1-$2") //Coloca um hífen entre o terceiro e o quarto dígitos
     //v=v.replace(/(\d{4})(\d)/,"$1-$2")
-    return v
+    return v.toUpperCase()
 }
 //window.screen.lockOrientation('portrait');
 //intel.xdk.device.setRotateOrientation("portrait");
 
 ///////////////////////// iniciar dom /////////////////////////
 var $$ = Dom7;
-
+var $nameapp = 'FacilityCondo';
 var $server = 'https://aptohome.com.br/admin/';
 var $apiKey = 'AIzaSyBy1QrMk23lmGlOsUOM3yryiEQ9SpEsRS0';
 var imagemPerf;
@@ -67,6 +67,11 @@ var tabindex = 1;
 var bannerview = 0;
 var atualizamaptime;
 var alertadechegadahometime;
+var $$idcondominioteste = "58";
+var $$idblocoteste = "1997";
+var $$iddomicilioteste = "9337";
+var $$senderID = "975722403631";
+var $$testelocal = false;
 
 logado();
 
@@ -153,12 +158,51 @@ function onOnline() {
 
 document.addEventListener("online", onOnline, false);
 
+//////////////////////////////// GetNinjas ////////////////////////////////
+function getninjas(){
+    myApp.showIndicator();
+    
+    /*var inAppBrowserRef;
+    var target = "_blank";
+    var options = "zoom=no,location=yes,toolbarcolor=#3f51b5,closebuttoncolor=#ffffff,navigationbuttoncolor=#ffffff,hideurlbar=yes";
+    
+    inAppBrowserRef = cordova.InAppBrowser.open("https://parcerias.getninjas.com.br/v1/?utm_source=apptohome&utm_medium=app&utm_campaign=services", target, options);
+    inAppBrowserRef.addEventListener('loadstop', loadStopCallBack);
+    function loadStopCallBack(){
+        myApp.hideIndicator();
+    }*/
+
+    $(".iframe-boleto").attr("src","https://parcerias.getninjas.com.br/v1/?utm_source=apptohome&utm_medium=app&utm_campaign=services");
+    $('.iframe-boleto').on("load", function() {
+        myApp.hideIndicator();
+    });
+
+}
+
+//////////////////////////////// inserir click no banner ////////////////////////////////
+function clickbanner(id){
+    $.ajax($server+'functionAppBanner.php?', {
+        type: "post",
+        data: "idbanner="+id+"&idmorador="+localStorage.getItem("moradorIdmorador")+"&idsindico="+localStorage.getItem("sindicoIdsindico")+"&idportaria="+localStorage.getItem("portariaIdportaria")+"&idadministradora="+localStorage.getItem("administradoraIdadministradora")+"&action=click",
+    })
+      .fail(function() {
+
+      })     
+      .done(function(data) {
+        if (data!="ok") {
+            console.log('Erro click banner');
+        } else {
+            console.log('click banner ok');
+        }
+      });
+}
+
 myApp.onPageReinit('index', function (page) {
         
     if (localStorage.getItem("portariaIdportaria")) {
         console.log("onPageReinit Portaria");
 
-        comunportariahome();
+        //comunportariahome();
         alertadechegadahome();
         searchhomeportaria();
         visitantealerthome();
@@ -182,10 +226,449 @@ myApp.onPageReinit('index', function (page) {
     }
 });
 
-myApp.onPageInit('index', function (page) {
-        console.log("onPageInit Portaria");
-    if (localStorage.getItem("portariaIdportaria")) {
+function badge(){
 
+    // Loading flag
+    var loading = false;
+     
+    // Last loaded index
+    var lastIndex = 0;
+    
+    var maxItems = 0;
+
+    // Append items per load
+    var itemsPerLoad = 20; 
+    var viewsmorador = 0;
+    var viewsportaria = 0;
+    var viewscondominio = 0;
+
+        // inserir badge de não lidos comunicado condominio
+        var idmorador = localStorage.getItem("moradorIdmorador");
+        var iddomicilio = localStorage.getItem("moradorIddomicilio");
+        var idbloco = localStorage.getItem("moradorIdbloco");
+        var iddestino = localStorage.getItem("moradorIdmorador");
+        var idportaria = localStorage.getItem("portariaIdportaria");
+
+        if (localStorage.getItem("sindicoIdsindico")) {
+            var idsindico = localStorage.getItem("sindicoIdsindico");
+            iddomicilio = "";
+            idbloco = "";
+            iddestino = "";
+        } else{
+            var idsindico = "";
+        }
+
+        if (localStorage.getItem("administradoraIdadministradora")) {
+            var idadministradora = localStorage.getItem("administradoraIdadministradora");
+            iddomicilio = "";
+            idbloco = "";
+            iddestino = "";
+        } else{
+            var idadministradora = "";
+        }
+
+        if (!localStorage.getItem("portariaIdportaria")) {
+            $.ajax({
+                url: $server+"functionAppComunCondominio.php?idcondominio="+localStorage.getItem("condominioId")+"&limit="+itemsPerLoad+"&offset="+lastIndex+"&idadministradora="+idadministradora+"&iddestino="+iddestino+"&idbloco="+idbloco+"&iddomicilio="+iddomicilio+"&idmorador="+idmorador+"&idsindico="+idsindico+"&action=list",
+                dataType : "json",
+                async: true,
+                success: function(data) {
+                    //console.log(data);
+                    if (data!=null) {
+                        myApp.hideIndicator();
+                        var datacomunicado = "";
+                        var delcomuncondominio = "";
+                        var swipeout = "";
+                        var invisivel = "invisivel";
+                        var qtd = data.comunicado.length;
+                        var view = 0;
+                        
+
+                        for (var i = 0; i < qtd; i++) {
+
+                            // soma comunicados nao lidos
+                            if (data.comunicado[i].view==0) {
+                                viewscondominio++
+                            }
+                        }
+
+                        localStorage.setItem("viewscondominio",viewscondominio);
+
+                        // so imprime badge se for motrador ou sindico morador
+                        if ((localStorage.getItem("moradorIdmorador") && localStorage.getItem("condominioId") == localStorage.getItem("moradorIdCondominio")) || (localStorage.getItem("moradorIdmorador") && !localStorage.getItem("sindicoIdsindico"))) {    
+                            console.log("viewscondominio = "+viewscondominio);
+                            if (viewscondominio>0) {
+                                $('.badgecomuncondominio').html('<span class="badge bg-red">'+viewscondominio+'</span>');    
+                            }else{
+                                $('.badgecomuncondominio').hide();
+                            }
+                        }
+                        
+                    }
+
+                    // so imprime badge se for morador ou sindico morador
+                    if ((localStorage.getItem("moradorIdmorador") && localStorage.getItem("condominioId") == localStorage.getItem("moradorIdCondominio")) || (localStorage.getItem("moradorIdmorador") && !localStorage.getItem("sindicoIdsindico"))) {    
+
+                        // inserir badge de não lidos comunicado portaria
+                        if (localStorage.getItem("portariaIdportaria")) {
+                            var idportaria = localStorage.getItem("portariaIdportaria");
+                        } else{
+                            var idportaria = "";
+                        }
+                        if (localStorage.getItem("moradorIdmorador")) {
+                            var idmorador = localStorage.getItem("moradorIdmorador");
+                        } else{
+                            var idmorador = "";
+                        }
+                        if (localStorage.getItem("sindicoIdsindico")) {
+                            var idsindico = localStorage.getItem("sindicoIdsindico");
+                        } else{
+                            var idsindico = "";
+                        }
+                        if (localStorage.getItem("administradoraIdadministradora")) {
+                            var idadministradora = localStorage.getItem("administradoraIdadministradora");
+                        } else{
+                            var idadministradora = "";
+                        }
+                        if (localStorage.getItem("moradorIddomicilio")) {
+                            var iddomicilio = localStorage.getItem("moradorIddomicilio");
+                        } else{
+                            var iddomicilio = "";
+                        }
+                        if (localStorage.getItem("moradorIdbloco")) {
+                            var idbloco = localStorage.getItem("moradorIdbloco");
+                        } else{
+                            var idbloco = "";
+                        }
+                        if (localStorage.getItem("moradorIdmorador")) {
+                            var iddestino = localStorage.getItem("moradorIdmorador");
+                        } else{
+                            var iddestino = "";
+                        }
+
+                        $.ajax({
+                            url: $server+"functionAppComunPortaria.php?idcondominio="+localStorage.getItem("condominioId")+"&limit="+itemsPerLoad+"&offset="+lastIndex+"&idadministradora="+idadministradora+"&iddestino="+iddestino+"&idmorador="+idmorador+"&idbloco="+idbloco+"&iddomicilio="+iddomicilio+"&idsindico="+idsindico+"&idportaria="+idportaria+"&action=list",
+                            dataType : "json",
+                            async: true,
+                            success: function(data) {
+                                //console.log(data);
+                                if (data!=null) {
+                                    myApp.hideIndicator();
+                                    var datacomunicado = "";
+                                    var delcomunportaria = "";
+                                    var swipeout = "";
+                                    var invisivel = "invisivel";
+                                    var qtd = data.comunicado.length;
+                                    
+                                    var textbold = "";
+
+                                    for (var i = 0; i < qtd; i++) {
+
+                                        // soma comunicados nao lidos
+                                        if (data.comunicado[i].view==0) {
+                                            viewsportaria++
+                                        }
+                                    }
+                                    localStorage.setItem("viewsportaria",viewsportaria);
+                                    console.log("viewsportaria = "+viewsportaria);
+                                    if (viewsportaria>0) {
+                                        $('.badgecomunportaria').html('<span class="badge bg-red">'+viewsportaria+'</span>');
+                                        $('.badgecomunportariahome').html('<span class="badge bg-red">'+viewsportaria+'</span>');
+                                    }else{
+                                        $('.badgecomunportaria').hide();
+                                        $('.badgecomunportariahome').hide();
+                                    }
+                                }
+
+                                // inserir badge de não lidos comunicado morador
+                                if (localStorage.getItem("portariaIdportaria")) {
+                                    var idportaria = localStorage.getItem("portariaIdportaria");
+                                } else{
+                                    var idportaria = "";
+                                }
+                                if (localStorage.getItem("moradorIdmorador")) {
+                                    var idmorador = localStorage.getItem("moradorIdmorador");
+                                } else{
+                                    var idmorador = "";
+                                }
+                                if (localStorage.getItem("sindicoIdsindico")) {
+                                    var idsindico = localStorage.getItem("sindicoIdsindico");
+                                } else{
+                                    var idsindico = "";
+                                }
+                                if (localStorage.getItem("administradoraIdadministradora")) {
+                                    var idadministradora = localStorage.getItem("administradoraIdadministradora");
+                                } else{
+                                    var idadministradora = "";
+                                }
+                                if (localStorage.getItem("moradorIddomicilio")) {
+                                    var iddomicilio = localStorage.getItem("moradorIddomicilio");
+                                } else{
+                                    var iddomicilio = "";
+                                }
+                                if (localStorage.getItem("moradorIdbloco")) {
+                                    var idbloco = localStorage.getItem("moradorIdbloco");
+                                } else{
+                                    var idbloco = "";
+                                }
+                                if (localStorage.getItem("moradorIdmorador")) {
+                                    var iddestino = localStorage.getItem("moradorIdmorador");
+                                } else{
+                                    var iddestino = "";
+                                }
+
+                                $.ajax({
+                                    url: $server+"functionAppComunMorador.php?idcondominio="+localStorage.getItem("condominioId")+"&limit="+itemsPerLoad+"&offset="+lastIndex+"&idadministradora="+idadministradora+"&iddestino="+iddestino+"&idmorador="+idmorador+"&idbloco="+idbloco+"&iddomicilio="+iddomicilio+"&idsindico="+idsindico+"&idportaria="+idportaria+"&action=list",
+                                    dataType : "json",
+                                    async: true,
+                                    success: function(data) {
+                                        //console.log(data);
+                                        if (data!=null) {
+                                            myApp.hideIndicator();
+                                            var datacomunicado = "";
+                                            var delcomunportaria = "";
+                                            var swipeout = "";
+                                            var invisivel = "invisivel";
+                                            var qtd = data.comunicado.length;
+                                            
+                                            var textbold = "";
+
+                                            for (var i = 0; i < qtd; i++) {
+
+                                                // soma comunicados nao lidos
+                                                if (data.comunicado[i].view==0) {
+                                                    viewsmorador++
+                                                }
+                                            }
+                                            localStorage.setItem("viewsmorador",viewsmorador);
+                                            console.log("viewsmorador = "+viewsmorador);
+                                            if (viewsmorador>0) {
+                                                $('.badgecomunmorador').html('<span class="badge bg-red">'+viewsmorador+'</span>');
+                                            }else{
+                                                $('.badgecomunmorador').hide();
+                                            }
+                                        }
+
+                                        var totalviews = 0;
+                                        var comuncomunicadonotviews = localStorage.getItem("viewscondominio") ? localStorage.getItem("viewscondominio") : 0;
+                                        var comuncomunportarianotviews = localStorage.getItem("viewsportaria") ? localStorage.getItem("viewsportaria") : 0;
+                                        var comuncomunmoradornotviews = localStorage.getItem("viewsmorador") ? localStorage.getItem("viewsmorador") : 0;
+                                        totalviews = parseInt(comuncomunicadonotviews) + parseInt(comuncomunportarianotviews) + parseInt(comuncomunmoradornotviews);
+                                        console.log("comuncomunicadonotviews "+comuncomunicadonotviews);
+                                        console.log("comuncomunportarianotviews "+comuncomunportarianotviews);
+                                        console.log("comuncomunmoradornotviews "+comuncomunmoradornotviews);
+                                        
+                                        if (totalviews>0) {
+                                            //coloca numero de nao visualizados
+                                            $('.badgecomunicado').html('<span class="badge bg-red">'+totalviews+'</span>');
+                                        }else{
+                                            $('.badgecomunicado span').hide();
+                                        }
+                                        
+                                    },error: function(data) {
+
+                                    }
+                                });
+
+                                var totalviews = 0;
+                                var comuncomunicadonotviews = localStorage.getItem("viewscondominio") ? localStorage.getItem("viewscondominio") : 0;
+                                var comuncomunportarianotviews = localStorage.getItem("viewsportaria") ? localStorage.getItem("viewsportaria") : 0;
+                                var comuncomunmoradornotviews = localStorage.getItem("viewsmorador") ? localStorage.getItem("viewsmorador") : 0;
+                                totalviews = parseInt(comuncomunicadonotviews) + parseInt(comuncomunportarianotviews) + parseInt(comuncomunmoradornotviews);
+                                console.log("comuncomunicadonotviews "+comuncomunicadonotviews);
+                                console.log("comuncomunportarianotviews "+comuncomunportarianotviews);
+                                console.log("comuncomunmoradornotviews "+comuncomunmoradornotviews);
+                                
+                                if (totalviews>0) {
+                                    //coloca numero de nao visualizados
+                                    $('.badgecomunicado').html('<span class="badge bg-red">'+totalviews+'</span>');
+                                }else{
+                                    $('.badgecomunicado span').hide();
+                                } 
+                                
+                            },error: function(data) {
+
+                            }
+                        });
+
+                        var totalviews = 0;
+                        var comuncomunicadonotviews = localStorage.getItem("viewscondominio") ? localStorage.getItem("viewscondominio") : 0;
+                        var comuncomunportarianotviews = localStorage.getItem("viewsportaria") ? localStorage.getItem("viewsportaria") : 0;
+                        var comuncomunmoradornotviews = localStorage.getItem("viewsmorador") ? localStorage.getItem("viewsmorador") : 0;
+                        totalviews = parseInt(comuncomunicadonotviews) + parseInt(comuncomunportarianotviews) + parseInt(comuncomunmoradornotviews);
+                        console.log("comuncomunicadonotviews "+comuncomunicadonotviews);
+                        console.log("comuncomunportarianotviews "+comuncomunportarianotviews);
+                        console.log("comuncomunmoradornotviews "+comuncomunmoradornotviews);
+                        
+                        if (totalviews>0) {
+                            //coloca numero de nao visualizados
+                            $('.badgecomunicado').html('<span class="badge bg-red">'+totalviews+'</span>');
+                        }else{
+                            $('.badgecomunicado span').hide();
+                        } 
+                    }else{
+                        var totalviews = 0;
+                        var comuncomunicadonotviews = localStorage.getItem("viewscondominio");
+                        console.log("comuncomunicadonotviews "+comuncomunicadonotviews);
+                        
+                        if (comuncomunicadonotviews>0) {
+                            //coloca numero de nao visualizados
+                            $('.badgecomunicado').html('<span class="badge bg-red">'+comuncomunicadonotviews+'</span>');
+                        }else{
+                            $('.badgecomunicado span').hide();
+                        }  
+                    }
+
+                },error: function(data) {
+
+
+                }
+            });
+        }else{
+
+            // inserir badge de não lidos comunicado portaria
+            if (localStorage.getItem("portariaIdportaria")) {
+                var idportaria = localStorage.getItem("portariaIdportaria");
+            } else{
+                var idportaria = "";
+            }
+            if (localStorage.getItem("moradorIdmorador")) {
+                var idmorador = localStorage.getItem("moradorIdmorador");
+            } else{
+                var idmorador = "";
+            }
+            if (localStorage.getItem("sindicoIdsindico")) {
+                var idsindico = localStorage.getItem("sindicoIdsindico");
+            } else{
+                var idsindico = "";
+            }
+            if (localStorage.getItem("administradoraIdadministradora")) {
+                var idadministradora = localStorage.getItem("administradoraIdadministradora");
+            } else{
+                var idadministradora = "";
+            }
+            if (localStorage.getItem("moradorIddomicilio")) {
+                var iddomicilio = localStorage.getItem("moradorIddomicilio");
+            } else{
+                var iddomicilio = "";
+            }
+            if (localStorage.getItem("moradorIdbloco")) {
+                var idbloco = localStorage.getItem("moradorIdbloco");
+            } else{
+                var idbloco = "";
+            }
+            if (localStorage.getItem("moradorIdmorador")) {
+                var iddestino = localStorage.getItem("moradorIdmorador");
+            } else{
+                var iddestino = "";
+            }
+
+            $.ajax({
+                url: $server+"functionAppComunPortaria.php?idcondominio="+localStorage.getItem("condominioId")+"&limit="+itemsPerLoad+"&offset="+lastIndex+"&idadministradora="+idadministradora+"&iddestino="+iddestino+"&idmorador="+idmorador+"&idbloco="+idbloco+"&iddomicilio="+iddomicilio+"&idsindico="+idsindico+"&idportaria="+idportaria+"&action=list",
+                dataType : "json",
+                async: true,
+                success: function(data) {
+                    //console.log(data);
+                    if (data!=null) {
+                        myApp.hideIndicator();
+                        var datacomunicado = "";
+                        var delcomunportaria = "";
+                        var swipeout = "";
+                        var invisivel = "invisivel";
+                        var qtd = data.comunicado.length;
+                        
+                        var textbold = "";
+
+                        for (var i = 0; i < qtd; i++) {
+
+                            // soma comunicados nao lidos
+                            if (data.comunicado[i].view==0) {
+                                viewsportaria++
+                            }
+                        }
+                        localStorage.setItem("viewsportaria",viewsportaria);
+                        console.log("viewsportaria = "+viewsportaria);
+                        if (viewsportaria>0) {
+                            $('.badgecomunportaria').html('<span class="badge bg-red">'+viewsportaria+'</span>');
+                            $('.badgecomunportariahome').html('<span class="badge bg-red">'+viewsportaria+'</span>');
+                        }else{
+                            $('.badgecomunportaria').hide();
+                            $('.badgecomunportariahome').hide();
+                        }
+                    }
+                },error: function(data) {
+
+                }
+            });
+
+        }
+
+    if (!localStorage.getItem("portariaIdportaria")) {
+        // badge ocorrencias
+
+        if (localStorage.getItem("moradorIdmorador")) {
+            idmorador = localStorage.getItem("moradorIdmorador");
+            idsindico = "";
+            idadministradora = "";
+        }
+        if (localStorage.getItem("sindicoIdsindico") && localStorage.getItem("moradorIdmorador")) {
+            idmorador = localStorage.getItem("moradorIdmorador");
+            idsindico = localStorage.getItem("sindicoIdsindico");
+            idadministradora = "";
+        } else if (localStorage.getItem("administradoraIdadministradora") && localStorage.getItem("moradorIdmorador")) {
+            idmorador = "";
+            idsindico = "";
+            idadministradora = localStorage.getItem("administradoraIdadministradora");
+        } else if (localStorage.getItem("administradoraIdadministradora")){
+            idmorador = "";
+            idsindico = "";
+            idadministradora = localStorage.getItem("administradoraIdadministradora");
+        }
+
+        idcondominio = localStorage.getItem("condominioId");
+
+        var viewsocorrencias = 0;
+
+        $.ajax({
+            url: $server+"functionAppOcorrencia.php?idmorador="+idmorador+"&idsindico="+idsindico+"&idadministradora="+idadministradora+"&idcondominio="+idcondominio+"&action=list",
+            dataType : "json",
+            success: function(data) {
+                if (data!=null) {
+                    var dataocorrencia = "";
+                    var qtd = data.ocorrencia.length;
+                    var delocorrencia = "";
+                    var swipeout = "";
+                    var invisivel = "invisivel";
+                    var view = "";
+                    var textbold = "";
+
+                    for (var i = 0; i < qtd; i++) {
+                        // soma ocorrencias nao lidas
+                        if (data.ocorrencia[i].views==0) {
+                            viewsocorrencias++
+                        }
+                    }
+
+                    if (viewsocorrencias>0) {
+                        $('.badgeocorrencia').html('<span class="badge bg-red">'+viewsocorrencias+'</span>');
+                    }else{
+                        $('.badgeocorrencia span').hide();
+                    }
+
+                }
+            },error: function(data) {
+
+
+            }
+        });
+    }
+
+}
+
+myApp.onPageInit('index', function (page) {
+        
+    if (localStorage.getItem("portariaIdportaria")) {
+        console.log("onPageInit Portaria");
         // seleciona dashboard portaria
         $$('.pageindex').addClass('invisivel');
         $$('.pageportaria').removeClass('invisivel');
@@ -457,12 +940,12 @@ function videos(){
                                     '<a href="#exibevideos" '+videoZoom+' class="item-link">'+
                                         '<div class="card-content">'+
                                             '<i class="fa zoomVideo fa-youtube-play fa-3x"></i>'+
-                                            '<img src="http://i.ytimg.com/vi/'+item.id.videoId+'/mqdefault.jpg" width="100%">'+
+                                            '<img src="https://i.ytimg.com/vi/'+item.id.videoId+'/mqdefault.jpg" width="100%">'+
                                         '</div>'+
                                     '</a>'+
                                     '<div class="card-header">'+
                                         '<div class="ks-facebook-avatar"><img src="https://yt3.ggpht.com/-jxyjMXngpPE/AAAAAAAAAAI/AAAAAAAAAAA/9BdjsAA14uw/s50-c-k-no-mo-rj-c0xffffff/photo.jpg" width="34"></div>'+
-                                            '<div class="ks-facebook-name">Aptohome</div>'+
+                                            '<div class="ks-facebook-name">'+$nameapp+'</div>'+
                                             '<div class="ks-facebook-date">'+item.snippet.title+'</div>'+
                                             //'<div class="ks-facebook-date">'+moment(item.snippet.publishedAt).locale('pt-br').format('llll')+'</div>'+
                                             //'<div class="color-indigo" onClick="shareVideoCont(\''+datayoutube+'\');"><i class="icon shareVideoCont fa fa-share-alt fa-lg"></i></div>'+
@@ -508,100 +991,265 @@ $$('#entrar').on('click', function(){
     
     myApp.showIndicator();
 
-        onDeviceReady();
+        // habilita teste local
+        if ($$testelocal==false) {
+            onDeviceReady();
+        }
 
         $.ajax({
             url: $$url,
             dataType: "json",
             success: function(data){
-            myApp.hideIndicator();
-            console.log(data);
-            if (data.login.morador && data.login.sindico) {
+                myApp.hideIndicator();
+                console.log(data);
+                if (data.login.morador && data.login.sindico) {
 
-                $i = 0;
-                var arrayCondominioId = [];
+                    $i = 0;
+                    var arrayCondominioId = [];
 
-                console.log("morador sindico");
-                var block=0;
-               $$.each(data.login.morador, function (chave,dados)
-                {   
-                    if (dados.condominio_active==1) {
-                        localStorage.setItem("moradorNome", dados.name);
-                        localStorage.setItem("moradorIdmorador", dados.idmorador);
-                        localStorage.setItem("moradorIdsindico", dados.idsindico);
-                        localStorage.setItem("moradorIdadministradora", dados.idadministradora);
-                        localStorage.setItem("condominioId", dados.idcondominio);
-                        localStorage.setItem("moradorIdCondominio", dados.idcondominio);
-                        localStorage.setItem("moradorIdbloco", dados.idbloco);
-                        localStorage.setItem("moradorIddomicilio", dados.iddomicilio);
-                        localStorage.setItem("condominioNome", dados.condominio_nome);
-                        localStorage.setItem("condominioStreet", dados.condominio_street);
-                        localStorage.setItem("condominioNumber", dados.condominio_number);
-                        localStorage.setItem("condominioDistrict", dados.condominio_district);
-                        localStorage.setItem("condominioCityname", dados.condominio_cityname);
-                        localStorage.setItem("condominioUf", dados.condominio_uf);
-                        localStorage.setItem("blocoNum", dados.bloco_num);
-                        localStorage.setItem("domicilioNum", dados.domicilio_num);
-                        localStorage.setItem("profileImage", dados.profile_image);
-                        //localStorage.setItem("profileImageGuid", dados.profile_image_guid);
-                        localStorage.setItem("guid", dados.morador_guid);
+                    console.log("morador sindico");
+                    var block=0;
+                   $$.each(data.login.morador, function (chave,dados)
+                    {   
+                        if (dados.condominio_active==1) {
+                            localStorage.setItem("moradorNome", dados.name);
+                            localStorage.setItem("moradorIdmorador", dados.idmorador);
+                            localStorage.setItem("moradorIdsindico", dados.idsindico);
+                            localStorage.setItem("moradorIdadministradora", dados.idadministradora);
+                            localStorage.setItem("condominioId", dados.idcondominio);
+                            localStorage.setItem("moradorIdCondominio", dados.idcondominio);
+                            localStorage.setItem("moradorIdbloco", dados.idbloco);
+                            localStorage.setItem("moradorIddomicilio", dados.iddomicilio);
+                            localStorage.setItem("condominioNome", dados.condominio_nome);
+                            localStorage.setItem("condominioStreet", dados.condominio_street);
+                            localStorage.setItem("condominioNumber", dados.condominio_number);
+                            localStorage.setItem("condominioDistrict", dados.condominio_district);
+                            localStorage.setItem("condominioCityname", dados.condominio_cityname);
+                            localStorage.setItem("condominioUf", dados.condominio_uf);
+                            localStorage.setItem("blocoNum", dados.bloco_num);
+                            localStorage.setItem("domicilioNum", dados.domicilio_num);
+                            localStorage.setItem("profileImage", dados.profile_image);
+                            //localStorage.setItem("profileImageGuid", dados.profile_image_guid);
+                            localStorage.setItem("guid", dados.morador_guid);
 
-                        //profile();
-                        
-                        atualizartoken();
-                        //popupBanner();
+                            //profile();
+                            
+                            atualizartoken();
+                            //popupBanner();
 
-                        if (dados.email!="") {
-                        myApp.closeModal(".login-screen");
+                            if (dados.email!="") {
+                            myApp.closeModal(".login-screen");
+                            }
+                        }else{
+                            myApp.hideIndicator();
+                            myApp.alert('Condomínio bloqueado! Favor entrar em contato com o Suporte.');
+                            block=1;
                         }
-                    }else{
-                        myApp.hideIndicator();
-                        myApp.alert('Condomínio bloqueado! Favor entrar em contato com o Aptohome.');
-                        block=1;
-                    }
-                });
+                    });
 
-                if (block==0) {
+                    if (block==0) {
+                        $$.each(data.login.sindico, function (chave,dados)
+                        {
+                                localStorage.setItem("sindicoEmail", dados.email);
+                                localStorage.setItem("sindicoNome", dados.name);
+                                localStorage.setItem("sindicoIdsindico", dados.idsindico);
+                                localStorage.setItem("profileImage", dados.profile_image);
+                                //localStorage.setItem("sindicoProfileImage", dados.profile_image);
+                                localStorage.setItem("profileImageGuid", dados.profile_image_guid);
+                                //localStorage.setItem("sindicoProfileImageGuid", dados.profile_image_guid);
+                                localStorage.setItem("sindicoGuid", dados.idsindico_guid);
+
+                                //localStorage.setItem("sindicoIdbloco", dados.bloco.idbloco);
+                                //localStorage.setItem("blocoNum", dados.condominio.bloco_num);
+                                //localStorage.setItem("sindicoCondominioId", dados.condominio[0].idcondominio);
+                                /*localStorage.setItem("sindicoCondominioNome", dados.condominio[0].condominio_nome);
+                                localStorage.setItem("sindicoCondominioStreet", dados.condominio[0].condominio_street);
+                                localStorage.setItem("sindicoCondominioNumber", dados.condominio[0].condominio_number);
+                                localStorage.setItem("sindicoCondominioDistrict", dados.condominio[0].condominio_district);
+                                localStorage.setItem("sindicoCondominioCityname", dados.condominio[0].condominio_cityname);
+                                localStorage.setItem("sindicoCondominioUf", dados.condominio[0].condominio_uf);*/
+
+                                localStorage.setItem("sindicoCondominioId", dados.condominio[0].idcondominio);
+                                localStorage.setItem("sindicoCondominioNome", localStorage.getItem("condominioNome"));
+                                localStorage.setItem("sindicoCondominioStreet", localStorage.getItem("condominioStreet"));
+                                localStorage.setItem("sindicoCondominioNumber", localStorage.getItem("condominioNumber"));
+                                localStorage.setItem("sindicoCondominioDistrict", localStorage.getItem("condominioDistrict"));
+                                localStorage.setItem("sindicoCondominioCityname", localStorage.getItem("condominioCityname"));
+                                localStorage.setItem("sindicoCondominioUf", localStorage.getItem("condominioUf"));                    
+                                
+                                atualizartokenSindico();
+
+                                for (var i = 0; i < dados.condominio.length; i++) {
+                                    arrayCondominioId.push(dados.condominio[i].idcondominio);
+                                    //console.log(arrayCondominioId);
+                                };
+
+                                if (dados.condominio.length>1) {
+                                //console.log(arrayCondominioId);
+                                    localStorage.setItem("sindicoArrayCondominioId", arrayCondominioId);
+                                }
+
+                                if (dados.email!="") {
+                                myApp.closeModal(".login-screen");
+                                }
+                                $i++;
+
+                        });
+
+         
+
+                        $.ajax({
+                            url: $server+"functionAppSindico.php?idcondominio="+localStorage.getItem('sindicoArrayCondominioId')+"&action=listCondominioSindico",
+                            dataType : "json",
+                            success: function(data) {
+                                    var listCond = '<div class="page" data-page="sindicoListCond">'+
+                                                    '<div class="navbar">'+
+                                                        '<div class="navbar-inner">'+
+                                                          '<div class="left"><a href="#" class="open-panel link icon-only"><i class="icon icon-bars"></i></a></div>'+
+                                                            '<div class="center">SELECIONE UM CONDOMÍNIO</div>'+
+                                                            '<div class="right"><a href="#" class="back link icon-only"><i class="icon icon-back"></i></a></div>'+
+                                                            '<div class="right no-margin"><a href="#index" class="link icon-only"><i class="icon fa fa-home"></i></a></div>'+
+                                                        '</div>'+
+                                                    '</div>'+
+                                                    '<form data-search-list=".search-here" data-search-in=".item-title" class="searchbar searchbar-init toolbar tabbar submenulistcond">'+
+                                                      '<div class="searchbar-input">'+
+                                                        '<input type="search" class="inputsearchlistcond" placeholder="Nome do condomínio">'+
+                                                        '<a href="#" class="searchbar-clear"></a>'+
+                                                      '</div>'+
+                                                    '</form>'+
+                                                      '<div class="page-content">'+
+                                                        '<div class="list-block list-block-search-listcond searchbar-found">'+
+                                                          '<ul>';
+                                    
+                                $$.each(data.condominio, function (chave,dados)
+                                {
+                                            listCond += '<li><a href="#" onclick="updateCond('+dados.idcondominio+');" class="listCond item-link list-button"><div class="item-inner">Cond. '+dados.condominio_nome+'</div></li>';
+                                });
+                                        listCond +=  '</ul>'+
+                                                            '</div>'+
+                                                          '</div>'+
+                                                        '</div>';
+                                localStorage.setItem("sindicoListCond", listCond);
+                                   
+                            },error: function(data) {
+                            }
+                        });
+
+                        profileSindico();
+                    }
+
+                } else if (data.login.morador) {
+                    console.log("morador");
+                    $$.each(data.login.morador, function (chave,dados)
+                    {
+                        if (dados.condominio_active==1) {
+                            localStorage.setItem("moradorEmail", dados.email);
+                            localStorage.setItem("moradorNome", dados.name);
+                            localStorage.setItem("moradorIdmorador", dados.idmorador);
+                            localStorage.setItem("moradorIdsindico", dados.idsindico);
+                            localStorage.setItem("moradorIdadministradora", dados.idadministradora);
+                            localStorage.setItem("condominioId", dados.idcondominio);
+                            localStorage.setItem("moradorIdCondominio", dados.idcondominio);
+                            localStorage.setItem("moradorIdbloco", dados.idbloco);
+                            localStorage.setItem("moradorIddomicilio", dados.iddomicilio);
+                            localStorage.setItem("condominioNome", dados.condominio_nome);
+                            localStorage.setItem("condominioStreet", dados.condominio_street);
+                            localStorage.setItem("condominioNumber", dados.condominio_number);
+                            localStorage.setItem("condominioDistrict", dados.condominio_district);
+                            localStorage.setItem("condominioCityname", dados.condominio_cityname);
+                            localStorage.setItem("condominioUf", dados.condominio_uf);
+                            localStorage.setItem("blocoNum", dados.bloco_num);
+                            localStorage.setItem("domicilioNum", dados.domicilio_num);
+                            localStorage.setItem("profileImage", dados.profile_image);
+                            localStorage.setItem("profileImageGuid", dados.profile_image_guid);
+                            localStorage.setItem("guid", dados.morador_guid);
+
+                            profile();
+                            //popupBanner();
+                            atualizartoken();
+                            
+                            if (dados.email!="") {
+                            myApp.closeModal(".login-screen");
+                            }
+                        }else{
+                            myApp.hideIndicator();
+                            myApp.alert('Condomínio bloqueado! Favor entrar em contato com o Suporte.');
+                        }
+                    });
+                } else if (data.login.sindico) {
+
+                $('.menualerta').addClass('invisivel');
+                $('.menucadastros').addClass('invisivel');
+                
+                console.log("sindico");
+                
+                    $i = 0;
+                    var arrayCondominioId = [];
                     $$.each(data.login.sindico, function (chave,dados)
                     {
                             localStorage.setItem("sindicoEmail", dados.email);
                             localStorage.setItem("sindicoNome", dados.name);
                             localStorage.setItem("sindicoIdsindico", dados.idsindico);
-                            localStorage.setItem("profileImage", dados.profile_image);
                             //localStorage.setItem("sindicoProfileImage", dados.profile_image);
-                            localStorage.setItem("profileImageGuid", dados.profile_image_guid);
                             //localStorage.setItem("sindicoProfileImageGuid", dados.profile_image_guid);
+                            localStorage.setItem("profileImage", dados.profile_image);
+                            localStorage.setItem("profileImageGuid", dados.profile_image_guid);
                             localStorage.setItem("sindicoGuid", dados.idsindico_guid);
-
+                            localStorage.setItem("condominioId", dados.condominio[0].idcondominio);
                             //localStorage.setItem("sindicoIdbloco", dados.bloco.idbloco);
                             //localStorage.setItem("blocoNum", dados.condominio.bloco_num);
-                            //localStorage.setItem("sindicoCondominioId", dados.condominio[0].idcondominio);
-                            /*localStorage.setItem("sindicoCondominioNome", dados.condominio[0].condominio_nome);
+
+                            localStorage.setItem("sindicoCondominioId", dados.condominio[0].idcondominio);
+                            localStorage.setItem("sindicoCondominioNome", dados.condominio[0].condominio_nome);
                             localStorage.setItem("sindicoCondominioStreet", dados.condominio[0].condominio_street);
                             localStorage.setItem("sindicoCondominioNumber", dados.condominio[0].condominio_number);
                             localStorage.setItem("sindicoCondominioDistrict", dados.condominio[0].condominio_district);
                             localStorage.setItem("sindicoCondominioCityname", dados.condominio[0].condominio_cityname);
-                            localStorage.setItem("sindicoCondominioUf", dados.condominio[0].condominio_uf);*/
-
-                            localStorage.setItem("sindicoCondominioId", dados.condominio[0].idcondominio);
-                            localStorage.setItem("sindicoCondominioNome", localStorage.getItem("condominioNome"));
-                            localStorage.setItem("sindicoCondominioStreet", localStorage.getItem("condominioStreet"));
-                            localStorage.setItem("sindicoCondominioNumber", localStorage.getItem("condominioNumber"));
-                            localStorage.setItem("sindicoCondominioDistrict", localStorage.getItem("condominioDistrict"));
-                            localStorage.setItem("sindicoCondominioCityname", localStorage.getItem("condominioCityname"));
-                            localStorage.setItem("sindicoCondominioUf", localStorage.getItem("condominioUf"));                    
-                            
-                            atualizartokenSindico();
+                            localStorage.setItem("sindicoCondominioUf", dados.condominio[0].condominio_uf);
 
                             for (var i = 0; i < dados.condominio.length; i++) {
                                 arrayCondominioId.push(dados.condominio[i].idcondominio);
                                 //console.log(arrayCondominioId);
                             };
-
                             if (dados.condominio.length>1) {
                             //console.log(arrayCondominioId);
                                 localStorage.setItem("sindicoArrayCondominioId", arrayCondominioId);
                             }
+
+                            $.ajax({
+                                url: $server+"functionAppSindico.php?idcondominio="+localStorage.getItem('sindicoArrayCondominioId')+"&action=listCondominioSindico",
+                                dataType : "json",
+                                success: function(data) {
+                                    var listCond = '<div class="page" data-page="sindicoListCond">'+
+                                                    '<div class="navbar">'+
+                                                        '<div class="navbar-inner">'+
+                                                          '<div class="left"><a href="#" class="open-panel link icon-only"><i class="icon icon-bars"></i></a></div>'+
+                                                            '<div class="center">SELECIONE UM CONDOMÍNIO</div>'+
+                                                            '<div class="right"><a href="#" class="back link icon-only"><i class="icon icon-back"></i></a></div>'+
+                                                            '<div class="right no-margin"><a href="#index" class="link icon-only"><i class="icon fa fa-home"></i></a></div>'+
+                                                        '</div>'+
+                                                    '</div>'+
+                                                      '<div class="page-content">'+
+                                                        '<div class="list-block">'+
+                                                          '<ul>';
+                                    
+                                $$.each(data.condominio, function (chave,dados)
+                                {
+                                            listCond += '<li><a href="#" onclick="updateCond('+dados.idcondominio+');" class="listCond item-link list-button"><div class="item-inner">Cond. '+dados.condominio_nome+'</div></li>';
+                                });
+                                        listCond +=  '</ul>'+
+                                                            '</div>'+
+                                                          '</div>'+
+                                                        '</div>';
+                                localStorage.setItem("sindicoListCond", listCond);
+                                       
+                                },error: function(data) {
+                                }
+                            });
+
+                            profileSindico();
+                            //popupBanner();
+                            atualizartokenSindico();
 
                             if (dados.email!="") {
                             myApp.closeModal(".login-screen");
@@ -609,289 +1257,132 @@ $$('#entrar').on('click', function(){
                             $i++;
 
                     });
+                } else if (data.login.administradora) {
 
-     
+                    $i = 0;
+                    var arrayCondominioId = [];
+                    $$.each(data.login.administradora, function (chave,dados)
+                    {
 
-                    $.ajax({
-                        url: $server+"functionAppSindico.php?idcondominio="+localStorage.getItem('sindicoArrayCondominioId')+"&action=listCondominioSindico",
-                        dataType : "json",
-                        success: function(data) {
-                                var listCond = '<div class="page" data-page="sindicoListCond">'+
-                                                '<div class="navbar">'+
-                                                    '<div class="navbar-inner">'+
-                                                      '<div class="left"><a href="#" class="open-panel link icon-only"><i class="icon icon-bars"></i></a></div>'+
-                                                        '<div class="center">SELECIONE UM CONDOMÍNIO</div>'+
-                                                        '<div class="right"><a href="#" class="back link icon-only"><i class="icon icon-back"></i></a></div>'+
-                                                        '<div class="right no-margin"><a href="#index" class="link icon-only"><i class="icon fa fa-home"></i></a></div>'+
-                                                    '</div>'+
-                                                '</div>'+
-                                                  '<div class="page-content">'+
-                                                    '<div class="list-block">'+
-                                                      '<ul>';
-                                
-                            $$.each(data.condominio, function (chave,dados)
-                            {
-                                        listCond += '<li><a href="#" onclick="updateCond('+dados.idcondominio+');" class="listCond item-link list-button"><div class="item-inner">Cond. '+dados.condominio_nome+'</div></li>';
-                            });
-                                    listCond +=  '</ul>'+
+                            localStorage.setItem("administradoraEmail", dados.email);
+                            localStorage.setItem("administradoraNome", dados.nome_fantasia);
+                            localStorage.setItem("administradoraIdadministradora", dados.idadministradora);
+                            //localStorage.setItem("administradoraProfileImage", dados.profile_image);
+                            //localStorage.setItem("administradoraProfileImageGuid", dados.profile_image_guid);
+                            localStorage.setItem("profileImage", dados.profile_image);
+                            localStorage.setItem("profileImageGuid", dados.profile_image_guid);
+                            localStorage.setItem("administradoraGuid", dados.idadministradora_guid);
+                            localStorage.setItem("condominioId", dados.condominio[0].idcondominio);
+                            //localStorage.setItem("sindicoIdbloco", dados.bloco.idbloco);
+                            //localStorage.setItem("blocoNum", dados.condominio.bloco_num);
+                            
+                            localStorage.setItem("administradoraCondominioId", dados.condominio[0].idcondominio);
+                            localStorage.setItem("administradoraCondominioNome", dados.condominio[0].condominio_nome);
+                            localStorage.setItem("administradoraCondominioStreet", dados.condominio[0].condominio_street);
+                            localStorage.setItem("administradoraCondominioNumber", dados.condominio[0].condominio_number);
+                            localStorage.setItem("administradoraCondominioDistrict", dados.condominio[0].condominio_district);
+                            localStorage.setItem("administradoraCondominioCityname", dados.condominio[0].condominio_cityname);
+                            localStorage.setItem("administradoraCondominioUf", dados.condominio[0].condominio_uf);
+
+                            for (var i = 0; i < dados.condominio.length; i++) {
+                                arrayCondominioId.push(dados.condominio[i].idcondominio);
+                                //console.log(arrayCondominioId);
+                            };
+                            if (dados.condominio.length>1) {
+                            //console.log(arrayCondominioId);
+                                localStorage.setItem("administradoraArrayCondominioId", arrayCondominioId);
+                            }
+
+                            $.ajax({
+                                url: $server+"functionAppAdministradora.php?idcondominio="+localStorage.getItem('administradoraArrayCondominioId')+"&action=listCondominioAdministradora",
+                                dataType : "json",
+                                success: function(data) {
+
+                                    var listCond = '<div class="page" data-page="sindicoListCond">'+
+                                                    '<div class="navbar">'+
+                                                        '<div class="navbar-inner">'+
+                                                          '<div class="left"><a href="#" class="open-panel link icon-only"><i class="icon icon-bars"></i></a></div>'+
+                                                            '<div class="center">SELECIONE UM CONDOMÍNIO</div>'+
+                                                            '<div class="right"><a href="#" class="back link icon-only"><i class="icon icon-back"></i></a></div>'+
+                                                            '<div class="right no-margin"><a href="#index" class="link icon-only"><i class="icon fa fa-home"></i></a></div>'+
                                                         '</div>'+
-                                                      '</div>'+
-                                                    '</div>';
-                            localStorage.setItem("sindicoListCond", listCond);
-                               
-                        },error: function(data) {
+                                                    '</div>'+
+                                                      '<div class="page-content">'+
+                                                        '<div class="list-block">'+
+                                                          '<ul>';
+                                    
+                                $$.each(data.condominio, function (chave,dados)
+                                {
+                                            listCond += '<li><a href="#" onclick="updateCondAdministradora('+dados.idcondominio+');" class="listCond item-link list-button"><div class="item-inner">Cond. '+dados.condominio_nome+'</div></li>';
+                                });
+                                        listCond +=  '</ul>'+
+                                                            '</div>'+
+                                                          '</div>'+
+                                                        '</div>';
+                                localStorage.setItem("administradoraListCond", listCond);
+
+                                },error: function(data) {
+                                }
+                            });
+
+                            profileAdministradora();
+                            //popupBanner();
+                            atualizartokenAdministradora();
+
+                            if (dados.email!="") {
+                            myApp.closeModal(".login-screen");
+                            }
+                            $i++;
+
+                    });
+                } else if (data.login.portaria) {
+
+                    // girar tela para landscape 
+                    //onlandscape();
+
+                    $$.each(data.login.portaria, function (chave,dados)
+                    {
+                        if (dados.condominio_active==1) {
+                            localStorage.setItem("portariaEmail", dados.email);
+                            localStorage.setItem("portariaNome", dados.name);
+                            localStorage.setItem("portariaIdportaria", dados.idportaria);
+                            localStorage.setItem("condominioId", dados.idcondominio);
+                            //localStorage.setItem("portariaIdbloco", dados.idbloco);
+                            localStorage.setItem("condominioNome", dados.condominio_nome);
+                            localStorage.setItem("condominioStreet", dados.condominio_street);
+                            localStorage.setItem("condominioNumber", dados.condominio_number);
+                            localStorage.setItem("condominioDistrict", dados.condominio_district);
+                            localStorage.setItem("condominioCityname", dados.condominio_cityname);
+                            localStorage.setItem("condominioUf", dados.condominio_uf);
+                            //localStorage.setItem("blocoNum", dados.bloco_num);
+                            localStorage.setItem("profileImage", dados.profile_image);
+                            localStorage.setItem("profileImageGuid", dados.profile_image_guid);
+                            localStorage.setItem("guid", dados.portaria_guid);
+
+                            profilePortaria();
+                            atualizartokenPortaria();
+                            
+                            if (dados.email!="") {
+                            myApp.closeModal(".login-screen");
+                            }
+                        }else{
+                            myApp.hideIndicator();
+                            myApp.alert('Condomínio bloqueado! Favor entrar em contato com o Suporte.');
                         }
                     });
-
-                    profileSindico();
+                } else {
+                    myApp.hideIndicator();
+                    myApp.alert('E-mail e/ou senha inválidos!');
                 }
 
-            } else if (data.login.morador) {
-                console.log("morador");
-                $$.each(data.login.morador, function (chave,dados)
-                {
-                    if (dados.condominio_active==1) {
-                        localStorage.setItem("moradorEmail", dados.email);
-                        localStorage.setItem("moradorNome", dados.name);
-                        localStorage.setItem("moradorIdmorador", dados.idmorador);
-                        localStorage.setItem("moradorIdsindico", dados.idsindico);
-                        localStorage.setItem("moradorIdadministradora", dados.idadministradora);
-                        localStorage.setItem("condominioId", dados.idcondominio);
-                        localStorage.setItem("moradorIdCondominio", dados.idcondominio);
-                        localStorage.setItem("moradorIdbloco", dados.idbloco);
-                        localStorage.setItem("moradorIddomicilio", dados.iddomicilio);
-                        localStorage.setItem("condominioNome", dados.condominio_nome);
-                        localStorage.setItem("condominioStreet", dados.condominio_street);
-                        localStorage.setItem("condominioNumber", dados.condominio_number);
-                        localStorage.setItem("condominioDistrict", dados.condominio_district);
-                        localStorage.setItem("condominioCityname", dados.condominio_cityname);
-                        localStorage.setItem("condominioUf", dados.condominio_uf);
-                        localStorage.setItem("blocoNum", dados.bloco_num);
-                        localStorage.setItem("domicilioNum", dados.domicilio_num);
-                        localStorage.setItem("profileImage", dados.profile_image);
-                        localStorage.setItem("profileImageGuid", dados.profile_image_guid);
-                        localStorage.setItem("guid", dados.morador_guid);
+                // chama desabilitar modulos //
+                modulos();
 
-                        profile();
-                        //popupBanner();
-                        atualizartoken();
-                        
-                        if (dados.email!="") {
-                        myApp.closeModal(".login-screen");
-                        }
-                    }else{
-                        myApp.hideIndicator();
-                        myApp.alert('Condomínio bloqueado! Favor entrar em contato com o Aptohome.'); 
-                    }
-                });
-            } else if (data.login.sindico) {
-
-            $('.menualerta').addClass('invisivel');
-            $('.menucadastros').addClass('invisivel');
-            
-            console.log("sindico");
-            
-                $i = 0;
-                var arrayCondominioId = [];
-                $$.each(data.login.sindico, function (chave,dados)
-                {
-                        localStorage.setItem("sindicoEmail", dados.email);
-                        localStorage.setItem("sindicoNome", dados.name);
-                        localStorage.setItem("sindicoIdsindico", dados.idsindico);
-                        //localStorage.setItem("sindicoProfileImage", dados.profile_image);
-                        //localStorage.setItem("sindicoProfileImageGuid", dados.profile_image_guid);
-                        localStorage.setItem("profileImage", dados.profile_image);
-                        localStorage.setItem("profileImageGuid", dados.profile_image_guid);
-                        localStorage.setItem("sindicoGuid", dados.idsindico_guid);
-                        localStorage.setItem("condominioId", dados.condominio[0].idcondominio);
-                        //localStorage.setItem("sindicoIdbloco", dados.bloco.idbloco);
-                        //localStorage.setItem("blocoNum", dados.condominio.bloco_num);
-                        //localStorage.setItem("sindicoCondominioId", dados.condominio[0].idcondominio);
-
-                        localStorage.setItem("sindicoCondominioId", dados.condominio[0].idcondominio);
-                        localStorage.setItem("sindicoCondominioNome", dados.condominio[0].condominio_nome);
-                        localStorage.setItem("sindicoCondominioStreet", dados.condominio[0].condominio_street);
-                        localStorage.setItem("sindicoCondominioNumber", dados.condominio[0].condominio_number);
-                        localStorage.setItem("sindicoCondominioDistrict", dados.condominio[0].condominio_district);
-                        localStorage.setItem("sindicoCondominioCityname", dados.condominio[0].condominio_cityname);
-                        localStorage.setItem("sindicoCondominioUf", dados.condominio[0].condominio_uf);
-
-                        for (var i = 0; i < dados.condominio.length; i++) {
-                            arrayCondominioId.push(dados.condominio[i].idcondominio);
-                            //console.log(arrayCondominioId);
-                        };
-                        if (dados.condominio.length>1) {
-                        //console.log(arrayCondominioId);
-                            localStorage.setItem("sindicoArrayCondominioId", arrayCondominioId);
-                        }
-
-                        $.ajax({
-                            url: $server+"functionAppSindico.php?idcondominio="+localStorage.getItem('sindicoArrayCondominioId')+"&action=listCondominioSindico",
-                            dataType : "json",
-                            success: function(data) {
-                                var listCond = '<div class="page" data-page="sindicoListCond">'+
-                                                '<div class="navbar">'+
-                                                    '<div class="navbar-inner">'+
-                                                      '<div class="left"><a href="#" class="open-panel link icon-only"><i class="icon icon-bars"></i></a></div>'+
-                                                        '<div class="center">SELECIONE UM CONDOMÍNIO</div>'+
-                                                        '<div class="right"><a href="#" class="back link icon-only"><i class="icon icon-back"></i></a></div>'+
-                                                        '<div class="right no-margin"><a href="#index" class="link icon-only"><i class="icon fa fa-home"></i></a></div>'+
-                                                    '</div>'+
-                                                '</div>'+
-                                                  '<div class="page-content">'+
-                                                    '<div class="list-block">'+
-                                                      '<ul>';
-                                
-                            $$.each(data.condominio, function (chave,dados)
-                            {
-                                        listCond += '<li><a href="#" onclick="updateCond('+dados.idcondominio+');" class="listCond item-link list-button"><div class="item-inner">Cond. '+dados.condominio_nome+'</div></li>';
-                            });
-                                    listCond +=  '</ul>'+
-                                                        '</div>'+
-                                                      '</div>'+
-                                                    '</div>';
-                            localStorage.setItem("sindicoListCond", listCond);
-                                   
-                            },error: function(data) {
-                            }
-                        });
-
-                        profileSindico();
-                        //popupBanner();
-                        atualizartokenSindico();
-
-                        if (dados.email!="") {
-                        myApp.closeModal(".login-screen");
-                        }
-                        $i++;
-
-                });
-            } else if (data.login.administradora) {
-
-                $i = 0;
-                var arrayCondominioId = [];
-                $$.each(data.login.administradora, function (chave,dados)
-                {
-
-                        localStorage.setItem("administradoraEmail", dados.email);
-                        localStorage.setItem("administradoraNome", dados.nome_fantasia);
-                        localStorage.setItem("administradoraIdadministradora", dados.idadministradora);
-                        //localStorage.setItem("administradoraProfileImage", dados.profile_image);
-                        //localStorage.setItem("administradoraProfileImageGuid", dados.profile_image_guid);
-                        localStorage.setItem("profileImage", dados.profile_image);
-                        localStorage.setItem("profileImageGuid", dados.profile_image_guid);
-                        localStorage.setItem("administradoraGuid", dados.idadministradora_guid);
-                        localStorage.setItem("condominioId", dados.condominio[0].idcondominio);
-                        //localStorage.setItem("sindicoIdbloco", dados.bloco.idbloco);
-                        //localStorage.setItem("blocoNum", dados.condominio.bloco_num);
-                        
-                        localStorage.setItem("administradoraCondominioId", dados.condominio[0].idcondominio);
-                        localStorage.setItem("administradoraCondominioNome", dados.condominio[0].condominio_nome);
-                        localStorage.setItem("administradoraCondominioStreet", dados.condominio[0].condominio_street);
-                        localStorage.setItem("administradoraCondominioNumber", dados.condominio[0].condominio_number);
-                        localStorage.setItem("administradoraCondominioDistrict", dados.condominio[0].condominio_district);
-                        localStorage.setItem("administradoraCondominioCityname", dados.condominio[0].condominio_cityname);
-                        localStorage.setItem("administradoraCondominioUf", dados.condominio[0].condominio_uf);
-
-                        for (var i = 0; i < dados.condominio.length; i++) {
-                            arrayCondominioId.push(dados.condominio[i].idcondominio);
-                            //console.log(arrayCondominioId);
-                        };
-                        if (dados.condominio.length>1) {
-                        //console.log(arrayCondominioId);
-                            localStorage.setItem("administradoraArrayCondominioId", arrayCondominioId);
-                        }
-
-                        $.ajax({
-                            url: $server+"functionAppAdministradora.php?idcondominio="+localStorage.getItem('administradoraArrayCondominioId')+"&action=listCondominioAdministradora",
-                            dataType : "json",
-                            success: function(data) {
-
-                                var listCond = '<div class="page" data-page="sindicoListCond">'+
-                                                '<div class="navbar">'+
-                                                    '<div class="navbar-inner">'+
-                                                      '<div class="left"><a href="#" class="open-panel link icon-only"><i class="icon icon-bars"></i></a></div>'+
-                                                        '<div class="center">SELECIONE UM CONDOMÍNIO</div>'+
-                                                        '<div class="right"><a href="#" class="back link icon-only"><i class="icon icon-back"></i></a></div>'+
-                                                        '<div class="right no-margin"><a href="#index" class="link icon-only"><i class="icon fa fa-home"></i></a></div>'+
-                                                    '</div>'+
-                                                '</div>'+
-                                                  '<div class="page-content">'+
-                                                    '<div class="list-block">'+
-                                                      '<ul>';
-                                
-                            $$.each(data.condominio, function (chave,dados)
-                            {
-                                        listCond += '<li><a href="#" onclick="updateCondAdministradora('+dados.idcondominio+');" class="listCond item-link list-button"><div class="item-inner">Cond. '+dados.condominio_nome+'</div></li>';
-                            });
-                                    listCond +=  '</ul>'+
-                                                        '</div>'+
-                                                      '</div>'+
-                                                    '</div>';
-                            localStorage.setItem("administradoraListCond", listCond);
-
-                            },error: function(data) {
-                            }
-                        });
-
-                        profileAdministradora();
-                        //popupBanner();
-                        atualizartokenAdministradora();
-
-                        if (dados.email!="") {
-                        myApp.closeModal(".login-screen");
-                        }
-                        $i++;
-
-                });
-            } else if (data.login.portaria) {
-
-                // girar tela para landscape 
-                //onlandscape();
-
-                $$.each(data.login.portaria, function (chave,dados)
-                {
-                    if (dados.condominio_active==1) {
-                        localStorage.setItem("portariaEmail", dados.email);
-                        localStorage.setItem("portariaNome", dados.name);
-                        localStorage.setItem("portariaIdportaria", dados.idportaria);
-                        localStorage.setItem("condominioId", dados.idcondominio);
-                        localStorage.setItem("portariaIdbloco", dados.idbloco);
-                        localStorage.setItem("condominioNome", dados.condominio_nome);
-                        localStorage.setItem("condominioStreet", dados.condominio_street);
-                        localStorage.setItem("condominioNumber", dados.condominio_number);
-                        localStorage.setItem("condominioDistrict", dados.condominio_district);
-                        localStorage.setItem("condominioCityname", dados.condominio_cityname);
-                        localStorage.setItem("condominioUf", dados.condominio_uf);
-                        localStorage.setItem("blocoNum", dados.bloco_num);
-                        localStorage.setItem("profileImage", dados.profile_image);
-                        localStorage.setItem("profileImageGuid", dados.profile_image_guid);
-                        localStorage.setItem("guid", dados.portaria_guid);
-
-                        profilePortaria();
-                        atualizartokenPortaria();
-                        
-                        if (dados.email!="") {
-                        myApp.closeModal(".login-screen");
-                        }
-                    }else{
-                        myApp.hideIndicator();
-                        myApp.alert('Condomínio bloqueado! Favor entrar em contato com o Aptohome.');    
-                    }
-                });
-            } else {
+            }
+             ,error:function(data){
                 myApp.hideIndicator();
                 myApp.alert('E-mail e/ou senha inválidos!');
-            }
-
-            // chama desabilitar modulos //
-            modulos();
-
-        }
-         ,error:function(data){
-            myApp.hideIndicator();
-            myApp.alert('E-mail e/ou senha inválidos!');
-         }
+             }
         });
 
 });
@@ -924,7 +1415,7 @@ function atualizartoken(data){
     setTimeout(function () {
         $.ajax($server+'functionAppMorador.php?', {
             type: "post",
-            data: "action=token&token="+localStorage.getItem("token")+"&plataform="+device.platform+"&guid="+localStorage.getItem("guid"),
+            data: "action=token&token="+localStorage.getItem("token")+"&version="+localStorage.getItem("version")+"&plataform="+device.platform+"&guid="+localStorage.getItem("guid"),
         })
         .fail(function() {
 
@@ -941,7 +1432,7 @@ function atualizartokenSindico(data){
     setTimeout(function () {
         $.ajax($server+'functionAppSindico.php?', {
             type: "post",
-            data: "action=token&token="+localStorage.getItem("token")+"&plataform="+device.platform+"&guid="+localStorage.getItem("sindicoGuid"),
+            data: "action=token&token="+localStorage.getItem("token")+"&version="+localStorage.getItem("version")+"&plataform="+device.platform+"&guid="+localStorage.getItem("sindicoGuid"),
         })
         .fail(function() {
 
@@ -959,7 +1450,7 @@ function atualizartokenAdministradora(data){
     setTimeout(function () {
         $.ajax($server+'functionAppAdministradora.php?', {
             type: "post",
-            data: "action=token&token="+localStorage.getItem("token")+"&plataform="+device.platform+"&guid="+localStorage.getItem("administradoraGuid"),
+            data: "action=token&token="+localStorage.getItem("token")+"&version="+localStorage.getItem("version")+"&plataform="+device.platform+"&guid="+localStorage.getItem("administradoraGuid"),
         })
         .fail(function() {
 
@@ -977,7 +1468,7 @@ function atualizartokenPortaria(data){
     setTimeout(function () {
         $.ajax($server+'functionAppPortaria.php?', {
             type: "post",
-            data: "action=token&token="+localStorage.getItem("token")+"&plataform="+device.platform+"&guid="+localStorage.getItem("guid"),
+            data: "action=token&token="+localStorage.getItem("token")+"&version="+localStorage.getItem("version")+"&plataform="+device.platform+"&guid="+localStorage.getItem("guid"),
         })
         .fail(function() {
 
@@ -993,31 +1484,42 @@ function atualizartokenPortaria(data){
 
 function sair() {
     myApp.confirm('Deseja realmente sair?', function () {
+        
+        if (!navigator.onLine) {
+            localStorage.clear();
+            window.location = "index.html";
+        }else{
 
-        if (localStorage.getItem("sindicoIdsindico") && localStorage.getItem("moradorIdmorador")) {
-            localStorage.setItem("sindicoIdsindico", "");
-            localStorage.setItem("moradorIdmorador", "");
-            atualizartokenSair();
-            atualizartokenSindicoSair();
+            if (localStorage.getItem("sindicoIdsindico") && localStorage.getItem("moradorIdmorador")) {
+                console.log("sair sindico morador");
+                localStorage.setItem("sindicoIdsindico", "");
+                localStorage.setItem("moradorIdmorador", "");
+                atualizartokenSair();
+                atualizartokenSindicoSair();
+            }
+            if (localStorage.getItem("portariaIdportaria")) {
+                console.log("sair portaria");
+                localStorage.setItem("portariaIdportaria", "");
+                atualizartokenPortariaSair();
+            }
+            if (localStorage.getItem("administradoraIdadministradora")) {
+                console.log("sair administradora");
+                localStorage.setItem("administradoraIdadministradora", "");
+                atualizartokenAdministradoraSair();
+            }
+            if (localStorage.getItem("sindicoIdsindico") && !localStorage.getItem("moradorIdmorador")) {
+                console.log("sair sindico e não morador");
+                localStorage.setItem("sindicoIdsindico", "");
+                atualizartokenSindicoSair();
+            }
+            if (!localStorage.getItem("sindicoIdsindico") && localStorage.getItem("moradorIdmorador")) {
+                console.log("sair morador");
+                localStorage.setItem("moradorIdmorador", "");
+                atualizartokenSair();
+            }
+            //localStorage.clear();
+            //window.location = "index.html";
         }
-        if (localStorage.getItem("portariaIdportaria")) {
-            localStorage.setItem("portariaIdportaria", "");
-            atualizartokenPortariaSair();
-        }
-        if (localStorage.getItem("administradoraIdadministradora")) {
-            localStorage.setItem("administradoraIdadministradora", "");
-            atualizartokenAdministradoraSair();
-        }
-        if (localStorage.getItem("sindicoIdsindico") && !localStorage.getItem("moradorIdmorador")) {
-            localStorage.setItem("sindicoIdsindico", "");
-            atualizartokenSindicoSair();
-        }
-        if (!localStorage.getItem("sindicoIdsindico") && localStorage.getItem("moradorIdmorador")) {
-            localStorage.setItem("moradorIdmorador", "");
-            atualizartokenSair();
-        }
-        //localStorage.clear();
-        //window.location = "index.html";
     });
 }
 
@@ -1096,126 +1598,239 @@ function atualizartokenPortariaSair(data){
 ///////////////////////////// logado ////////////////////////////
 
 function logado() {
-    
+var blocklogado=0;       
+
     if (localStorage.getItem("moradorIdmorador") && localStorage.getItem("sindicoIdsindico")) {
 
         $.ajax({
+            url: $server+"functionAppMorador.php?guid="+localStorage.getItem("guid")+"&idcondominio="+localStorage.getItem("condominioId")+"&action=list",
+            dataType : "json",
+            success: function(data) {
+                if (data.morador[0].condominioactive==1) {
+                    //console.log("active = "+data.morador[0].active);
+                    if (data.morador[0].active==1) {
+                        profileSindico();     
+                        myApp.closeModal(".login-screen");
+                        //popupBanner();
+                        console.log("morador/sindico");
+                        atualizartoken(localStorage.getItem("token"));
+                        atualizartokenSindico(localStorage.getItem("token"));
+                    }else{
+                        //sair do app
+                        if (localStorage.getItem("sindicoIdsindico") && localStorage.getItem("moradorIdmorador")) {
+                            localStorage.setItem("sindicoIdsindico", "");
+                            localStorage.setItem("moradorIdmorador", "");
+                            atualizartokenSair();
+                            atualizartokenSindicoSair();
+                        }
+                    }
+                }else{
+                    myApp.hideIndicator();
+                    myApp.confirm('Condomínio bloqueado! Favor entrar em contato com o Suporte.', function () {
+                        //myApp.alert('Condomínio bloqueado! Favor entrar em contato com o Suporte.');
+                        //sair do app
+                        if (localStorage.getItem("sindicoIdsindico") && localStorage.getItem("moradorIdmorador")) {
+                            localStorage.setItem("sindicoIdsindico", "");
+                            localStorage.setItem("moradorIdmorador", "");
+                            atualizartokenSair();
+                            atualizartokenSindicoSair();
+                            console.log("condominio bloqueado");
+                        }
+                        blocklogado=1;
+                    }, function () {
+                        //sair do app
+                        if (localStorage.getItem("sindicoIdsindico") && localStorage.getItem("moradorIdmorador")) {
+                            localStorage.setItem("sindicoIdsindico", "");
+                            localStorage.setItem("moradorIdmorador", "");
+                            atualizartokenSair();
+                            atualizartokenSindicoSair();
+                            console.log("condominio bloqueado");
+                        }
+                        blocklogado=1;
+                    });
+                }
+            }
+        });
+
+
+    } else if (localStorage.getItem("sindicoEmail") && blocklogado==0) {
+
+
+        $.ajax({
+            url: $server+"functionAppSindico.php?guid="+localStorage.getItem("sindicoGuid")+"&idcondominio="+localStorage.getItem("condominioId")+"&action=list",
+
+            dataType : "json",
+            success: function(data) {
+                if (data.sindico[0].condominioactive==1) {
+                    //console.log("active = "+data.sindico[0].active);
+                    if (data.sindico[0].active==1) {
+                        profileSindico();        
+                        myApp.closeModal(".login-screen"); 
+                        //popupBanner();   
+                        console.log("sindico");
+                        atualizartokenSindico(localStorage.getItem("token"));  
+                    }else{
+                        //sair do app
+                        if (localStorage.getItem("sindicoIdsindico") && !localStorage.getItem("moradorIdmorador")) {
+                            localStorage.setItem("sindicoIdsindico", "");
+                            atualizartokenSindicoSair();
+                        }
+                    }
+                }else{
+                    myApp.hideIndicator();
+                    myApp.confirm('Condomínio bloqueado! Favor entrar em contato com o Suporte.', function () {
+                        //sair do app
+                        if (localStorage.getItem("sindicoIdsindico") && !localStorage.getItem("moradorIdmorador")) {
+                            localStorage.setItem("sindicoIdsindico", "");
+                            atualizartokenSindicoSair();
+                            console.log("condominio bloqueado");
+                        }
+                        blocklogado=1;
+                    }, function () {
+                        //sair do app
+                        if (localStorage.getItem("sindicoIdsindico") && !localStorage.getItem("moradorIdmorador")) {
+                            localStorage.setItem("sindicoIdsindico", "");
+                            atualizartokenSindicoSair();
+                            console.log("condominio bloqueado");
+                        }
+                        blocklogado=1;
+                    });;
+                }
+            }
+        });
+
+
+
+    } else if (localStorage.getItem("moradorEmail") && blocklogado==0) {
+
+        $.ajax({
             url: $server+"functionAppMorador.php?guid="+localStorage.getItem("guid")+"&action=list",
             dataType : "json",
             success: function(data) {
-                //console.log("active = "+data.morador[0].active);
-                if (data.morador[0].active==1) {
-                    profileSindico();     
-                    myApp.closeModal(".login-screen");
-                    //popupBanner();
-                    console.log("morador/sindico");
-                    atualizartoken(localStorage.getItem("token"));
-                    atualizartokenSindico(localStorage.getItem("token"));
-                }else{
-                    //sair do app
-                    if (localStorage.getItem("sindicoIdsindico") && localStorage.getItem("moradorIdmorador")) {
-                        localStorage.setItem("sindicoIdsindico", "");
-                        localStorage.setItem("moradorIdmorador", "");
-                        atualizartokenSair();
-                        atualizartokenSindicoSair();
+                if (data.morador[0].condominioactive==1) {
+                    //console.log("active = "+data.morador[0].active);
+                    if (data.morador[0].active==1) {
+                        profile();        
+                        myApp.closeModal(".login-screen");
+                        //popupBanner();
+                        console.log("morador");
+                        atualizartoken(localStorage.getItem("token"));
+                    }else{
+                        //sair do app
+                        if (!localStorage.getItem("sindicoIdsindico") && localStorage.getItem("moradorIdmorador")) {
+                            localStorage.setItem("moradorIdmorador", "");
+                            console.log("active = 0");
+                            atualizartokenSair();
+                        }
                     }
+                }else{
+                    myApp.hideIndicator();
+                    myApp.confirm('Condomínio bloqueado! Favor entrar em contato com o Suporte.', function () {
+                        //sair do app
+                        if (!localStorage.getItem("sindicoIdsindico") && localStorage.getItem("moradorIdmorador")) {
+                            localStorage.setItem("moradorIdmorador", "");
+                            atualizartokenSair();
+                            console.log("condominio bloqueado");
+                        }
+                        blocklogado=1;
+                    }, function () {
+                        //sair do app
+                        if (!localStorage.getItem("sindicoIdsindico") && localStorage.getItem("moradorIdmorador")) {
+                            localStorage.setItem("moradorIdmorador", "");
+                            atualizartokenSair();
+                            console.log("condominio bloqueado");
+                        }
+                        blocklogado=1;
+                    });
+                }
+                 
+            }
+        });
+
+    } else if (localStorage.getItem("administradoraEmail") && blocklogado==0) {
+
+        $.ajax({
+            url: $server+"functionAppAdministradora.php?guid="+localStorage.getItem("administradoraGuid")+"&idcondominio="+localStorage.getItem("administradoraCondominioId")+"&action=list",
+            dataType : "json",
+            success: function(data) {
+                if (data.administradora[0].condominioactive==1) {
+                    //console.log("active = "+data.morador[0].active);
+                    if (data.administradora[0].active==1) {
+                        profileAdministradora();        
+                        myApp.closeModal(".login-screen");
+                        //popupBanner();
+                        console.log("administradora");
+                        atualizartokenAdministradora(localStorage.getItem("token"));
+                    }else{
+                        //sair do app
+                        if (localStorage.getItem("administradoraIdadministradora")) {
+                            localStorage.setItem("administradoraIdadministradora", "");
+                            atualizartokenAdministradoraSair();
+                        }
+                    }
+                }else{
+                    myApp.hideIndicator();
+                    myApp.confirm('Administradora bloqueada! Favor entrar em contato com o Suporte.', function () {
+                        //sair do app
+                        if (localStorage.getItem("administradoraIdadministradora")) {
+                            localStorage.setItem("administradoraIdadministradora", "");
+                            atualizartokenAdministradoraSair();
+                            console.log("administradora bloqueada");
+                        }
+                        blocklogado=1;
+                    }, function () {
+                        //sair do app
+                        if (localStorage.getItem("administradoraIdadministradora")) {
+                            localStorage.setItem("administradoraIdadministradora", "");
+                            atualizartokenAdministradoraSair();
+                            console.log("administradora bloqueada");
+                        }
+                        blocklogado=1;
+                    });
                 }
             }
         });
 
-
-    } else if (localStorage.getItem("sindicoEmail")) {
-
+    } else if (localStorage.getItem("portariaEmail") && blocklogado==0) {
 
         $.ajax({
-            url: $server+"functionAppSindico.php?guid="+localStorage.getItem("guid")+"&action=list",
+            url: $server+"functionAppPortaria.php?guid="+localStorage.getItem("guid")+"&idcondominio="+localStorage.getItem("condominioId")+"&action=list",
             dataType : "json",
             success: function(data) {
-                console.log("active = "+data.sindico[0].active);
-                if (data.sindico[0].active==1) {
-                    profileSindico();        
-                    myApp.closeModal(".login-screen"); 
-                    //popupBanner();   
-                    console.log("sindico");
-                    atualizartokenSindico(localStorage.getItem("token"));  
-                }else{
-                    //sair do app
-                    if (localStorage.getItem("sindicoIdsindico") && !localStorage.getItem("moradorIdmorador")) {
-                        localStorage.setItem("sindicoIdsindico", "");
-                        atualizartokenSindicoSair();
+                if (data.portaria[0].condominioactive==1) {
+                    //console.log("active = "+data.morador[0].active);
+                    if (data.portaria[0].active==1) {
+                        profilePortaria();        
+                        myApp.closeModal(".login-screen");
+                        //popupBanner();
+                        console.log("portaria");
+                        atualizartokenPortaria(localStorage.getItem("token"));
+                    }else{
+                        //sair do app
+                        if (localStorage.getItem("portariaIdportaria")) {
+                            localStorage.setItem("portariaIdportaria", "");
+                            atualizartokenPortariaSair();
+                        }
                     }
-                }
-            }
-        });
-
-
-
-    } else if (localStorage.getItem("moradorEmail")) {
-
-        $.ajax({
-            url: $server+"functionAppMorador.php?guid="+localStorage.getItem("guid")+"&action=list",
-            dataType : "json",
-            success: function(data) {
-                //console.log("active = "+data.morador[0].active);
-                if (data.morador[0].active==1) {
-                    profile();        
-                    myApp.closeModal(".login-screen");
-                    //popupBanner();
-                    console.log("morador");
-                    atualizartoken(localStorage.getItem("token"));
                 }else{
-                    //sair do app
-                    if (!localStorage.getItem("sindicoIdsindico") && localStorage.getItem("moradorIdmorador")) {
-                        localStorage.setItem("moradorIdmorador", "");
-                        console.log("active = 0");
-                        atualizartokenSair();
-                    }
-                }
-            }
-        });
-
-    } else if (localStorage.getItem("administradoraEmail")) {
-
-        $.ajax({
-            url: $server+"functionAppAdministradora.php?guid="+localStorage.getItem("administradoraGuid")+"&action=list",
-            dataType : "json",
-            success: function(data) {
-                //console.log("active = "+data.morador[0].active);
-                if (data.administradora[0].active==1) {
-                    profileAdministradora();        
-                    myApp.closeModal(".login-screen");
-                    //popupBanner();
-                    console.log("administradora");
-                    atualizartokenAdministradora(localStorage.getItem("token"));
-                }else{
-                    //sair do app
-                    if (localStorage.getItem("administradoraIdadministradora")) {
-                        localStorage.setItem("administradoraIdadministradora", "");
-                        atualizartokenAdministradoraSair();
-                    }
-                }
-            }
-        });
-
-    } else if (localStorage.getItem("portariaEmail")) {
-
-        $.ajax({
-            url: $server+"functionAppPortaria.php?guid="+localStorage.getItem("guid")+"&action=list",
-            dataType : "json",
-            success: function(data) {
-                //console.log("active = "+data.morador[0].active);
-                if (data.portaria[0].active==1) {
-                    profilePortaria();        
-                    myApp.closeModal(".login-screen");
-                    //popupBanner();
-                    console.log("portaria");
-                    atualizartokenPortaria(localStorage.getItem("token"));
-                }else{
-                    //sair do app
-                    if (localStorage.getItem("portariaIdportaria")) {
-                        localStorage.setItem("portariaIdportaria", "");
-                        atualizartokenPortariaSair();
-                    }
+                    myApp.hideIndicator();
+                    myApp.confirm('Portaria bloqueada! Favor entrar em contato com o Suporte.', function () {
+                        //sair do app
+                        if (localStorage.getItem("portariaIdportaria")) {
+                            localStorage.setItem("portariaIdportaria", "");
+                            atualizartokenPortariaSair();
+                            console.log("portaria bloqueada");
+                        }
+                        blocklogado=1;
+                    }, function () {
+                        //sair do app
+                        if (localStorage.getItem("portariaIdportaria")) {
+                            localStorage.setItem("portariaIdportaria", "");
+                            atualizartokenPortariaSair();
+                            console.log("portaria bloqueada");
+                        }
+                        blocklogado=1;
+                    });
                 }
             }
         });
@@ -1284,8 +1899,42 @@ function modulos(){
             success: function(data) {
                 //console.log(data);
                 if (data!=null) {
+
+                    //muda legend dos campos
+                    if (data.legend!=null) {
+                        if (data.legend.aptolegend!=null && data.legend.aptolegend!="null") {
+                            console.log("entrei");
+                            localStorage.setItem("labelapto", data.legend.aptolegend);
+                            $(".labelapto").html(localStorage.getItem("labelapto"));
+                        }else{
+                            localStorage.setItem("labelapto", "Apto");
+                        }
+
+                        if (data.legend.blocolegend!=null && data.legend.blocolegend!="null") {
+                            localStorage.setItem("labelbloco", data.legend.blocolegend);
+                            $(".labelbloco").html(localStorage.getItem("labelbloco"));
+                        }else{
+                            localStorage.setItem("labelbloco", "Bloco");
+                        }
+
+                        if (data.legend.moradorlegend!=null && data.legend.moradorlegend!="null") {
+                            localStorage.setItem("labelmorador", data.legend.moradorlegend);
+                            $(".labelmorador").html(localStorage.getItem("labelmorador"));
+
+                            $(".labelmoradoricon").html('<i class="icon fa fa-users fa-3x"></i><br>CADASTRO DE<br>'+data.legend.moradorlegend.toUpperCase());
+                            $(".labelmoradortab").html('<i class="icon fa badgecomunmorador"></i>'+data.legend.moradorlegend);
+                            $(".labelmoradorupper").html(data.legend.moradorlegend.toUpperCase());
+                            $(".labelmoradorinserirupper").html('INSERIR '+data.legend.moradorlegend.toUpperCase());
+                            $(".labelmoradorcomunlegend").html('condomínio | portaria | '+data.legend.moradorlegend.toLowerCase());
+                        }else{
+                            localStorage.setItem("labelmorador", "Morador");
+                        }
+                    }
+
                     var qtd = data.moduloapp.length;
 
+                    //console.log(qtd);
+                    var auxalerta = 0;
                     for (var i = 0; i < qtd; i++) {
 
                         switch( data.moduloapp[i].idmodulo ){
@@ -1293,7 +1942,15 @@ function modulos(){
                                 $$(".menucomunicado").addClass("invisivel");
                             break;
                             case '2':
-                                $$(".menualerta").addClass("invisivel");
+                                if (auxalerta == 1) {
+                                    $$(".avisodechegadaportaria").parent().addClass("invisivel");
+                                    $$(".pageportariahome").attr("style","width: 50vw!important;");
+                                }else{
+                                    $$(".menualerta").addClass("invisivel");
+                                    $$(".avisodechegadaportaria").addClass("invisivel");
+                                    $$(".alertaportariaportaria").attr("style","height: calc(100vh - 56px)!important;top: 56px;position: relative;");
+                                }
+                                auxalerta = 1;
                             break;
                             case '3':
                                 $$(".menuespaco").addClass("invisivel");
@@ -1346,6 +2003,23 @@ function modulos(){
                             case '19':
                                 $$(".menuboletos").addClass("invisivel");
                             break;
+                            case '20':
+                                //alerta de chegada ja esta desabilitado, dividir tela em 50%
+                                if (auxalerta == 1) {
+                                    $$(".avisodechegadaportaria").parent().addClass("invisivel");
+                                    $$(".pageportariahome").attr("style","width: 50vw!important;");
+                                }else{
+                                    $$(".alertaportariaportaria").addClass("invisivel");
+                                    $$(".avisodechegadaportaria").attr("style","height: 100vh!important;position: relative;");
+                                }
+                                auxalerta = 1;
+                            break;
+                            // case 21 = visualizacao de ocorrencias (todos ou so quem criou)
+                            case '22':
+                                $$(".menutaps").addClass("invisivel");
+                            break;
+                            case '23':
+                                $$(".menugetninjas").addClass("invisivel");
                         }
                     }
                     // se nao for desabilitado (case 15) mostra o popup
@@ -1353,6 +2027,7 @@ function modulos(){
                         localStorage.setItem("popupView",true);
                         popupBanner();
                     }
+
                 myApp.hideIndicator();
                 }else{
                     myApp.alert('Erro de conexão com o servidor! O App será fechado.');
@@ -1364,6 +2039,11 @@ function modulos(){
                 myApp.hideIndicator();
              }
         });
+
+        //// inserir badge de não lidos
+        //setTimeout(badge, 10000);
+        badge();
+
     }
 }
 
@@ -1375,19 +2055,36 @@ function profile(){
     var profile_image = "<img src="+localStorage.getItem("profileImage")+">";
     $('.profile_foto').html(profile_image);
     $('.profile_nome').html(localStorage.getItem("moradorNome"));
-
-    if(localStorage.getItem("blocoNum")){
-        var bloco_num = "Bloco: " + localStorage.getItem("blocoNum") + " | ";
-    }
-    var profile_detalhes = "Condomínio: " + localStorage.getItem("condominioNome") + " <br>"+ bloco_num + "Apto: " + localStorage.getItem("domicilioNum");
-
-    $('.nameHome').html("Cond. " +localStorage.getItem("condominioNome"));
-
-    $('.profile_detalhes').html(profile_detalhes);
+    var bloco_num = "";
+    var labelbloco = "";
+    var labelapto = "";
     
+    setTimeout(function () {  
+        //verifica se labels tem valor
+        if (localStorage.getItem("labelbloco")) {
+            labelbloco = localStorage.getItem("labelbloco");
+        }else{
+            labelbloco = "Bloco";
+        }
+        if (localStorage.getItem("labelapto")) {
+            labelapto = localStorage.getItem("labelapto");
+        }else{
+            labelapto = "Apto";
+        }
+      
+        if(localStorage.getItem("blocoNum") && localStorage.getItem("blocoNum").toUpperCase()!="SEM BLOCO"){
+            bloco_num = labelbloco+": " + localStorage.getItem("blocoNum") + " | ";
+        }
+        var profile_detalhes = "Condomínio: " + localStorage.getItem("condominioNome") + " <br>"+ bloco_num + labelapto+": " + localStorage.getItem("domicilioNum");
+
+        $('.nameHome').html("Cond. " +localStorage.getItem("condominioNome"));
+
+        $('.profile_detalhes').html(profile_detalhes);
+    }, 3000);
+
     atualizartoken(localStorage.getItem("token"));
-        //popupBanner();
-        //mainView.router.loadPage("bannercont");
+
+
 }
 
 //////////////////////////// profile sindico /////////////////////////////
@@ -1412,9 +2109,7 @@ function profileSindico(){
     $('.profile_foto').html(profile_image);
     $('.profile_nome').html(localStorage.getItem("sindicoNome"));
 
-    if(localStorage.getItem("blocoNum")){
-        var bloco_num = localStorage.getItem("blocoNum");
-    }
+
     var profile_detalhes = "Condomínio: " + localStorage.getItem("sindicoCondominioNome");
 
     $('.nameHome').html("Cond. " +localStorage.getItem("sindicoCondominioNome"));
@@ -1425,14 +2120,37 @@ function profileSindico(){
     $('.profile_detalhes').html(profile_detalhes);
 
     atualizartokenSindico(localStorage.getItem("token"));
-        //mainView.router.loadPage("bannercont");
+
 }
 
 ///////////////// lista os condomínio dos síndicos ou administradoras /////////////
 function listCond(){
-    //var clickedLinkListCond = $('.filterCond');
+
+
     mainView.router.loadContent(localStorage.getItem("sindicoListCond"));
-    //myApp.popover(localStorage.getItem("sindicoListCond"), clickedLinkListCond);
+
+
+    var mySearchbarListcond = myApp.searchbar('.submenulistcond', {
+
+        searchList: '.list-block-search-listcond',
+        searchIn: '.item-link',
+        removeDiacritics: true,
+        //customSearch: true,
+
+        onEnable: function(s){
+            //console.log('enable');
+            //$('.inputsearchportariahome').attr("disabled", true);
+        },
+
+        onSearch: function(s){
+            //console.log(s.value);
+        },
+
+        onDisable: function(s){
+            console.log("clear");
+            //$('#searchportariahome-cont').html("");
+        }
+    }); 
 
 }
 ///////////////// update para usar o condomíino selecionado ///////////////////////
@@ -1463,9 +2181,27 @@ function updateCond(id,push){
                 }
             });
         },error: function(data) {
-            myApp.hideIndicator();
-            //console.log(data);
-            myApp.alert('Erro! Tente novamente.');
+            //sair do app
+            if (localStorage.getItem("sindicoIdsindico") && localStorage.getItem("moradorIdmorador")) {
+                myApp.hideIndicator();
+
+
+                myApp.confirm('Condomínio bloqueado! Favor entrar em contato com o Suporte.', function () {
+                    //myApp.alert('Condomínio bloqueado! Favor entrar em contato com o Suporte.');
+                    localStorage.setItem("sindicoIdsindico", "");
+                    localStorage.setItem("moradorIdmorador", "");
+                    atualizartokenSair();
+                    atualizartokenSindicoSair();
+                    console.log("condominio bloqueado");
+                });
+            }else if (localStorage.getItem("sindicoIdsindico")) {
+                myApp.hideIndicator();
+                myApp.confirm('Condomínio bloqueado! Favor entrar em contato com o Suporte.', function () {
+                    localStorage.setItem("sindicoIdsindico", "");
+                    atualizartokenSindicoSair();
+                    console.log("condominio bloqueado");
+                });
+            }
         }
     });
 
@@ -1486,9 +2222,7 @@ function profileAdministradora(){
     $('.profile_foto').html(profile_image);
     $('.profile_nome').html(localStorage.getItem("administradoraNome"));
 
-    if(localStorage.getItem("blocoNum")){
-        var bloco_num = localStorage.getItem("blocoNum");
-    }
+
     var profile_detalhes = "Condomínio: " + localStorage.getItem("administradoraCondominioNome");
 
     $('.nameHome').html("Cond. " +localStorage.getItem("administradoraCondominioNome"));
@@ -1500,13 +2234,11 @@ function profileAdministradora(){
     $('.profile_detalhes').html(profile_detalhes);
 
     atualizartokenAdministradora(localStorage.getItem("token"));
-        //mainView.router.loadPage("bannercont");
+
 }
 
 function listCondAdministradora(){
     mainView.router.loadContent(localStorage.getItem("administradoraListCond"));
-    //var clickedLinkListCond = $('.filterCond');
-    //myApp.popover(localStorage.getItem("administradoraListCond"), clickedLinkListCond);
 
 }
 
@@ -1571,16 +2303,14 @@ function profilePortaria(){
     $('.profile_foto').html(profile_image);
     $('.profile_nome').html(localStorage.getItem("portariaNome"));
 
-    if(localStorage.getItem("blocoNum")){
-        var bloco_num = localStorage.getItem("blocoNum");
-    }
+
     var profile_detalhes = "Condomínio: " + localStorage.getItem("condominioNome");
+    $('.nameHome').html("Cond. " +localStorage.getItem("condominioNome"));
 
     $('.profile_detalhes').html(profile_detalhes);
     
     atualizartokenPortaria(localStorage.getItem("token"));
-        //popupBanner();
-        //mainView.router.loadPage("bannercont");
+
 }
 
 
@@ -1597,9 +2327,10 @@ function searchhomeportaria(){
         //customSearch: true,
 
         onEnable: function(s){
-            console.log('enable');
-            //searchhomeportaria();
-            //$('.inputsearchportariahome').attr("disabled", true);
+
+
+
+
         },
 
         onSearch: function(s){
@@ -1608,9 +2339,9 @@ function searchhomeportaria(){
 
         onDisable: function(s){
             console.log("clear");
-            //mySearchbar.clear();
-            //mySearchbar.disable();
-            //$('#searchportariahome-cont').html("");
+
+
+
         }
     });
 
@@ -1635,72 +2366,8 @@ function searchhomeportaria(){
                     var qtdveiculo = "";
                     var qtdmorador = "";
 
-                    /*if (data.search.visitante.visitanteAberto) {
-                        qtdvisitanteaberto = data.search.visitante.visitanteAberto.length;
-                        var delvisitante ="";
-                        var cor="";
-
-                        var name ="";
-                        var email ="";
-                        var rg = "";
-                        var cpf = "";
-                        var exibecont = "";
-                        var textnomebloco = "";
-                        var textbloco = "";
-                        var urlVisitante = "";
-
-                        datasearch += '<li class="item-divider"> Visitantes no Condomíni</li>';
-
-                        for (var i = 0; i < qtdvisitanteaberto; i++) {
-
-                            name = data.search.visitante.visitanteAberto[i].name ? data.search.visitante.visitanteAberto[i].name : "";
-                            email = data.search.visitante.visitanteAberto[i].email ? data.search.visitante.visitanteAberto[i].email : "";
-                            cpf = data.search.visitante.visitanteAberto[i].cpf ? 'CPF: ' + data.search.visitante.visitanteAberto[i].cpf+'<br>' : "";
-                            rg = data.search.visitante.visitanteAberto[i].rg ? 'RG: ' + data.search.visitante.visitanteAberto[i].rg+'<br>' : "";
-
-                            cpfexib = cpf ? cpf : "";
-                            rgexib = rg ? rg : "";
-                            cor="#4caf50";
-
-                            // Verifica se o condomínio é sem bloco
-                            if(data.search.visitante.visitanteAberto[i].num_bloco!="Sem bloco"){
-                                var num_bloco = "/" + data.search.visitante.visitanteAberto[i].num_bloco;
-                            }
-                            // Verifica se é visitante para o condomínio
-                            if (data.search.visitante.visitanteAberto[i].num_domicilio!="") {
-                                textnomebloco = name+' ('+data.search.visitante.visitanteAberto[i].num_domicilio+num_bloco+')';
-                            }else{
-                                textnomebloco = name+' (Condomínio)';
-                            }
-                            if (data.search.visitante.visitanteAberto[i].num_domicilio) {
-                                textbloco = 'Apto: '+data.search.visitante.visitanteAberto[i].num_domicilio+num_bloco;
-                            }else{
-                                textbloco = "Condomínio";
-                            }
-
-                            urlVisitante = data.search.visitante.visitanteAberto[i].urlVisitante.replace("http://","https://");
-                            datasearch += '<li class="swipeout item-content">'+
-                                                      '<a href="#visitantecont" onclick="visitantecont('+data.search.visitante.visitanteAberto[i].idvisitante+')" class="swipeout-content item-link item-content">'+
-                                                        '<div class="item-media" style="border:solid 4px '+cor+'">'+
-                                                          '<img src="'+urlVisitante+'" >'+
-                                                        '</div>'+
-                                                        '<div class="item-inner">'+
-                                                          '<div class="item-title-row">'+
-                                                            '<div class="item-title">'+textnomebloco+'</div>'+
-                                                          '</div>'+
-                                                          '<div class="item-text">'+rgexib+'</div>'+
-                                                          '<div class="item-text">'+cpfexib+'</div>'+
-                                                          '<div class="item-text">'+textbloco+'</div>'+
-                                                        '</div>'+
-                                                      '</a>'+
-                                                      '<div class="swipeout-actions-right">'+
-                                                        '<a href="#inserirvisitante" onclick = "editarvisitante('+data.search.visitante.visitanteAberto[i].idvisitante+')"" class="action2 bg-orange">Editar</a>'+
-                                                      '</div>'+
-                                                    '</li>';
-                        }
-                    }*/
-
                     if (data.search.visitante.visitante) {
+
 
                         myArray = data.search.visitante.visitante;
 
@@ -1734,6 +2401,7 @@ function searchhomeportaria(){
                             var textnomebloco = "";
                             var textbloco = "";
                             var urlVisitante = "";
+                            var num_bloco = "";
 
                             datasearch += '<li class="item-divider"> Visitantes no Condomínio</li>';
 
@@ -1762,10 +2430,12 @@ function searchhomeportaria(){
                                     cor="#4caf50";
                                     exibecont = cpf;
                                 }
+                                //console.log("num_bloco = "+num_bloco);
 
                                 // Verifica se o condomínio é sem bloco
-                                if(arrayVisitantedentro[i].num_bloco!="Sem bloco"){
-                                    var num_bloco = "/" + arrayVisitantedentro[i].num_bloco;
+                                if(arrayVisitantedentro[i].num_bloco.toUpperCase()!="SEM BLOCO"){
+                                    //console.log("num_bloco = "+num_bloco);
+                                    num_bloco = "/" + arrayVisitantedentro[i].num_bloco;
                                 }
                                 // Verifica se é visitante para o condomínio
                                 if (arrayVisitantedentro[i].num_domicilio!="") {
@@ -1774,10 +2444,11 @@ function searchhomeportaria(){
                                     textnomebloco = name+' (Condomínio)';
                                 }
                                 if (arrayVisitantedentro[i].num_domicilio) {
-                                    textbloco = 'Apto: '+arrayVisitantedentro[i].num_domicilio+num_bloco;
+                                    textbloco = localStorage.getItem("labelapto")+': '+arrayVisitantedentro[i].num_domicilio+num_bloco;
                                 }else{
                                     textbloco = "Condomínio";
                                 }
+                                console.log("num_bloco = "+num_bloco);
 
                                 urlVisitante = arrayVisitantedentro[i].urlVisitante.replace("http://","https://");
                                 datasearch += '<li class="swipeout item-content">'+
@@ -1798,6 +2469,7 @@ function searchhomeportaria(){
                                                             '<a href="#inserirvisitante" onclick = "editarvisitante('+arrayVisitantedentro[i].idvisitante+')"" class="action2 bg-orange">Editar</a>'+
                                                           '</div>'+
                                                         '</li>';
+                                num_bloco = "";                                                        
                             }
                         }
 
@@ -1814,6 +2486,7 @@ function searchhomeportaria(){
                             var textnomebloco = "";
                             var textbloco = "";
                             var urlVisitante = "";
+                            var num_bloco = "";
 
                             datasearch += '<li class="item-divider"> Visitantes Cadastrados</li>';
 
@@ -1828,6 +2501,7 @@ function searchhomeportaria(){
                                 datainiexib = dataini ? 'Início: '+convertMysqldate(dataini) : "";
                                 dataterexib = horater ? '<br> Término: '+convertMysqldate(horater) : "";
                                 datavisit = datainiexib+dataterexib;
+                                var num_bloco = "";
 
                                 cpfexib = cpf ? cpf : "";
                                 rgexib = rg ? rg : "";
@@ -1841,8 +2515,10 @@ function searchhomeportaria(){
                                 }
 
                                 // Verifica se o condomínio é sem bloco
-                                if(arrayVisitantefora[i].num_bloco!="Sem bloco"){
-                                    var num_bloco = " Bloco: " + arrayVisitantefora[i].num_bloco;
+
+                                if(arrayVisitantefora[i].num_bloco.toUpperCase()!="SEM BLOCO"){
+                                    //console.log("num_bloco = "+num_bloco);
+                                    num_bloco = "/" + arrayVisitantefora[i].num_bloco;
                                 }
                                 // Verifica se é visitante para o condomínio
                                 if (arrayVisitantefora[i].num_domicilio!="") {
@@ -1851,7 +2527,7 @@ function searchhomeportaria(){
                                     textnomebloco = name+' (Condomínio)';
                                 }
                                 if (arrayVisitantefora[i].num_domicilio) {
-                                    textbloco = 'Apto: '+arrayVisitantefora[i].num_domicilio+num_bloco;
+                                    textbloco = localStorage.getItem("labelapto")+': '+arrayVisitantefora[i].num_domicilio+num_bloco;
                                 }else{
                                     textbloco = "Condomínio";
                                 }
@@ -1875,6 +2551,7 @@ function searchhomeportaria(){
                                                             '<a href="#inserirvisitante" onclick = "editarvisitante('+arrayVisitantefora[i].idvisitante+')"" class="action2 bg-orange">Editar</a>'+
                                                           '</div>'+
                                                         '</li>';
+                                num_bloco = "";                                                        
                             }
                         }
                     }
@@ -1885,6 +2562,7 @@ function searchhomeportaria(){
                         var tipo ="";
                         var delveiculo ="";
                         var urlVeiculo = "";
+                        var num_bloco = "";
 
                         datasearch += '<li class="item-divider"> Veículos</li>';
 
@@ -1896,26 +2574,28 @@ function searchhomeportaria(){
                                 tipo = "Moto";
                             }
 
-                            if(data.search.veiculo.veiculo[i].num_bloco!="Sem bloco"){
-                                var num_bloco = "/" + data.search.veiculo.veiculo[i].num_bloco;
+                            // Verifica se o condomínio é sem bloco
+                            if(data.search.veiculo.veiculo[i].num_bloco.toUpperCase()!="SEM BLOCO"){
+                                num_bloco = "/" + data.search.veiculo.veiculo[i].num_bloco;
                             }
 
                             urlVeiculo = data.search.veiculo.veiculo[i].urlVeiculo.replace("http://","https://");
                             datasearch += '<li class="item-content">'+
-                                                      '<a href="#veiculocont" onclick="veiculocont('+data.search.veiculo.veiculo[i].idveiculo+')" class="item-link item-content">'+
+                                                      '<a href="#veiculocont" onclick="veiculocont('+data.search.veiculo.veiculo[i].idveiculo+')" class="swipeout-content  item-link item-content">'+
                                                         '<div class="item-media" style="border:solid 4px '+data.search.veiculo.veiculo[i].cor+'">'+
                                                           '<img src="'+urlVeiculo+'" >'+
                                                         '</div>'+
                                                         '<div class="item-inner">'+
                                                           '<div class="item-title-row">'+
-                                                            '<div class="item-title item-title-veiculo">'+data.search.veiculo.veiculo[i].placa+' ('+data.search.veiculo.veiculo[i].num_domicilio+num_bloco+')</div>'+
+                                                            '<div class="item-title item-title-veiculo">'+data.search.veiculo.veiculo[i].placa+'</div>'+
                                                           '</div>'+
                                                           '<div class="item-text">'+tipo+'</div>'+
                                                           '<div class="item-text">'+data.search.veiculo.veiculo[i].marca+' - '+data.search.veiculo.veiculo[i].modelo+'</div>'+
-                                                          '<div class="item-text">Apto:'+data.search.veiculo.veiculo[i].num_domicilio+num_bloco+'</div>'+
+                                                          '<div class="item-text">'+localStorage.getItem("labelapto")+': '+data.search.veiculo.veiculo[i].num_domicilio+num_bloco+'</div>'+
                                                         '</div>'+
                                                       '</a>'+
                                                     '</li>';
+                            num_bloco = "";
                         }
                     }
 
@@ -1924,53 +2604,52 @@ function searchhomeportaria(){
                         qtdmorador = data.search.morador.morador.length;
                         var delmorador = "";
                         var urlMorador = "";
+                        var num_bloco = "";
 
-                        datasearch += '<li class="item-divider"> Moradores</li>';
+                        datasearch += '<li class="item-divider"> '+localStorage.getItem("labelmorador").toUpperCase()+'</li>';
+
 
                         for (var i = 0; i < qtdmorador; i++) {
 
-                            if(data.search.morador.morador[i].num_bloco!="Sem bloco"){
-                                var num_bloco = "/" + data.search.morador.morador[i].num_bloco;
+                            // Verifica se o condomínio é sem bloco
+                            if(data.search.morador.morador[i].num_bloco.toUpperCase()!="SEM BLOCO"){
+                                num_bloco = "/" + data.search.morador.morador[i].num_bloco;
                             }
                             
                             urlMorador = data.search.morador.morador[i].urlMorador.replace("http://","https://");
                             datasearch += '<li class="item-content">'+
-                                                      '<a href="#moradorcont" onclick="moradorcont('+data.search.morador.morador[i].idmorador+')" class="item-link item-content">'+
+                                                      '<a href="#moradorcont" onclick="moradorcont('+data.search.morador.morador[i].idmorador+')" class="swipeout-content item-link item-content">'+
                                                         '<div class="item-media">'+
                                                           '<img src="'+urlMorador+'" >'+
                                                         '</div>'+
                                                         '<div class="item-inner">'+
                                                           '<div class="item-title-row">'+
-                                                            '<div class="item-title">'+data.search.morador.morador[i].name+' ('+data.search.morador.morador[i].num_domicilio+num_bloco+')</div>'+
+                                                            '<div class="item-title">'+data.search.morador.morador[i].name+'</div>'+
+
                                                           '</div>'+
                                                           '<div class="item-text">'+data.search.morador.morador[i].email+'</div>'+
-                                                          '<div class="item-text">Apto:'+data.search.morador.morador[i].num_domicilio+num_bloco+'</div>'+
+                                                          '<div class="item-text">'+localStorage.getItem("labelapto")+': '+data.search.morador.morador[i].num_domicilio+num_bloco+'</div>'+
                                                         '</div>'+
                                                       '</a>'+
                                                     '</li>';
+                            num_bloco = "";
                         }
                     }
                     //atualizar listagem só qando houver diferença
                     var totalqtd = qtdvisitanteaberto + qtdvisitante + qtdveiculo + qtdmorador;
                     var qtdsearchportariahome = $('#searchportariahome-cont li').length - 4;
-                    //if (totalqtd!=qtdsearchportariahome) {
-                        //console.log("datasearch = "+qtdvisitanteaberto+" + "+qtdvisitante+" + "+qtdveiculo+" + "+qtdmorador+" = "+totalqtd);
-                        //console.log("searchportariahome = "+ qtdsearchportariahome);
-                        $('#searchportariahome-cont').html(datasearch);
-                        mySearchbar.disable();
-                    //}
 
-                }else{
-                    //myApp.hideIndicator();
-                    //$('#visitante-cont').html("<li class='semregistro'>Nenhum registro cadastrado</li>");
+                    $('#searchportariahome-cont').html(datasearch);
+
                 }
-                //setTimeout(searchhomeportaria, 60000);
+
             },error: function(data) {
-                //myApp.hideIndicator();
-                //$('#visitante-cont').html("<li class='semregistro'>Nenhum registro cadastrado</li>");
+
+
+
             }
         });
-    //alert("Entrei");
+
 }
 
 ////////////////////////////  editar visitante ///////////////////
@@ -2152,6 +2831,7 @@ $$('.edit_profile').on('click', function(){
                 if ($$tipoUsuario!="4") {
                     if (dados.birth_date!=null) {
                         $('#profilebirthdate').val(dataamericana(dados.birth_date));
+                        $("#profilebirthdate").addClass("has-value");
                     }
                     $('#profilegender option[value="' + dados.gender + '"]').attr({ selected : "selected" });
                     $('#profilecpf').val($('#profilecpf').masked(dados.cpf));
@@ -2180,12 +2860,10 @@ function cameraProfile() {
 // Take picture using device camera and retrieve image as base64-encoded string
     navigator.camera.getPicture(onSuccessProfile, onFailProfile, {
     quality: 80,
-    allowEdit : true,
     targetWidth: 1500,
     correctOrientation: true,
     targetHeight: 1000,
-    destinationType: Camera.DestinationType.DATA_URL,
-    saveToPhotoAlbum: true
+    destinationType: Camera.DestinationType.DATA_URL
     });
 }
 
@@ -2194,7 +2872,6 @@ function cameraFileProfile(source) {
 // Retrieve image file location from specified source
     navigator.camera.getPicture(onSuccessProfile, onFailProfile, {
     quality: 80,
-    allowEdit : true,
     targetWidth: 1500,
     correctOrientation: true,
     targetHeight: 1000,
@@ -2334,7 +3011,7 @@ function enviarprofile()
         });
         $("#preview-profile").attr('src',"");
  
-        indexofImage = imagemPerf.indexOf("aptohome");
+        indexofImage = imagemPerf.indexOf("apptohome");
 
 if (indexofImage!="-1") {
 }
@@ -2370,7 +3047,7 @@ if (indexofImage!="-1") {
                 }
                 
                 myApp.hideIndicator();
-                myApp.alert('Usuário editado om sucesso!', function () { mainView.router.load({pageName: 'index'});});
+                myApp.alert('Usuário editado com sucesso!', function () { mainView.router.load({pageName: 'index'});});
             });
         }
          ,error:function(data){
@@ -2417,12 +3094,34 @@ function camerasdeseguranca(){
     myApp.showIndicator();
 
         $.ajax({
-            data : "get",
-            url: $server+"functionAppCamera.php?idcondominio="+localStorage.getItem("condominioId")+"&action=list",
+
+            url: $server+"functionAppCamera.php?idcondominio="+localStorage.getItem("condominioId")+"&action=listCam",
+            dataType : "json",
             success: function(data) {
                 if (data!="") {
                     myApp.hideIndicator();
-                    $('#camerasdeseguranca-cont').html(data);
+                    var qtd = data.camera.length;
+                    var datacam = "";
+
+                    for (var i = 0; i < qtd; i++) {
+                        //onclick="exibecamerasdeseguranca(\''+data.camera[i].urlmedia+'\');"
+                        //exibecamerasdeseguranca
+                        datacam += '<div class="col-50">'+
+                            '<a href="#" class="item-link">'+
+                                '<div class="card-cont ks-facebook-card">'+
+                                    '<div class="">'+
+                                        '<iframe src="'+data.camera[i].urlmedia+'" frameborder="0" allowfullscreen></iframe>'+
+                                        '<div class="card-content-inner">'+
+                                            '<p class="cam-title color-black">'+data.camera[i].titulo+'</p>'+
+                                            '<p class="cam-desc color-gray">'+data.camera[i].descricao+'</p>'+
+                                        '</div>'+
+                                    '</div>'+
+                                '</div>'+
+                            '</a>'+
+                        '</div>';
+
+                    }
+                    $('#camerasdeseguranca-cont').html(datacam);
                 }else{
                     myApp.hideIndicator();
                     $('#camerasdeseguranca-cont').html("<li class='semregistro'>Nenhum registro cadastrado</li>");
@@ -2431,6 +3130,7 @@ function camerasdeseguranca(){
              ,error:function(data){
                 myApp.hideIndicator();
                 $('#camerasdeseguranca-cont').html("<li class='semregistro'>Nenhum registro cadastrado</li>");
+                //myApp.alert('Erro! Tente novamente.');
              }
         });
     //alert("Entrei");
@@ -2442,9 +3142,6 @@ function camerasdeseguranca(){
 //////////////////////////////// exibe cameras de seguranca //////////////////////
 function exibecamerasdeseguranca(data){
 
-    //$('#exibecamerasdeseguranca-cont').html(data);
-    //intel.xdk.device.setRotateOrientation("landscape");
-    //onlandscape();
     $("#exibecamerasdeseguranca-cont").attr('src',data);
     
 }
@@ -2462,6 +3159,10 @@ function boleto(){
                     var qtd = data.boleto.length;
 
                     for (var i = 0; i < qtd; i++) {
+
+                        if (data.boleto[i].notresponsive==1) {
+                            $(".boletos-100").attr("style","width:1000px")
+                        }
 
                         $(".iframe-boleto").attr("src",data.boleto[i].url);
                         //$(".iframe-boleto").attr("src","https://actaapp.com21.com.br");
@@ -2650,17 +3351,23 @@ myApp.onPageInit('pagamentoscont', function (page) {
                 // separa mes e ano
                 var expiryCardSplit = expiryCardSpace.split('/');
                 var expirationMonth = expiryCardSplit[0];
-                var expirationYear;
-                var expirationYear = expiryCardSplit[1];
-                //console.log(expirationYear);
-                //console.log(expirationYear.length);
-                //verifica se o ano tem 4 digitos senão adiciona 20 na frente
-                if (expirationYear.length!=0) {
-                    console.log(expirationYear.length);
-                    var qtdExpirationYear = expirationYear.length;
+                var expirationYear = 0;
+                if (expiryCardSplit[1]) {
+                    expirationYear = expiryCardSplit[1];
+
                 }
-                if (qtdExpirationYear==2) {
-                    expirationYear = "20"+expirationYear;
+                console.log("expiryCardSplit = "+expiryCardSplit[1]);
+                console.log("expirationYear = "+expirationYear);
+                //console.log(expirationYear.length);                
+                //verifica se o ano tem 4 digitos senão adiciona 20 na frente
+                if (expirationYear!=0) {
+                    if (expirationYear.length!=0) {
+                        console.log(expirationYear.length);
+                        var qtdExpirationYear = expirationYear.length;
+                    }
+                    if (qtdExpirationYear==2) {
+                        expirationYear = "20"+expirationYear;
+                    }
                 }
             }
             // retira espacos em branco
@@ -2814,7 +3521,65 @@ ptrContent.on('refresh', function (e) {
 });
 
 /////////////////////////////////////  mural de anuncios ///////////////////////
-function muraldeanuncios(){
+function muraldeanuncios(idCatAnuncio){
+if (!idCatAnuncio) {
+    idCatAnuncio = "";
+}
+// filtro listar categorias anuncio //
+
+    $.ajax({
+        url: $server+"functionAppAnuncios.php?action=listCat",
+        dataType : "json",
+        success: function(data) {
+            //console.log("entrei-success");
+            $('#txtlistcatanuncio').html("");
+            if (data!=null) {
+                myApp.hideIndicator();
+                var qtd = data.catanuncio.length;
+                var catlist = "";
+
+                    var catlist = '<div class="page" data-page="listcatanuncio">'+
+                                    '<div class="navbar">'+
+                                        '<div class="navbar-inner">'+
+                                            '<div class="left"><a href="#" class="open-panel link icon-only"><i class="icon icon-bars"></i></a></div>'+
+                                            '<div class="center">SELECIONE UMA CATEGORIA</div>'+
+                                            '<div class="right"><a href="#" class="back link icon-only"><i class="icon icon-back"></i></a></div>'+
+                                            '<div class="right no-margin"><a href="#index" class="link icon-only"><i class="icon fa fa-home"></i></a></div>'+
+                                        '</div>'+
+                                    '</div>'+
+                                      '<div class="page-content">'+
+                                        '<div class="list-block">'+
+                                          '<ul>';
+                        catlist += '<li><a href="#" onClick="muraldeanuncios(), $(\'.selecionarcatanuncio\').html(\'Todas\'),mainView.router.back();" class="item-link list-button"><div class="item-inner">Todas</div></li>';
+                    for (var i = 0; i < qtd; i++) {
+
+                        catlist += '<li><a href="#" onClick="muraldeanuncios(\''+data.catanuncio[i].idCatAnuncio+'\'), $(\'.selecionarcatanuncio\').html(\''+data.catanuncio[i].nomeCatAnuncio+'\'),mainView.router.back();" class="item-link list-button"><div class="item-inner">'+data.catanuncio[i].nomeCatAnuncio+'</div></li>';
+
+                    }
+                        catlist +='</ul>'+
+                                    '</div>'+
+                                  '</div>'+
+                                '</div>';
+
+                    localStorage.setItem("arrCatAnuncio", catlist);
+                    // verifica se tem categroia selecionada, senão coloca todas
+                    if ($('.selecionarcatanuncio').html()=="") {
+                        $('.selecionarcatanuncio').html("Todas");
+                    }
+            }
+
+        },error: function(data) {
+            myApp.hideIndicator();
+            myApp.alert('Erro ao carregar dados, tente novamente!');
+            $('#txtlistcatanuncio').html("");
+
+        }
+    });
+
+    // acao click para listar categorias
+    $$('.actionOptionCatAnun').on('click', function (e) {
+        mainView.router.loadContent(localStorage.getItem("arrCatAnuncio"));
+    });    
 
     myApp.showIndicator();
     //$('#muraldeanuncios-cont').html("");
@@ -2838,7 +3603,7 @@ function muraldeanuncios(){
         }
 
         $.ajax({
-            url: $server+"functionAppAnuncios.php?idcondominio="+localStorage.getItem("condominioId")+"&action=list",
+            url: $server+"functionAppAnuncios.php?idcondominio="+localStorage.getItem("condominioId")+"&idcatanuncio="+idCatAnuncio+"&action=listAnuncioCat",
             dataType : "json",
             success: function(data) {
                 //console.log(data);
@@ -2904,13 +3669,15 @@ function muraldeanuncios(){
              ,error:function(data){
                 myApp.hideIndicator();
                 $('#muraldeanuncios-cont').html("<li class='semregistro'>Nenhum registro cadastrado</li>");
+                //myApp.alert('Erro! Tente novamente.');
              }
         });
 }
+
 /////////////////////////////////////  deletar anuncio ///////////////////////////
 function delanuncio(guid,eq){
 
-    myApp.confirm('Deseja deletar esse item?', function () {
+    myApp.confirm('Deseja apagar esse item?', function () {
 
         myApp.showIndicator();
 
@@ -2979,7 +3746,7 @@ function muraldeanuncioscont(id){
                                             '<div class="card-content-inner">'+
                                                 '<div class="facebook-date">'+data.anuncio[i].dataAnuncio+'</div>'+
                                                 '<p class="facebook-title">'+data.anuncio[i].titleAnuncio+'</p>'+
-                                                '<p class="item-text">'+data.anuncio[i].descricaoAnuncio+'</p>'+
+                                                '<p class="item-text">'+nl2br(data.anuncio[i].descricaoAnuncio)+'</p>'+
                                                 '<div class="facebook-date">Fone: '+data.anuncio[i].phoneAnuncio+'</div>'+
                                                 '<p class="color-green facebook-price">'+data.anuncio[i].priceAnuncio+'</p>'+
                                             '</div>'+
@@ -3009,11 +3776,9 @@ function cameraAnuncios() {
 // Take picture using device camera and retrieve image as base64-encoded string
     navigator.camera.getPicture(onSuccessAnuncios, onFailAnuncios, {
     quality: 80,
-    allowEdit : true,
     targetWidth: 1500,
     correctOrientation: true,
-    destinationType: Camera.DestinationType.DATA_URL,
-    saveToPhotoAlbum: true
+    destinationType: Camera.DestinationType.DATA_URL
     });
 }
 
@@ -3022,7 +3787,6 @@ function cameraFileAnuncios(source) {
 // Retrieve image file location from specified source
     navigator.camera.getPicture(onSuccessAnuncios, onFailAnuncios, {
     quality: 80,
-    allowEdit : true,
     targetWidth: 1500,
     correctOrientation: true,
     destinationType: Camera.DestinationType.DATA_URL,
@@ -3086,7 +3850,7 @@ myApp.onPageInit('inserirmuraldeanuncios', function (page) {
     });
     
 });
-///////////////////////////// listar categorias anuncio //////////////////////////////////
+///////////////////////////// listar categorias inserir anuncio //////////////////////////////////
 function listCatAnuncio(){
     myApp.showIndicator();
 
@@ -3122,7 +3886,7 @@ function listCatAnuncio(){
 
 $('#butinseriranuncios').on('click', function(){
     //alert($$('#txttitanuncio').val()+" - "+$$('#txtanuncio').val()+" - "+$$('#txtvaloranuncio').val());
-    if (($$('#txttitanuncio').val()!="") && ($$('#txtanuncio').val()!="") && ($$('#txtphonenumber').val()!="") && ($$('#txtvaloranuncio').val()!="")) {
+    if (($$('#txtcatanuncio').val()!="") && ($$('#txttitanuncio').val()!="") && ($$('#txtanuncio').val()!="") && ($$('#txtphonenumber').val()!="") && ($$('#txtvaloranuncio').val()!="")) {
 
             enviaranuncios();
 
@@ -3256,31 +4020,35 @@ function livroocorrencias(){
     myApp.showIndicator();
     //$('#ocorrencias-cont').html("");
     var idmorador = "";
+    var idsindico = "";
+    var idadministradora = "";
     var idcondominio ="";
 
-    /*if (localStorage.getItem("sindicoIdsindico") && localStorage.getItem("moradorIdmorador")) {
-        idmorador = "";
-        idcondominio = localStorage.getItem("condominioId");
-    } else if (localStorage.getItem("administradoraIdadministradora") && localStorage.getItem("moradorIdmorador")) {
-        idmorador = "";
-        idcondominio = localStorage.getItem("condominioId");
-    }*/
 
     if (localStorage.getItem("moradorIdmorador")) {
         idmorador = localStorage.getItem("moradorIdmorador");
+        idsindico = "";
+        idadministradora = "";
     }
     if (localStorage.getItem("sindicoIdsindico") && localStorage.getItem("moradorIdmorador")) {
-        idmorador = "";
+
+        idmorador = localStorage.getItem("moradorIdmorador");
+        idsindico = localStorage.getItem("sindicoIdsindico");
+        idadministradora = "";
     } else if (localStorage.getItem("administradoraIdadministradora") && localStorage.getItem("moradorIdmorador")) {
         idmorador = "";
+        idsindico = "";
+        idadministradora = localStorage.getItem("administradoraIdadministradora");
     } else if (localStorage.getItem("administradoraIdadministradora")){
         idmorador = "";
+        idsindico = "";
+        idadministradora = localStorage.getItem("administradoraIdadministradora");
     }
 
     idcondominio = localStorage.getItem("condominioId");
 
     $.ajax({
-        url: $server+"functionAppOcorrencia.php?idmorador="+idmorador+"&idcondominio="+idcondominio+"&action=list",
+        url: $server+"functionAppOcorrencia.php?idmorador="+idmorador+"&idsindico="+idsindico+"&idadministradora="+idadministradora+"&idcondominio="+idcondominio+"&action=list",
         dataType : "json",
         success: function(data) {
             if (data!=null) {
@@ -3289,6 +4057,8 @@ function livroocorrencias(){
                 var delocorrencia = "";
                 var swipeout = "";
                 var invisivel = "invisivel";
+                var view = "";
+                var textbold = "";
 
                 for (var i = 0; i < qtd; i++) {
 
@@ -3299,13 +4069,20 @@ function livroocorrencias(){
 
                     }
 
+                    if (data.ocorrencia[i].views==0) {
+                        //view = '<div class="item-after icon-view"><i class="fa fa-lg fa-eye color-blue"></i></div>';
+                        textbold = " textbold";
+                    }else{
+                        view = "";
+                    }
+
                     delocorrencia = "onclick = delocorrencia('"+data.ocorrencia[i].guid+"',"+i+");"
                     dataocorrencia += '<li class="'+swipeout+' swipeout-ocorrencia" data-index="'+i+'">'+
-                                              '<a href="#livroocorrenciascont" onclick="livroocorrenciascont('+data.ocorrencia[i].idOcorrencia+')" class="swipeout-content item-link item-content">'+
+                                              '<a href="#livroocorrenciascont" onclick="livroocorrenciascont('+data.ocorrencia[i].idOcorrencia+',false,'+i+')" class="swipeout-content item-link item-content">'+
                                                 '<div class="item-media">'+
                                                   '<img src="'+data.ocorrencia[i].urlOcorrencia+'" >'+
                                                 '</div>'+
-                                                '<div class="item-inner">'+
+                                                '<div class="item-inner'+textbold+'">'+
                                                   '<div class="item-title-row">'+
                                                     '<div class="item-title">'+data.ocorrencia[i].nameMorador+'</div>'+
                                                   '</div>'+
@@ -3317,6 +4094,9 @@ function livroocorrencias(){
                                                     '<a href="#" '+delocorrencia+' class="action1 bg-red">Apagar</a>'+
                                                   '</div>'+
                                             '</li>';
+
+                    textbold = ""; 
+
                     $('#ocorrencias-cont').html(dataocorrencia);
                 
                     swipeout = "";
@@ -3332,13 +4112,14 @@ function livroocorrencias(){
         },error:function(data){
             myApp.hideIndicator();
             $('#ocorrencias-cont').html("<li class='semregistro'>Nenhum registro cadastrado</li>");
+            //myApp.alert('Erro! Tente novamente.');
          }
     });
 }
 /////////////////////////////////////  deletar ocorrencias ///////////////////////////
 function delocorrencia(guid,eq){
 
-    myApp.confirm('Deseja deletar esse item?', function () {
+    myApp.confirm('Deseja apagar esse item?', function () {
 
         myApp.showIndicator();
 
@@ -3365,13 +4146,37 @@ function delocorrencia(guid,eq){
 }
 
 /////////////////////////////////////  livro de ocorrencias conteudo ///////////////////////////
-function livroocorrenciascont(id,push){
+function livroocorrenciascont(id,push,eq){
 
-    myApp.showIndicator();
-    $('#livroocorrenciascont-cont').html("");
+        myApp.showIndicator();
+        $('#livroocorrenciascont-cont').html("");
+
+        if (localStorage.getItem("moradorIdmorador")) {
+            idmorador = localStorage.getItem("moradorIdmorador");
+            idsindico = "";
+            idadministradora = "";
+        }
+        if (localStorage.getItem("sindicoIdsindico") && localStorage.getItem("moradorIdmorador")) {
+            idmorador = localStorage.getItem("moradorIdmorador");
+            idsindico = localStorage.getItem("sindicoIdsindico");
+            idadministradora = "";
+        } else if (localStorage.getItem("administradoraIdadministradora") && localStorage.getItem("moradorIdmorador")) {
+            idmorador = "";
+            idsindico = "";
+            idadministradora = localStorage.getItem("administradoraIdadministradora");
+        } else if (localStorage.getItem("administradoraIdadministradora")){
+            idmorador = "";
+            idsindico = "";
+            idadministradora = localStorage.getItem("administradoraIdadministradora");
+        } else if (localStorage.getItem("sindicoIdsindico")){
+            idmorador = "";
+            idsindico = localStorage.getItem("sindicoIdsindico");
+            idadministradora = "";
+        }
 
         $.ajax({
-            url: $server+"functionAppOcorrencia.php?idocorrencia="+id+"&action=list",
+            url: $server+"functionAppOcorrencia.php?idmorador="+idmorador+"&idsindico="+idsindico+"&idadministradora="+idadministradora+"&idocorrencia="+id+"&action=list",
+
             dataType : "json",
             success: function(data) {
                 var qtd = data.ocorrencia.length;
@@ -3379,7 +4184,57 @@ function livroocorrenciascont(id,push){
                 var imgOcorrencia="";
                 var pdfView;
                 var dataocorrencia="";
+                var viewComun = "";
+                var listView = "";
+
                 for (var i = 0; i < qtd; i++) {
+
+                    var qtdview = data.ocorrencia[i].views.length;
+                    
+                    if (qtdview>0) {
+
+                        var listView = '<div class="page" data-page="listView">'+
+                                        '<div class="navbar">'+
+                                            '<div class="navbar-inner">'+
+                                              '<div class="left"><a href="#" class="open-panel link icon-only"><i class="icon icon-bars"></i></a></div>'+
+                                                '<div class="center">VISUALIZADO POR</div>'+
+                                                '<div class="right"><a href="#" class="back link icon-only"><i class="icon icon-back"></i></a></div>'+
+                                                '<div class="right no-margin"><a href="#index" class="link icon-only"><i class="icon fa fa-home"></i></a></div>'+
+                                            '</div>'+
+                                        '</div>'+
+                                          '<div class="page-content">'+
+                                            '<div class="list-block media-list" tablet>'+
+                                              '<ul>';
+                        var domicilio = "";
+                        $$.each(data.ocorrencia[i].views, function (chave,dados)
+                        {
+                                    if (dados.domicilioView!="null" && dados.domicilioView!=null) {
+                                        domicilio = dados.domicilioView;
+                                    }
+                                    listView += '<li class="data-index="'+i+'">'+
+                                                      '<a href="#" class="item-link item-content">'+
+                                                        '<div class="item-media">'+
+                                                          '<img src="'+dados.urlProfileView+'" >'+
+                                                        '</div>'+
+                                                        '<div class="item-inner">'+
+                                                          '<div class="item-title-row no-arrow">'+
+                                                            '<div class="item-title">'+dados.nameView+'</div>'+
+                                                          '</div>'+
+                                                          '<div class="item-subtitle">'+dados.dataView+'</div>'+
+                                                          '<div class="item-text">'+domicilio+'</div>'+
+                                                        '</div>'+
+                                                      '</a>'+
+                                                    '</li>';
+                                    domicilio = "";
+                        });
+                                listView +=  '</ul>'+
+                                            '</div>'+
+                                          '</div>'+
+                                        '</div>';
+                        localStorage.setItem("listView", listView);
+
+                        viewComun = '<div class="ks-facebook-view"><a href="#" onClick="listView()");">'+qtdview+' <i class="fa fa-lg fa-eye color-blue"></i></a></div>';
+                    }
 
                     //atualizar condominio logado
                     if (push==true && localStorage.getItem("sindicoIdsindico")) {
@@ -3425,14 +4280,27 @@ function livroocorrenciascont(id,push){
                                                     '</div>'+
                                                     '<div class="ks-facebook-name">'+data.ocorrencia[i].nameMorador+'</div>'+
                                                     '<div class="ks-facebook-date">'+data.ocorrencia[i].numMorador+' - '+data.ocorrencia[i].dataOcorrencia+'</div>'+
+                                                    viewComun+
                                                 '</div>'+
                                                 '<div class="card-content-inner">'+
-                                                    '<p class="facebook-title">'+data.ocorrencia[i].descricaoOcorrencia+'</p>'+
+                                                    '<p class="facebook-title">'+nl2br(data.ocorrencia[i].descricaoOcorrencia)+'</p>'+
                                                 '</div>'+
                                             '</div>'+
                                         '</li>';
                         imgTransparencia = "";
                     $('#ocorrenciascont-cont').html(dataocorrencia);
+
+                    //marcar comunicado como lido
+                    $('#ocorrencias-cont li[data-index='+eq+'] a .item-inner').removeClass("textbold");
+                        
+                    if (data.ocorrencia[i].moradorview==true || data.ocorrencia[i].portariaview==true || data.ocorrencia[i].sindicoview==true || data.ocorrencia[i].adminview==true) {
+                        console.log("subtratir badges ocorrencias condominio");
+                        //subtrair badges
+                        if ($(".badgeocorrencia span").html()!="") {
+                            //subtrair badge icon
+                            $(".badgeocorrencia span").html(parseInt($(".badgeocorrencia span").text())-1);
+                        }
+                    } 
                     
                     /*if (data.ocorrencia[i].urlOcorrencia!="images/sem_foto_icone.jpg") {
                         var imgOcorrencia = '<div class="card-content-cont"><i '+imgZoom+' class="fa fa-search-plus fa-3x"></i><img src="'+data.ocorrencia[i].urlOcorrencia+'" '+imgZoom+' width="100%"></div>';
@@ -3459,7 +4327,8 @@ function livroocorrenciascont(id,push){
                 var qtd = data.resposta.length;
                 var imgResposta = "";
                 var imgZoom;
-                var imgTitle = "Aptohome";
+                var imgTitle = $nameapp;
+
                 var dataresp = "";
 
                 for (var i = 0; i < qtd; i++) {
@@ -3494,7 +4363,7 @@ function livroocorrenciascont(id,push){
                                                     '<div class="ks-facebook-date">'+data.resposta[i].dataResposta+'</div>'+
                                                 '</div>'+
                                                 '<div class="card-content-inner">'+
-                                                    '<p class="facebook-date">'+data.resposta[i].descricaoResposta+'</p>'+
+                                                    '<p class="facebook-date">'+nl2br(data.resposta[i].descricaoResposta)+'</p>'+
                                                 '</div>'+
                                             '</div>'+
                                         '</li>';
@@ -3505,6 +4374,7 @@ function livroocorrenciascont(id,push){
 
             },error: function(data) {
                 //myApp.hideIndicator();
+                //myApp.alert('Erro! Tente novamente.');
             }
         });
 
@@ -3593,11 +4463,9 @@ function cameraOcorrencia() {
 // Take picture using device camera and retrieve image as base64-encoded string
     navigator.camera.getPicture(onSuccessOcorrencias, onFailOcorrencias, {
     quality: 80,
-    allowEdit : true,
     targetWidth: 1500,
     correctOrientation: true,
-    destinationType: Camera.DestinationType.DATA_URL,
-    saveToPhotoAlbum: true
+    destinationType: Camera.DestinationType.DATA_URL
     });
 }
 
@@ -3606,7 +4474,6 @@ function cameraFileOcorrencia(source) {
 // Retrieve image file location from specified source
     navigator.camera.getPicture(onSuccessOcorrencias, onFailOcorrencias, {
     quality: 80,
-    allowEdit : true,
     targetWidth: 1500,
     correctOrientation: true,
     destinationType: Camera.DestinationType.DATA_URL,
@@ -3710,6 +4577,7 @@ $$('#pdfFileOcorrencias').on('change', function (e) {
         }
     }else{
         myApp.alert('Formato inválido! Escolha um arquivo no formato PDF.');
+        myApp.hideIndicator();
     }
 
 });
@@ -3939,7 +4807,7 @@ function transparenciadecontas(idTipo){
 /////////////////////////////////////  deletar transparencia ///////////////////////////
 function deltransparencia(guid,eq){
 
-    myApp.confirm('Deseja deletar esse item?', function () {
+    myApp.confirm('Deseja apagar esse item?', function () {
 
         myApp.showIndicator();
 
@@ -4021,7 +4889,7 @@ function transparenciadecontascont(id){
                                                     '<div class="ks-facebook-date">'+data.transparencia[i].dataTransparencia+'</div>'+
                                                 '</div>'+
                                                 '<div class="card-content-inner">'+
-                                                    '<p class="facebook-title">'+data.transparencia[i].descricaoTransparencia+'</p>'+
+                                                    '<p class="facebook-title">'+nl2br(data.transparencia[i].descricaoTransparencia)+'</p>'+
                                                 '</div>'+
                                             '</div>'+
                                         '</li>';
@@ -4043,11 +4911,9 @@ function cameraTransparencia() {
 // Take picture using device camera and retrieve image as base64-encoded string
     navigator.camera.getPicture(onSuccessTransparencia, onFailTransparencia, {
     quality: 80,
-    allowEdit : true,
     targetWidth: 1500,
     correctOrientation: true,
-    destinationType: Camera.DestinationType.DATA_URL,
-    saveToPhotoAlbum: true
+    destinationType: Camera.DestinationType.DATA_URL
     });
 }
 
@@ -4056,7 +4922,6 @@ function cameraFileTransparencia(source) {
 // Retrieve image file location from specified source
     navigator.camera.getPicture(onSuccessTransparencia, onFailTransparencia, {
     quality: 50,
-    allowEdit: true,
     targetWidth: 1000,
     destinationType: Camera.DestinationType.DATA_URL,
     sourceType: Camera.PictureSourceType.PHOTOLIBRARY
@@ -4212,7 +5077,7 @@ function enviartransparencia()
                     });
                     $('input[type=hidden]').val("");
 
-                    myApp.alert('Transparência inserida com sucesso!', function () { mainView.router.load({pageName: 'transparenciadecontastipo'}); transparenciadecontastipo();});
+                    myApp.alert('Documento inserido com sucesso!', function () { mainView.router.load({pageName: 'transparenciadecontastipo'}); transparenciadecontastipo();});
                 }
               });
         }else{
@@ -4241,7 +5106,7 @@ function enviartransparencia()
                     });
                     $('input[type=hidden]').val("");
 
-                    myApp.alert('Transparência inserida com sucesso!', function () { mainView.router.load({pageName: 'transparenciadecontastipo'}); transparenciadecontastipo();});
+                    myApp.alert('Documento inserido com sucesso!', function () { mainView.router.load({pageName: 'transparenciadecontastipo'}); transparenciadecontastipo();});
                 }
               });
 
@@ -4260,82 +5125,7 @@ ptrContent.on('refresh', function (e) {
         myApp.pullToRefreshDone();
 });
 
-///////////////////////////////////// enquetes | assembleia virtual ///////////////////////////
-function enquetes(){
 
-    myApp.showIndicator();
-    //var datatransparencia;
-    //$('#servico-cont').html("");
-
-        // retirar botão inserir
-        if (localStorage.getItem("moradorIdmorador")) {
-            $('.inserirservico').addClass('invisivel');
-        }
-        if (localStorage.getItem("administradoraIdadministradora") || localStorage.getItem("sindicoIdsindico")) {
-            $('.inserirservico').removeClass('invisivel');
-        }
-
-        $.ajax({
-            url: $server+"functionAppEnquete.php?idcondominio="+localStorage.getItem("condominioId")+"&action=list",
-            dataType : "json",
-            success: function(data) {
-                if (data!=null) {
-                    myApp.hideIndicator();
-                    var dataservico = "";
-                    var qtd = data.enquetes.length;
-                    var delenquetes = "";
-                    var invisivel ="invisivel ";
-                    var swipeout ="";
-
-                    for (var i = 0; i < qtd; i++) {
-
-                    if (localStorage.getItem("administradoraIdadministradora") || localStorage.getItem("sindicoIdsindico")) {
-                        swipeout = "swipeout ";
-                        invisivel="";
-                    }
-
-                        delenquetes = "onclick = delservico('"+data.enquetes[i].guid+"',"+i+");"
-                        dataservico += '<li class="'+swipeout+' swipeout-enquetes" data-index="'+i+'">'+
-                                                  '<a href="#servicocont" onclick="enquetescont('+data.enquetes[i].idServico+')" class="swipeout-content item-link item-content">'+
-                                                    '<div class="item-media">'+
-                                                      '<img src="'+data.enquetes[i].urlServico+'" >'+
-                                                    '</div>'+
-                                                    '<div class="item-inner">'+
-                                                      '<div class="item-title-row">'+
-                                                        '<div class="item-title">'+data.enquetes[i].tituloServico+'</div>'+
-                                                      '</div>'+
-                                                      '<div class="item-text">'+data.enquetes[i].descricaoServico+'</div>'+
-                                                    '</div>'+
-                                                  '</a>'+
-                                                    '<div class="'+invisivel+'swipeout-actions-right">'+
-                                                    '<a href="#" '+delservico+' class="action1 bg-red">Apagar</a>'+
-                                                  '</div>'+
-                                                '</li>';
-                        $('#servico-cont').html(dataservico);
-                    }
-                }else{
-                    myApp.hideIndicator();
-                    $('#enquetes-cont').html("<li class='semregistro'>Nenhum registro cadastrado</li>");
-                }
-            },error: function(data) {
-                myApp.hideIndicator();
-                $('#enquetes-cont').html("<li class='semregistro'>Nenhum registro cadastrado</li>");
-            }
-        });
-    //alert("Entrei");
-}
-
-
-// Pull to refresh content
-var ptrContent = $$('.enquetes');
- 
-// Add 'refresh' listener on it
-ptrContent.on('refresh', function (e) {
-
-        enquetes();
-        // When loading done, we need to reset it
-        myApp.pullToRefreshDone();
-});
 
 ///////////////////////////////////// enquetes ///////////////////////////
 function enquetes(){
@@ -4691,7 +5481,7 @@ function enviarenquetes()
         
         $.ajax($server+'functionAppEnquete.php?', {
             type: "post",
-            data: "idsindico="+$$idsindico+"&idcondominio="+$$idcondominio+"&datainicio="+$$datainicio+"&datafim="+$$datafim+"&txtTitulo="+$$txtTitulo+"&txtresp1="+$$txtresp1+"&txtresp2="+$$txtresp2+"&txtresp3="+$$txtresp3+"&txtresp4="+$$txtresp4+"&txtresp5="+$$txtresp5+"&action=add",
+            data: "idsindico="+$$idsindico+"&idcondominio="+$$idcondominio+"&datainicio="+$$datainicio+"&datafim="+$$datafim+"&txtTitulo="+$$txtTitulo+"&txtresp1="+$$txtresp1+"&txtresp2="+$$txtresp2+"&txtresp3="+$$txtresp3+"&txtresp4="+$$txtresp4+"&txtresp5="+$$txtresp5+"&apiKey="+$apiKey+"&action=add",
         })
           .fail(function() {
             myApp.hideIndicator();
@@ -4787,7 +5577,7 @@ function servico(){
 /////////////////////////////////////  deletar servico ///////////////////////////
 function delservico(guid,eq){
 
-    myApp.confirm('Deseja deletar esse item?', function () {
+    myApp.confirm('Deseja apagar esse item?', function () {
 
         myApp.showIndicator();
 
@@ -4871,7 +5661,7 @@ function servicocont(id){
                                             '</div>'+
                                             '<div class="card-content-inner">'+
                                                 '<p class="facebook-title">'+data.servico[i].tituloServico+'</p>'+
-                                                '<p class="item-text">'+data.servico[i].descricaoServico+'</p>'+
+                                                '<p class="item-text">'+nl2br(data.servico[i].descricaoServico)+'</p>'+
                                                 '<div class="facebook-date">Fone: '+data.servico[i].phoneServico+'</div>'+
                                             '</div>'+
                                         '</div>'+
@@ -4895,11 +5685,9 @@ function cameraServico() {
 // Take picture using device camera and retrieve image as base64-encoded string
     navigator.camera.getPicture(onSuccessServico, onFailServico, {
     quality: 80,
-    allowEdit : true,
     targetWidth: 1500,
     correctOrientation: true,
-    destinationType: Camera.DestinationType.DATA_URL,
-    saveToPhotoAlbum: true
+    destinationType: Camera.DestinationType.DATA_URL
     });
 }
 
@@ -4908,7 +5696,6 @@ function cameraFileServico(source) {
 // Retrieve image file location from specified source
     navigator.camera.getPicture(onSuccessServico, onFailServico, {
     quality: 50,
-    allowEdit: true,
     targetWidth: 1000,
     destinationType: Camera.DestinationType.DATA_URL,
     sourceType: Camera.PictureSourceType.PHOTOLIBRARY
@@ -5124,7 +5911,7 @@ function cronograma(){
 /////////////////////////////////////  deletar cronograma ///////////////////////////
 function delcronograma(guid,eq){
 
-    myApp.confirm('Deseja deletar esse item?', function () {
+    myApp.confirm('Deseja apagar esse item?', function () {
 
         myApp.showIndicator();
 
@@ -5233,11 +6020,9 @@ function cameraCronograma() {
 // Take picture using device camera and retrieve image as base64-encoded string
     navigator.camera.getPicture(onSuccessCronograma, onFailServico, {
     quality: 80,
-    allowEdit : true,
     targetWidth: 1500,
     correctOrientation: true,
-    destinationType: Camera.DestinationType.DATA_URL,
-    saveToPhotoAlbum: true
+    destinationType: Camera.DestinationType.DATA_URL
     });
 }
 
@@ -5246,7 +6031,6 @@ function cameraFileCronograma(source) {
 // Retrieve image file location from specified source
     navigator.camera.getPicture(onSuccessCronograma, onFailCronograma, {
     quality: 50,
-    allowEdit: true,
     targetWidth: 1000,
     destinationType: Camera.DestinationType.DATA_URL,
     sourceType: Camera.PictureSourceType.PHOTOLIBRARY
@@ -5452,7 +6236,7 @@ function morador(){
 ////////////////////// deletar morador /////////////////////////
 function delmorador(guid,eq){
 
-    myApp.confirm('Deseja deletar esse item?', function () {
+    myApp.confirm('Deseja apagar esse item?', function () {
 
         myApp.showIndicator();
 
@@ -5542,11 +6326,9 @@ function cameraAddMorador() {
 // Take picture using device camera and retrieve image as base64-encoded string
     navigator.camera.getPicture(onSuccessAddMorador, onFailAddMorador, {
     quality: 80,
-    allowEdit : true,
     targetWidth: 1500,
     correctOrientation: true,
-    destinationType: Camera.DestinationType.DATA_URL,
-    saveToPhotoAlbum: true
+    destinationType: Camera.DestinationType.DATA_URL
     });
 }
 
@@ -5555,7 +6337,6 @@ function cameraFileAddMorador(source) {
 // Retrieve image file location from specified source
     navigator.camera.getPicture(onSuccessAddMorador, onFailAddMorador, {
     quality: 50,
-    allowEdit: true,
     targetWidth: 1000,
     destinationType: Camera.DestinationType.DATA_URL,
     sourceType: Camera.PictureSourceType.PHOTOLIBRARY
@@ -5679,9 +6460,10 @@ $$('#cadastro-teste').on('click', function(){
         myApp.showIndicator();
  
         if ($$('#txtcodcondominio').val()=="") {
-            $$idcondominio = "58";
-            $$idbloco = "1997";
-            $$iddomicilio = "9337";
+
+            $$idcondominio = $$idcondominioteste;
+            $$idbloco = $$idblocoteste;
+            $$iddomicilio = $$iddomicilioteste;
             $$txtNomeAddMorador = $$('#txtnomeaddmoradorteste').val();
             $$txtEmailAddMorador = $$('#txtemailaddmoradorteste').val();
             $$cellPhoneaddMorador = $$('#cellphoneaddmoradorteste').val();
@@ -5702,7 +6484,7 @@ $$('#cadastro-teste').on('click', function(){
               .done(function(data) {
                 if (data=="ok") {
                    myApp.hideIndicator();
-                    myApp.alert('Morador cadastrado com sucesso!<br><br>Você receberá um email de confirmação para criar sua senha (Caso não receba, verificar na pasta SPAM).', function () { myApp.closeModal('.popup.modal-in');});
+                    myApp.alert('Cadastro realizado com sucesso!<br><br>Você receberá um email de confirmação para criar sua senha (Caso não receba, verificar na pasta SPAM).', function () { myApp.closeModal('.popup.modal-in');});
                 } else if (data=="erro"){
                     myApp.hideIndicator();
                     myApp.alert('Erro! Tente novamente.');
@@ -5745,7 +6527,7 @@ $$('#cadastro-teste').on('click', function(){
                           .done(function(data) {
                             if (data=="ok") {
                                myApp.hideIndicator();
-                                myApp.alert('Morador cadastrado com sucesso!<br><br>Você receberá um email de confirmação para criar sua senha (Caso não receba, verificar na pasta SPAM).', function () { myApp.closeModal('.popup.modal-in');});
+                                myApp.alert('Cadastro realizado com sucesso!<br><br>Você receberá um email de confirmação para criar sua senha (Caso não receba, verificar na pasta SPAM).', function () { myApp.closeModal('.popup.modal-in');});
                             } else if (data=="erro"){
                                 myApp.hideIndicator();
                                 myApp.alert('Erro! Tente novamente.');
@@ -5946,7 +6728,7 @@ function alertaportariacont(id){
                                                 '</div>'+
                                                 '<div class="card-content-inner">'+
                                                     '<p class="facebook-title">'+data.alertaportaria[i].titleAlertaPortaria+'</p>'+
-                                                    '<p class="facebook-date">'+data.alertaportaria[i].descricaoAlertaPortaria+'</p>'+
+                                                    '<p class="facebook-date">'+nl2br(data.alertaportaria[i].descricaoAlertaPortaria)+'</p>'+
                                                 '</div>'+
                                             '</div>'+
                                         '</li>';
@@ -6053,7 +6835,7 @@ function visitante(){
 ///////////////////////////////////// deletar visitante ///////////////////////////
 function delvisitante(guid,eq){
 
-    myApp.confirm('Deseja deletar esse item?', function () {
+    myApp.confirm('Deseja apagar esse item?', function () {
 
         myApp.showIndicator();
 
@@ -6116,15 +6898,21 @@ function visitantecont(id,action,active){
 
                 var num_domicilio = "";
                 var name = "";
-                var cpf = "";
                 var rg = "";
+                var cpf = "";
                 var phone ="";
                 var email ="";
                 for (var i = 0; i < qtd; i++) {
 
 
                 num_domicilio = data.visitante[i].num_domicilio ? data.visitante[i].num_domicilio : "<i class='icon fa fa-home fa-2x'></i>";
-                num_bloco = data.visitante[i].num_bloco ? "/"+data.visitante[i].num_bloco : "";
+                if (data.visitante[i].num_bloco!="Sem Bloco" && data.visitante[i].num_bloco!="") {
+                    num_bloco = "/"+data.visitante[i].num_bloco;
+                }else{
+                    num_bloco = "";
+                }                
+
+                //num_bloco = data.visitante[i].num_bloco ? "/"+data.visitante[i].num_bloco : "";
                 name = data.visitante[i].name ? data.visitante[i].name : "";
                 cpf = data.visitante[i].cpf ? 'CPF: '+data.visitante[i].cpf : "";
                 rg = data.visitante[i].rg ? 'RG: '+data.visitante[i].rg : "";
@@ -6287,6 +7075,7 @@ $('.label-checkbox-visitantecondominio').on('click', function(){
                 $$('.domiciliolistcomunicadoli').removeClass("visivel");
                 $$('.domiciliolistcomunicadoli').addClass("visivel");
             }
+            listBloco("visitantes");
         }
     }, 100);
 });
@@ -6297,12 +7086,10 @@ function cameraVisitante() {
 // Take picture using device camera and retrieve image as base64-encoded string
     navigator.camera.getPicture(onSuccessVisitante, onFailVisitante, {
     quality: 80,
-    allowEdit : true,
     targetWidth: 1500,
     correctOrientation: true,
     targetHeight: 1000,
-    destinationType: Camera.DestinationType.DATA_URL,
-    saveToPhotoAlbum: true
+    destinationType: Camera.DestinationType.DATA_URL
     });
 }
 
@@ -6311,7 +7098,6 @@ function cameraFileVisitante(source) {
 // Retrieve image file location from specified source
     navigator.camera.getPicture(onSuccessVisitante, onFailVisitante, {
     quality: 50,
-    allowEdit: true,
     targetWidth: 1000,
     targetHeight: 1000,
     destinationType: Camera.DestinationType.DATA_URL,
@@ -6388,14 +7174,29 @@ $('#butinserirvisitante').on('click', function(){
 
     if (localStorage.getItem("portariaIdportaria")) {
         if (!$('#txtvisitantecondominio:checked').val()){
-            if ($$('#blocolistportariavisitantes').val()=="" || $$('#domiciliolistportariavisitantes').val()=="") {
-                myApp.alert('Selecione o Bloco e Apartamento.');
-            }else{
+            //verifica se o condominio é sem bloco
+            if ($("#blocolistportariavisitantes").is(":visible")) {
+                if ($$('#blocolistportariavisitantes').val()=="" || $$('#domiciliolistportariavisitantes').val()=="") {
+                    myApp.alert('Preencha todos os campos.');
 
-                if ($$('#txtnomevisitante').val()!="") {
-                    enviarvisitante();
                 }else{
-                    myApp.alert('Preencha todos os campos.');    
+
+                    if ($$('#txtnomevisitante').val()!="") {
+                        enviarvisitante();
+                    }else{
+                        myApp.alert('Preencha todos os campos.');    
+                    }
+                }
+            }else{
+                if ($$('#domiciliolistportariavisitantes').val()=="") {
+                    myApp.alert('Preencha todos os campos.');
+                }else{
+
+                    if ($$('#txtnomevisitante').val()!="") {
+                        enviarvisitante();
+                    }else{
+                        myApp.alert('Preencha todos os campos.');    
+                    }
                 }
             }
         }else{
@@ -6465,6 +7266,43 @@ $('#butinserirvisitante').on('click', function(){
             });
     });
 
+    myApp.onPageReinit('inserirvisitante', function (page) {
+        // Fruits data demo array
+        // var nomesVisitantes = ('Apple Apricot Avocado Banana Melon Orange Peach Pear Pineapple').split(' ');
+        var nomesVisitantes = "";
+        var idsVisitantes = "";
+
+            $.ajax({
+                url: $server+"functionAppVisitante.php?idcondominio="+localStorage.getItem("condominioId")+"&status=0&action=listall",
+                dataType : "json",
+                success: function(data) {
+                    if (data!=null) {
+                        myApp.hideIndicator();
+                        var datavisitante = "";
+                        var qtd = data.visitante.length;
+                        var delvisitante ="";
+                        var cor="";
+
+                        var name ="";
+                        var email ="";
+                        var exibecont = "";
+                        for (var i = 0; i < qtd; i++) {
+
+                            name = data.visitante[i].name ? data.visitante[i].name : "";
+                            nomesVisitantes += name+",";
+                            idsVisitantes += data.visitante[i].idvisitante+",";
+                        }
+                    }
+                    localStorage.setItem("nomesVisitantes", nomesVisitantes);
+                    localStorage.setItem("idsVisitantes", idsVisitantes);
+                    //console.log("nomesVisitantes = "+nomesVisitantes);
+                    //console.log("idsVisitantes = "+idsVisitantes);
+                    autocompletevisitante();
+                },error: function(data) {
+
+                }
+            });
+    }); 
     
 function autocompletevisitante(){
         if (localStorage.getItem("portariaIdportaria")) {
@@ -6517,7 +7355,12 @@ function enviarvisitante()
         }else{
             if ($('#txtvisitantecondominio:checked').val()!="1"){
                 $$idcondominio = localStorage.getItem("condominioId");
-                $$idbloco = $$('#blocolistportariavisitantes').val();
+                if ($("#blocolistportariavisitantes").is(":visible")) {
+                    $$idbloco = $$('#blocolistportariavisitantes').val();
+                }else{
+                    $$idbloco = $("#blocolistportaria.sembloco").val();
+                }
+                
                 $$iddomicilio =$$('#domiciliolistportariavisitantes').val();
                 $$portaria = true;
             }else{
@@ -6553,7 +7396,7 @@ function enviarvisitante()
         // Salvando visitante servidor
         $.ajax($server+'functionAppVisitante.php?', {
             type: "post",
-            data: "portaria="+$$portaria+"&imagem="+imagem+"&idcondominio="+$$idcondominio+"&guid="+$$guid+"&idbloco="+$$idbloco+"&iddomicilio="+$$iddomicilio+"&txtNomeVisitante="+$$txtNomeVisitante+"&txtEmailVisitante="+$$txtEmailVisitante+"&txtCpfVisitante="+$$txtCpfVisitante+"&txtRgVisitante="+$$txtRgVisitante+"&txtPhoneVisitante="+$$txtPhoneVisitante+"&txtTipoVisitante="+$$txtTipoVisitante+"&txtHoraInicio="+$$txtHoraInicio+"&txtHoraTermino="+$$txtHoraTermino+"&action=add",
+            data: "portaria="+$$portaria+"&imagem="+imagem+"&idcondominio="+$$idcondominio+"&guid="+$$guid+"&idbloco="+$$idbloco+"&iddomicilio="+$$iddomicilio+"&txtNomeVisitante="+$$txtNomeVisitante+"&txtEmailVisitante="+$$txtEmailVisitante+"&txtCpfVisitante="+$$txtCpfVisitante+"&txtRgVisitante="+$$txtRgVisitante+"&txtPhoneVisitante="+$$txtPhoneVisitante+"&txtTipoVisitante="+$$txtTipoVisitante+"&txtHoraInicio="+$$txtHoraInicio+"&txtHoraTermino="+$$txtHoraTermino+"&apiKey="+$apiKey+"&action=add",
         })
           .fail(function() {
             myApp.hideIndicator();
@@ -6714,7 +7557,7 @@ function veiculo(){
 ///////////////////////////////////// deletar veiculo ///////////////////////////
 function delveiculo(guid,eq){
 
-    myApp.confirm('Deseja deletar esse item?', function () {
+    myApp.confirm('Deseja apagar esse item?', function () {
 
         myApp.showIndicator();
 
@@ -6774,7 +7617,13 @@ function veiculocont(id){
                         });
                         imgZoom = "onclick=myPhotoBrowserVeiculo.open();";
 
-                num_bloco = data.veiculo[i].num_bloco ? "/"+data.veiculo[i].num_bloco : "";
+                //num_bloco = data.veiculo[i].num_bloco ? "/"+data.veiculo[i].num_bloco : "";
+
+                if(data.veiculo[i].num_bloco.toUpperCase()!="SEM BLOCO" && data.veiculo[i].num_bloco!=""){
+                    num_bloco = "/" + data.veiculo[i].num_bloco;
+                }else{
+                    num_bloco = "";
+                }
 
                 if (data.veiculo[i].tipo=="1") {
                     tipo = "Carro";
@@ -6826,12 +7675,10 @@ function cameraVeiculo() {
 // Take picture using device camera and retrieve image as base64-encoded string
     navigator.camera.getPicture(onSuccessVeiculo, onFailVeiculo, {
     quality: 80,
-    allowEdit : true,
     targetWidth: 1500,
     correctOrientation: true,
     targetHeight: 1000,
-    destinationType: Camera.DestinationType.DATA_URL,
-    saveToPhotoAlbum: true
+    destinationType: Camera.DestinationType.DATA_URL
     });
 }
 
@@ -6840,7 +7687,6 @@ function cameraFileVeiculo(source) {
 // Retrieve image file location from specified source
     navigator.camera.getPicture(onSuccessVeiculo, onFailVeiculo, {
     quality: 50,
-    allowEdit: true,
     targetWidth: 1000,
     targetHeight: 1000,
     destinationType: Camera.DestinationType.DATA_URL,
@@ -6919,16 +7765,24 @@ function listMarcas(){
     var tipo = "";
 
     if ($$("#txttipoveiculo").val()=="1") {
-        tipo = "carros";
+        tipo = "1";
+
     }else if ($$("#txttipoveiculo").val()=="2"){
-        tipo = "motos";
+        tipo = "2";
+
     }
 
     $.ajax({
-        url: "http://fipeapi.appspot.com/api/1/"+tipo+"/marcas.json",
+        //url: "https://fipeapi.appspot.com/api/1/"+tipo+"/marcas.json",
+        url: "https://parallelum.com.br/fipe/api/v1/carros/marcas",
+        //url: "https://veiculos.fipe.org.br/api/veiculos/ConsultarMarcas",
         dataType : "json",
+        type: "get",
+        /*type: "post",
+        data: "codigoTabelaReferencia=250&codigoTipoVeiculo="+tipo,*/
         success: function(data) {
             console.log("entrei-success");
+            //console.log(data);
             $('#txtmarcaveiculo').html("");
             if (data!=null) {
                 myApp.hideIndicator();
@@ -6937,7 +7791,8 @@ function listMarcas(){
 
                 marcaslist += '<option value="" data-marca-id="">Selecione uma marca</option>';
                 for (var i = 0; i < qtd; i++) {
-                    marcaslist += '<option value="'+data[i].fipe_name+'" data-marca-id="'+data[i].id+'">'+data[i].fipe_name+'</option>';
+                    //marcaslist += '<option value="'+data[i].fipe_name+'" data-marca-id="'+data[i].id+'">'+data[i].fipe_name+'</option>';
+                    marcaslist += '<option value="'+data[i].nome+'" data-marca-id="'+data[i].codigo+'">'+data[i].nome+'</option>';
                 }
 
             }
@@ -6945,9 +7800,42 @@ function listMarcas(){
             $('#txtmarcaveiculo').html(marcaslist);
             myApp.hideIndicator();
         },error: function(data) {
-            myApp.hideIndicator();
-            myApp.alert('Erro ao carregar dados, tente novamente!');
-            $('#txtmarcaveiculo').html("");
+
+
+            $.ajax({
+                url: "https://fipeapi.appspot.com/api/1/"+tipo+"/marcas.json",
+                //url: "https://parallelum.com.br/fipe/api/v1/carros/marcas",
+                //url: "https://veiculos.fipe.org.br/api/veiculos/ConsultarMarcas",
+                dataType : "json",
+                type: "get",
+                /*type: "post",
+                data: "codigoTabelaReferencia=250&codigoTipoVeiculo="+tipo,*/
+                success: function(data) {
+                    console.log("entrei-success");
+                    console.log(data);
+                    $('#txtmarcaveiculo').html("");
+                    if (data!=null) {
+                        myApp.hideIndicator();
+                        var qtd = data.length;
+                        var marcaslist = "";
+
+                        marcaslist += '<option value="" data-marca-id="">Selecione uma marca</option>';
+                        for (var i = 0; i < qtd; i++) {
+                            marcaslist += '<option value="'+data[i].fipe_name+'" data-marca-id="'+data[i].id+'">'+data[i].fipe_name+'</option>';
+                            //marcaslist += '<option value="'+data[i].Label+'" data-marca-id="'+data[i].Value+'">'+data[i].Label+'</option>';
+                        }
+
+                    }
+                    $('.marcalistli').addClass("visivel");
+                    $('#txtmarcaveiculo').html(marcaslist);
+                    myApp.hideIndicator();
+                },error: function(data) {
+                    myApp.hideIndicator();
+                    myApp.alert('Erro ao carregar dados, tente novamente!');
+                    $('#txtmarcaveiculo').html("");
+
+                }
+            });
 
         }
     });
@@ -6957,27 +7845,35 @@ function listModelos(){
     var tipo = "";
 
     if ($$("#txttipoveiculo").val()=="1") {
-        tipo = "carros";
+        tipo = "1";
+
     }else if ($$("#txttipoveiculo").val()=="2"){
-        tipo = "motos";
+        tipo = "2";
+
     }
     var idmarca = $('#txtmarcaveiculo option:selected').attr('data-marca-id');
     //console.log("idmarca = "+idmarca);
     if (idmarca!="") {
         myApp.showIndicator();
         $.ajax({
-            url: "http://fipeapi.appspot.com/api/1/"+tipo+"/veiculos/"+idmarca+".json",
+            //url: "https://fipeapi.appspot.com/api/1/"+tipo+"/veiculos/"+idmarca+".json",
+            url: "https://parallelum.com.br/fipe/api/v1/"+tipo+"/marcas/"+idmarca+"/modelos",
+            //url: "https://veiculos.fipe.org.br/api/veiculos/ConsultarModelos",
             dataType : "json",
+            type: "get",
+            /*type: "post",
+            data: "codigoTabelaReferencia=250&codigoTipoVeiculo="+tipo+"&codigoMarca="+idmarca,*/
             success: function(data) {
                 console.log("entrei-success");
                 $('#txtmodeloveiculo').html("");
                 if (data!=null) {
                     myApp.hideIndicator();
-                    var qtd = data.length;
+                    var qtd = data.modelos.length;
                     var modeloslist = "";
 
                     for (var i = 0; i < qtd; i++) {
-                        modeloslist += '<option value="'+data[i].fipe_name+'">'+data[i].fipe_name+'</option>';
+                        //modeloslist += '<option value="'+data[i].fipe_name+'">'+data[i].fipe_name+'</option>';
+                        modeloslist += '<option value="'+data.modelos[i].nome+'">'+data.modelos[i].nome+'</option>';
                     }
 
                 }
@@ -6985,9 +7881,39 @@ function listModelos(){
                 $('#txtmodeloveiculo').html(modeloslist);
                 myApp.hideIndicator();
             },error: function(data) {
-                myApp.hideIndicator();
-                myApp.alert('Erro ao carregar dados, tente novamente!');
-                $('#txtmodeloveiculo').html("");
+
+                $.ajax({
+                    url: "https://fipeapi.appspot.com/api/1/"+tipo+"/veiculos/"+idmarca+".json",
+                    //url: "https://parallelum.com.br/fipe/api/v1/"+tipo+"/marcas/"+idmarca+"/modelos",
+                    //url: "https://veiculos.fipe.org.br/api/veiculos/ConsultarModelos",
+                    dataType : "json",
+                    type: "get",
+                    /*type: "post",
+                    data: "codigoTabelaReferencia=250&codigoTipoVeiculo="+tipo+"&codigoMarca="+idmarca,*/
+                    success: function(data) {
+                        console.log("entrei-success");
+                        $('#txtmodeloveiculo').html("");
+                        if (data!=null) {
+                            myApp.hideIndicator();
+                            var qtd = data.length;
+                            var modeloslist = "";
+
+                            for (var i = 0; i < qtd; i++) {
+                                modeloslist += '<option value="'+data[i].fipe_name+'">'+data[i].fipe_name+'</option>';
+                                //modeloslist += '<option value="'+data.Modelos[i].nome+'">'+data.Modelos[i].nome+'</option>';
+                            }
+
+                        }
+                        $('.modelolistli').addClass("visivel");
+                        $('#txtmodeloveiculo').html(modeloslist);
+                        myApp.hideIndicator();
+                    },error: function(data) {
+                        myApp.hideIndicator();
+                        myApp.alert('Erro ao carregar dados, tente novamente!');
+                        $('#txtmodeloveiculo').html("");
+
+                    }
+                });
 
             }
         });
@@ -7085,7 +8011,7 @@ $('#inserircomuncondominio').on('click', function(){
 
                     if (localStorage.getItem("administradoraEmail") || localStorage.getItem("sindicoEmail") || (localStorage.getItem("portariaIdportaria"))) {
                         if (alvo=="visitantes") {
-                            adminSind = '<option value="" selected="selected">Selecione um Bloco</option>';
+                            adminSind = '<option value="" selected="selected">Selecione uma opção</option>';
                         }else{
                             adminSind = '<option value="" selected="selected">Todos</option>';
                         }
@@ -7127,11 +8053,27 @@ $('#inserircomuncondominio').on('click', function(){
                         selected = "";
                     }
 
-                    if (semBloco=="Sem Bloco") {
+                    //console.log(semBloco);
+                    if (semBloco.toUpperCase()=="SEM BLOCO") {
+                        console.log("Sem Bloco");
                         blocolistcomunicado = "";
-                        listDomicilio(idBloco,alvo);
-                        $('.blocolistcomunicadoli').addClass("invisivel");
-                        $('.blocolistcomunicadoli').removeClass("visivel");
+                        listDomicilio(idBloco,alvo,semBloco);
+
+                        if (localStorage.getItem("portariaIdportaria")) {
+                            console.log("portariaIdportaria");
+                            $('.blocolistcomunicadoli').addClass("invisivel");
+                            $('.blocolistcomunicadoli').removeClass("visivel");
+                            $("#blocolistportaria.sembloco").removeClass("invisivel");
+                            $("#blocolistportaria.sembloco").val(idBloco);
+                            console.log("idBloco = "+$("#blocolistportaria.sembloco").val());
+                        }
+                        if (localStorage.getItem("moradorIdmorador")) {
+                            console.log("moradorIdmorador");
+                            $('#blocolistmorador').addClass("invisivel");
+                            $("#blocolistmorador.sembloco").removeClass("invisivel");
+                            $("#blocolistmorador.sembloco").val(idBloco);
+                            console.log("idBloco = "+$("#blocolistmorador.sembloco").val());
+                        }
                     }
                 }
                 if (blocolistcomunicado!="") {
@@ -7147,10 +8089,14 @@ $('#inserircomuncondominio').on('click', function(){
     }
 
 ////////////////// listar domicílios form comunicados /////////////////
-    function listDomicilio(idBloco,alvo){
+    function listDomicilio(idBloco,alvo,semBloco){
+        if (!semBloco) {
+            semBloco="";
+        }
         var visitanteCondominio="";
 
         console.log("listDomicilio");
+        console.log("idBloco = "+idBloco);
         $('.moradorlistcomunicadoli').removeClass("visivel");
         if (idBloco==null || idBloco==0) {
             console.log("idBloco==null");
@@ -7182,6 +8128,12 @@ $('#inserircomuncondominio').on('click', function(){
                 console.log("morador");
                 idBloco=$$("#blocolistmorador").val();
             }
+        }else{
+            if (localStorage.getItem("portariaIdportaria") && semBloco.toUpperCase()=="SEM BLOCO") {
+                console.log("porteiro sem bloco");
+                idBloco=$$("#blocolistportaria.sembloco").val();
+                console.log("idBloco = "+idBloco);
+            }
         }
         myApp.showIndicator();
         $.ajax({
@@ -7201,13 +8153,13 @@ $('#inserircomuncondominio').on('click', function(){
                         adminSind = '<option value="">Todos</option>';
                         console.log(adminSind);
                     } else{
-                        adminSind = '<option value="">Selecione um Apto</option>';
+                        adminSind = '<option value="">Selecione uma opção</option>';
                     }
 
                     //se sindico for morador do condominio selecionado
                     if (localStorage.getItem("sindicoIdsindico")) {
                         if (localStorage.getItem("moradorIdCondominio")==localStorage.getItem("condominioId")) {
-                            adminSind = '<option value="">Selecione um Apto</option>';
+                            adminSind = '<option value="">Selecione uma opção</option>';
                         }
                     }
 
@@ -7347,9 +8299,37 @@ ptrContent.on('refresh', function (e) {
 ///////////////////////////////////// Comunicado comuncondominio ///////////////////////////
 
 function comuncondominio(alvo){
+    myApp.detachInfiniteScroll($$('.infinite-scroll-comuncondominio'));
+    myApp.attachInfiniteScroll($$('.infinite-scroll-comuncondominio'));
+
+    $("#comuncondominio-cont").html("");
     //console.log("alvo = "+alvo);
     myApp.showIndicator();
     //var datatransparencia;
+
+    // Loading flag
+    var loading = false;
+     
+    // Last loaded index
+    var lastIndex = 0;
+    
+    var maxItems = 0;
+    // Max items to load
+    /*$.ajax({
+        url: $server+"functionAppComunCondominio.php?idcondominio="+localStorage.getItem("condominioId")+"&idadministradora="+idadministradora+"&iddestino="+iddestino+"&idbloco="+idbloco+"&iddomicilio="+iddomicilio+"&idsindico="+idsindico+"&action=count",
+        dataType : "json",
+        success: function(data) {
+            if (data!=null) {
+                console.log("maxItems = "+data);
+                maxItems = data;
+            }            
+        },error: function(data) {
+
+        }
+    });*/
+     
+    // Append items per load
+    var itemsPerLoad = 20;
 
     $('.tab-1').addClass('active');
     $('.tab-2').removeClass('active');
@@ -7400,6 +8380,8 @@ function comuncondominio(alvo){
     if (localStorage.getItem("administradoraIdadministradora")) {
         $('.inserircomuncondominio').removeClass('invisivel');
     }
+
+    var idmorador = localStorage.getItem("moradorIdmorador");    
     var iddomicilio = localStorage.getItem("moradorIddomicilio");
     var idbloco = localStorage.getItem("moradorIdbloco");
     var iddestino = localStorage.getItem("moradorIdmorador");
@@ -7413,9 +8395,9 @@ function comuncondominio(alvo){
     } else{
         var idsindico = "";
     }
-    /*}else{
-        var idsindico = localStorage.getItem("moradorIdsindico");
-    }*/
+
+
+
 
     if (localStorage.getItem("administradoraIdadministradora")) {
         var idadministradora = localStorage.getItem("administradoraIdadministradora");
@@ -7425,121 +8407,190 @@ function comuncondominio(alvo){
     } else{
         var idadministradora = "";
     }
-    /*}else{
-        var idadministradora = localStorage.getItem("moradorIdadministradora");
-    }*/
+
+
+
 
     if (idportaria ==null){idportaria=""};
 
+    if (lastIndex==0) {
+        comuncondominioload(lastIndex);
+    }
+
+    function comuncondominioload(lastIndex) {
+        //console.log("comuncondominioload");
         $.ajax({
-            url: $server+"functionAppComunCondominio.php?idcondominio="+localStorage.getItem("condominioId")+"&idadministradora="+idadministradora+"&iddestino="+iddestino+"&idbloco="+idbloco+"&iddomicilio="+iddomicilio+"&idsindico="+idsindico+"&action=list",
+            url: $server+"functionAppComunCondominio.php?idcondominio="+localStorage.getItem("condominioId")+"&limit="+itemsPerLoad+"&offset="+lastIndex+"&idadministradora="+idadministradora+"&iddestino="+iddestino+"&idbloco="+idbloco+"&iddomicilio="+iddomicilio+"&idmorador="+idmorador+"&idsindico="+idsindico+"&action=list",
             dataType : "json",
             success: function(data) {
+                //console.log(data);
                 if (data!=null) {
                     myApp.hideIndicator();
                     var datacomunicado = "";
+                    var delcomuncondominio = "";
+                    var swipeout = "";
+                    var invisivel = "invisivel";
                     var qtd = data.comunicado.length;
+                    var view = "";
+                    var textbold = "";
 
                     for (var i = 0; i < qtd; i++) {
 
                         if ((data.comunicado[i].name==localStorage.getItem("sindicoNome")) || (data.comunicado[i].name==localStorage.getItem("moradorNome")) || (data.comunicado[i].name==localStorage.getItem("administradoraNome"))) {
                             send = 'right';
                             colorsend = ' color-green';
+
+                            swipeout = "swipeout";
+                            invisivel= "";
+
                         } else {
                             send = 'left';
                             colorsend = ' color-red';
-                        }
 
-                        datacomunicado += '<li date-date="'+data.comunicado[i].dataComunicado+'">'+
-                                                  '<a href="#comunicadocont" onclick="comuncomunicadocont('+data.comunicado[i].idComunicado+')" class="item-link item-content">'+
+                            swipeout = "";
+                            invisivel= "invisivel";
+                        }
+                        //if ((localStorage.getItem("sindicoIdsindico") || localStorage.getItem("administradoraIdadministradora"))) {
+                            if (data.comunicado[i].view==0) {
+                                //view = '<div class="item-after icon-view"><i class="fa fa-lg fa-eye color-blue"></i></div>';
+                                textbold = " textbold";
+                            }else{
+                                view = "";
+                            }
+                        //}
+
+
+                        delcomuncondominio = "onclick = delcomuncondominio('"+data.comunicado[i].guid+"',"+i+");"
+                        datacomunicado += '<li date-date="'+data.comunicado[i].dataComunicado+'" class="'+swipeout+' swipeout-comuncondominio" data-index="'+i+'">'+
+                                                  '<a href="#comunicadocont" onclick="comuncomunicadocont('+data.comunicado[i].idComunicado+','+false+','+i+')" class="swipeout-content item-link item-content">'+
                                                     '<div class="item-media">'+
                                                       '<img src="'+data.comunicado[i].urlProfile+'" >'+
                                                     '</div>'+
-                                                    '<div class="item-inner">'+
+                                                    '<div class="item-inner'+textbold+'">'+
                                                       '<div class="item-title-row no-arrow">'+
                                                         '<div class="item-title">'+data.comunicado[i].name+'</div>'+
                                                         '<div class="item-after"><i class="fa fa-lg fa-arrow-circle-'+send+colorsend+'"></i></div>'+
+                                                        view+
                                                       '</div>'+
                                                       '<div class="item-subtitle">'+data.comunicado[i].dataComunicado+'</div>'+
                                                       '<div class="item-text">'+data.comunicado[i].tituloComunicado+'</div>'+
                                                     '</div>'+
                                                   '</a>'+
+                                                  '<div class="'+invisivel+' swipeout-actions-right">'+
+                                                    '<a href="#" '+delcomuncondominio+' class="action1 bg-red">Apagar</a>'+
+                                                  '</div>'+
                                                 '</li>';
-                        $("#comuncondominio-cont").html(datacomunicado);
-    
+                        textbold = "";
                     }
 
-                    ////// reordenar lista por data decrescente ///////
-                    var mylist = $('#comuncondominio-cont');
-                    var listitems = mylist.children('li').get();
-                    listitems.sort(function(a, b) {
-                        var date1 = new Date(convertToDateCount($(a).attr('date-date')));
-                        var dateMsec1 = date1.getTime();
+                    if (lastIndex==0) {
+                        console.log("lastIndex html");
+                        $("#comuncondominio-cont").html(datacomunicado);
 
-                        var date2 = new Date(convertToDateCount($(b).attr('date-date')));
-                        var dateMsec2 = date2.getTime();
+                        //loading = true;
+                    }else{
+                        console.log("lastIndex append");
+                        $("#comuncondominio-cont").append(datacomunicado);
+                    }
 
-                        var compA = dateMsec1;
-                        var compB = dateMsec2;
-
-                        return (compB < compA) ? -1 : (compB > compA) ? 1 : 0;
-                    })
-                    $.each(listitems, function(idx, itm) { mylist.append(itm); });               
 
                 }else{
                     myApp.hideIndicator();
                     $("#comuncondominio-cont").html("<li class='semregistro'>Nenhum registro cadastrado</li>");
                 }            
             },error: function(data) {
-                myApp.hideIndicator();
-                $("#comuncondominio-cont").html("<li class='semregistro'>Nenhum registro cadastrado</li>");
+
+                    if (lastIndex==0) {
+                        //console.log("error lastIndex = "+lastIndex);
+                        myApp.hideIndicator();
+                        $("#comuncondominio-cont").html("<li class='semregistro'>Nenhum registro cadastrado</li>");
+                    }else{
+                        //console.log("error lastIndex = "+lastIndex);
+                        myApp.hideIndicator();
+                        $$('.infinite-scroll-preloader').remove();
+                    }
+
             }
         });
-    //alert("Entrei");
+
+    }
+
+    // Attach 'infinite' event handler
+    $$('.infinite-scroll-comuncondominio').on('infinite', function () {
+    console.log("infinite-scroll");
+        $(".infinite-scroll-preloader").show();
+        console.log(loading);
+        myApp.detachInfiniteScroll($$('.infinite-scroll-comuncondominio'));
+        // Exit, if loading in progress
+        if (loading) return;
+
+        // Set loading flag
+        loading = true;
+
+        // Emulate 1s loading
+        setTimeout(function () {
+            // Reset loading flag
+            loading = false;
+
+            if (lastIndex >= maxItems-1) {
+            console.log("lastIndex = "+lastIndex);
+            console.log("maxItems = "+(maxItems-1));
+
+                console.log("remove scroll");
+              // Nothing more to load, detach infinite scroll events to prevent unnecessary loadings
+              myApp.detachInfiniteScroll($$('.infinite-scroll-comuncondominio'));
+              // Remove preloader
+              $$('.infinite-scroll-preloader').remove();
+              return;
+            }
+
+            // Update last loaded index
+            lastIndex = $$('.comuncondominio .list-block li').length;
+            comuncondominioload(lastIndex);
+        }, 1000);
+    });
+}
+
+/////////////////////////////////////  deletar comunicado condomino ///////////////////////////
+function delcomuncondominio(guid,eq){
+
+    myApp.confirm('Deseja apagar esse item?', function () {
+
+        myApp.showIndicator();
+
+        $.ajax({
+            url: $server+"functionAppComunCondominio.php?guid="+guid+"&action=deletar",
+            data : "get",
+            success: function(data) {
+            if (data!="ok") {
+                myApp.hideIndicator();
+                myApp.alert('Erro! Tente novamente ='+data);
+            } else {
+                myApp.hideIndicator();
+                console.log($("li.swipeout-comuncondominio[data-index="+eq+"]").index());
+                myApp.swipeoutDelete($$('li.swipeout-comuncondominio').eq($("li.swipeout-comuncondominio[data-index="+eq+"]").index()));
+            }
+            
+            },error: function(data) {
+                myApp.hideIndicator();
+                myApp.alert('Erro! Tente novamente.');
+            }
+        });
+    });
+
 }
 
 ///////////////////////////////////// comuncomunicado conteudo ///////////////////////////
-function comuncomunicadocont(id){
-    
-    //subtrai 1 e imprimir badge
-    /*if (localStorage.getItem("badgeComunicado")>1) {
-        localStorage.setItem("badgeComunicado", parseInt(localStorage.getItem("badgeComunicado"))-parseInt(1));
-        localStorage.setItem("badgeTotal", parseInt(localStorage.getItem("badgeTotal"))-parseInt(1));
-        $('.badgecomunicado').html('<span class="badge bg-red">'+localStorage.getItem("badgeComunicado")+'</span>');
-    }else{
-        $('.badgecomunicado').html('');
-        localStorage.setItem("badgeComunicado","0");
-        localStorage.setItem("badgeTotal","0");
-    }
+function comuncomunicadocont(id,push,eq){
 
-    var push = PushNotification.init({
-        android: {
-            senderID: "214666097431",
-        },
-        ios: {
-            senderID: "214666097431",
-            gcmSandbox: "true", // false para producao true para desenvolvimento
-            alert: "true",
-            sound: "true",
-            badge: "true"
-        },
-        windows: {}
-    });
-
-    //atualiza badge icone
-    push.setApplicationIconBadgeNumber(function() {
-        console.log('success badge');
-    }, function() {
-        console.log('error badge');
-    }, localStorage.getItem("badgeTotal"));
-    */
 
     myApp.showIndicator();
     $('#comunicadocont-cont').html("");
     $('#comunicadorespcont-cont').html("");
 
         $.ajax({
-            url: $server+"functionAppComunCondominio.php?idcomuncondominio="+id+"&action=listcont",
+            url: $server+"functionAppComunCondominio.php?idcomuncondominio="+id+"&idmorador="+localStorage.getItem("moradorIdmorador")+"&idsindico="+localStorage.getItem("sindicoIdsindico")+"&idportaria="+localStorage.getItem("portariaIdportaria")+"&idadministradora="+localStorage.getItem("administradoraIdadministradora")+"&action=listcont",
+
             dataType : "json",
             success: function(data) {
             myApp.hideIndicator();
@@ -7548,8 +8599,69 @@ function comuncomunicadocont(id){
                 var imgComunicado = "";
                 var imgZoom;
                 var pdfView;
-                var imgTitle = "Aptohome";
+
+                var imgTitle = $nameapp;
+                var viewComun = "";
+                var listView = "";
+
                 for (var i = 0; i < qtd; i++) {
+
+                    //if ((localStorage.getItem("sindicoIdsindico") || localStorage.getItem("administradoraIdadministradora")) && data.comunicado[i].view!=null) {
+                        var qtdview = data.comunicado[i].view.length;
+                        
+                        if (qtdview>0) {
+
+                            var listView = '<div class="page" data-page="listView">'+
+                                            '<div class="navbar">'+
+                                                '<div class="navbar-inner">'+
+                                                  '<div class="left"><a href="#" class="open-panel link icon-only"><i class="icon icon-bars"></i></a></div>'+
+                                                    '<div class="center">VISUALIZADO POR</div>'+
+                                                    '<div class="right"><a href="#" class="back link icon-only"><i class="icon icon-back"></i></a></div>'+
+                                                    '<div class="right no-margin"><a href="#index" class="link icon-only"><i class="icon fa fa-home"></i></a></div>'+
+                                                '</div>'+
+                                            '</div>'+
+                                              '<div class="page-content">'+
+                                                '<div class="list-block media-list tablet">'+
+                                                  '<ul>';
+                            var domicilio = "";
+                            $$.each(data.comunicado[i].view, function (chave,dados)
+                            {
+                                        if (dados.domicilioView!="null" && dados.domicilioView!=null) {
+                                            domicilio = dados.domicilioView;
+                                        }
+                                        listView += '<li class="data-index="'+i+'">'+
+                                                          '<a href="#" class="item-link item-content">'+
+                                                            '<div class="item-media">'+
+                                                              '<img src="'+dados.urlProfileView+'" >'+
+                                                            '</div>'+
+                                                            '<div class="item-inner">'+
+                                                              '<div class="item-title-row no-arrow">'+
+                                                                '<div class="item-title">'+dados.nameView+'</div>'+
+                                                              '</div>'+
+                                                              '<div class="item-subtitle">'+dados.dataView+'</div>'+
+                                                              '<div class="item-text">'+domicilio+'</div>'+
+                                                            '</div>'+
+                                                          '</a>'+
+                                                        '</li>';
+                                        domicilio = "";
+                            });
+                                    listView +=  '</ul>'+
+                                                '</div>'+
+                                              '</div>'+
+                                            '</div>';
+                            localStorage.setItem("listView", listView);
+
+                            viewComun = '<div class="ks-facebook-view"><a href="#" onClick="listView()");">'+qtdview+' <i class="fa fa-lg fa-eye color-blue"></i></a></div>';
+                        }
+                    //}
+
+                    //atualizar condominio logado
+                    if (push==true && localStorage.getItem("sindicoIdsindico")) {
+                        updateCond(data.comunicado[i].idCondominio,true);
+                    }
+                    if (push==true && localStorage.getItem("administradoraIdadministradora")) {
+                        updateCondAdministradora(data.comunicado[i].idCondominio,true);
+                    }
 
                     if (data.comunicado[i].urlComunicado!="images/sem_foto_icone.jpg") {
 
@@ -7590,16 +8702,32 @@ function comuncomunicadocont(id){
                                                     '</div>'+
                                                     '<div class="ks-facebook-name">'+data.comunicado[i].name+'</div>'+
                                                     '<div class="ks-facebook-date">'+data.comunicado[i].dataComunicado+'</div>'+
+                                                    viewComun+
                                                 '</div>'+
                                                 '<div class="card-content-inner">'+
                                                     '<p class="facebook-title">'+data.comunicado[i].tituloComunicado+'</p>'+
-                                                    '<p class="facebook-date">'+data.comunicado[i].descricaoComunicado+'</p>'+
+                                                    '<p class="facebook-date">'+nl2br(data.comunicado[i].descricaoComunicado)+'</p>'+
                                                 '</div>'+
                                             '</div>'+
                                         '</li>';
                         imgComunicado = "";
                     $('#comunicadocont-cont').html(datacomunicado);
- 
+                    
+                    //marcar comunicado como lido
+                    $('#comuncondominio-cont li[data-index='+eq+'] a .item-inner').removeClass("textbold");
+                    
+                    if (data.comunicado[i].moradorview==true || data.comunicado[i].portariaview==true || data.comunicado[i].sindicoview==true || data.comunicado[i].adminview==true) {
+                        console.log("subtratir badges comunicado condominio");
+                        //subtrair badges
+                        if ($(".badgecomuncondominio span").html()!="") {
+                            //subtrair badge tab
+                            $(".badgecomuncondominio span").html(parseInt($(".badgecomuncondominio span").text())-1);
+                        }
+                        if ($(".badgecomunicado span").html()!="") {
+                            //subtrair badge icon
+                            $(".badgecomunicado span").html(parseInt($(".badgecomunicado span").text())-1);
+                        }
+                    }
                 }
 
             },error: function(data) {
@@ -7619,7 +8747,8 @@ function comuncomunicadocont(id){
                 var qtd = data.resposta.length;
                 var imgResposta = "";
                 var imgZoom;
-                var imgTitle = "Aptohome";
+                var imgTitle = $nameapp;
+
                 var dataresp;
 
                 for (var i = 0; i < qtd; i++) {
@@ -7654,7 +8783,7 @@ function comuncomunicadocont(id){
                                                     '<div class="ks-facebook-date">'+data.resposta[i].dataResposta+'</div>'+
                                                 '</div>'+
                                                 '<div class="card-content-inner">'+
-                                                    '<p class="facebook-date">'+data.resposta[i].descricaoResposta+'</p>'+
+                                                    '<p class="facebook-date">'+nl2br(data.resposta[i].descricaoResposta)+'</p>'+
                                                 '</div>'+
                                             '</div>'+
                                         '</li>';
@@ -7665,6 +8794,7 @@ function comuncomunicadocont(id){
 
             },error: function(data) {
                 //myApp.hideIndicator();
+                //myApp.alert('Erro! Tente novamente.');
             }
         });
 
@@ -7704,17 +8834,23 @@ function comuncomunicadocont(id){
 
 }
 
+///////////////// list view /////////////
+function listView(){
+    //var clickedLinkListCond = $('.filterCond');
+    mainView.router.loadContent(localStorage.getItem("listView"));
+    //myApp.popover(localStorage.getItem("sindicoListCond"), clickedLinkListCond);
+
+}
+
 ///////////////////////////// camera comunicado condominio ///////////////////////////
 
 function cameraComuncondominio() {
 // Take picture using device camera and retrieve image as base64-encoded string
     navigator.camera.getPicture(onSuccessComuncondominio, onFailComuncondominio, {
     quality: 80,
-    allowEdit : true,
     targetWidth: 1500,
     correctOrientation: true,
-    destinationType: Camera.DestinationType.DATA_URL,
-    saveToPhotoAlbum: true
+    destinationType: Camera.DestinationType.DATA_URL
     });
 }
 
@@ -7723,7 +8859,6 @@ function cameraFileComuncondominio(source) {
 // Retrieve image file location from specified source
     navigator.camera.getPicture(onSuccessComuncondominio, onFailComuncondominio, {
     quality: 50,
-    allowEdit: true,
     targetWidth: 1000,
     destinationType: Camera.DestinationType.DATA_URL,
     sourceType: Camera.PictureSourceType.PHOTOLIBRARY
@@ -7826,6 +8961,7 @@ $$('#pdfFileComuncondominio').on('change', function (e) {
         }
     }else{
         myApp.alert('Formato inválido! Escolha um arquivo no formato PDF.');
+        myApp.hideIndicator();
     }
 
 });
@@ -7938,7 +9074,7 @@ var ptrContent = $$('.comunportaria');
 // Add 'refresh' listener on it
 ptrContent.on('refresh', function (e) {
 
-        comunportaria();
+        comunportaria("refresh");
         // When loading done, we need to reset it
         myApp.pullToRefreshDone();
 });
@@ -7989,7 +9125,7 @@ var ptrContent = $$('.comunportariahome');
 // Add 'refresh' listener on it
 ptrContent.on('refresh', function (e) {
 
-        comunportariahome();
+        comunportariahome("refresh");
         // When loading done, we need to reset it
         myApp.pullToRefreshDone();
 });
@@ -7998,9 +9134,15 @@ function teste (){
     alert("setInterval 10 seg");
 }
 
-///////////////////////////////////// Comunicado comunportaria home ///////////////////////////
+///////////////////////////////////// Comunicado portaria home ///////////////////////////
 
 function comunportariahome(alvo){
+
+myApp.attachInfiniteScroll($$('.comunportariahome.infinite-scroll'));
+    if (alvo=="refresh") {
+        console.log("alvo");
+        $('#comunportariahome-cont').html("");
+    }
 
     //var datatransparencia;
     $('.badgecomunicado').html();
@@ -8045,86 +9187,175 @@ function comunportariahome(alvo){
         var iddestino = "";
     }
 
-        $.ajax({
-            url: $server+"functionAppComunPortaria.php?idcondominio="+localStorage.getItem("condominioId")+"&idadministradora="+idadministradora+"&iddestino="+iddestino+"&idmorador="+idmorador+"&idbloco="+idbloco+"&iddomicilio="+iddomicilio+"&idsindico="+idsindico+"&idportaria="+idportaria+"&action=list",
-            dataType : "json",
-            success: function(data) {
-                if (data!=null) {
+    // Loading flag
+    var loading = false;
+     
+    // Last loaded index
+    var lastIndex = 0;
+    console.log("lastIndex home = "+lastIndex);
+    var maxItems = 0;
+    // Max items to load
+    /*$.ajax({
+        url: $server+"functionAppComunPortaria.php?idcondominio="+localStorage.getItem("condominioId")+"&idadministradora="+idadministradora+"&iddestino="+iddestino+"&idmorador="+idmorador+"&idbloco="+idbloco+"&iddomicilio="+iddomicilio+"&idsindico="+idsindico+"&idportaria="+idportaria+"&action=count",
+        dataType : "json",
+        success: function(data) {
+            if (data!=null) {
+                console.log("maxItems = "+data);
+                maxItems = data;
+                comunportariaload(lastIndex);
+            }            
+        },error: function(data) {
 
-                    var datacomunicado = "";
-                    var qtd = data.comunicado.length;
-                    var urlComunPortaria = "";
+        }
+    });*/
 
-                    for (var i = 0; i < qtd; i++) {
+    // Append items per load
+    var itemsPerLoad = 20;  
+    comunportariaload(lastIndex);
+    function comunportariaload(lastIndex) {
+        //console.log("comunportariaload");
+            $.ajax({
+                url: $server+"functionAppComunPortaria.php?idcondominio="+localStorage.getItem("condominioId")+"&limit="+itemsPerLoad+"&offset="+lastIndex+"&idadministradora="+idadministradora+"&iddestino="+iddestino+"&idmorador="+idmorador+"&idbloco="+idbloco+"&iddomicilio="+iddomicilio+"&idsindico="+idsindico+"&idportaria="+idportaria+"&action=list",
+                dataType : "json",
+                success: function(data) {
+                    if (data!=null) {
 
-                        if ((data.comunicado[i].name==localStorage.getItem("portariaNome")) || (data.comunicado[i].name==localStorage.getItem("moradorNome"))) {
-                            send = 'right';
-                            colorsend = ' color-green';
-                        } else {
-                            send = 'left';
-                            colorsend = ' color-red';
+                        var datacomunicado = "";
+                        var qtd = data.comunicado.length;
+                        var urlComunPortaria = "";
+
+                        var view = "";
+                        var textbold = "";
+
+                        for (var i = 0; i < qtd; i++) {
+
+                            if ((data.comunicado[i].name==localStorage.getItem("portariaNome")) || (data.comunicado[i].name==localStorage.getItem("moradorNome"))) {
+                                send = 'right';
+                                colorsend = ' color-green';
+                            } else {
+                                send = 'left';
+                                colorsend = ' color-red';
+                            }
+
+                            // deixa negrito comunicados nao lidos
+                            if (data.comunicado[i].view==0) {
+                                textbold = " textbold";
+                            }else{
+                                view = "";
+                            }
+
+                            urlComunPortaria = data.comunicado[i].urlProfile.replace("http://","https://");
+                            datacomunicado += '<li date-date="'+data.comunicado[i].dataComunicado+'" data-index="'+i+'">'+
+                                                      '<a href="#comunicadocont" onclick="comunportariacont('+data.comunicado[i].idComunicado+','+false+','+i+')" class="item-link item-content">'+
+                                                        '<div class="item-media">'+
+                                                          '<img src="'+urlComunPortaria+'" >'+
+                                                        '</div>'+
+                                                        '<div class="item-inner'+textbold+'">'+
+                                                          '<div class="item-title-row no-arrow">'+
+                                                            '<div class="item-title">'+data.comunicado[i].name+'</div>'+
+                                                            '<div class="item-after"><i class="fa fa-lg fa-arrow-circle-'+send+colorsend+'"></i></div>'+
+                                                          '</div>'+
+                                                          '<div class="item-subtitle">'+data.comunicado[i].dataComunicado+'</div>'+
+                                                          '<div class="item-text">'+data.comunicado[i].tituloComunicado+'</div>'+
+                                                        '</div>'+
+                                                      '</a>'+
+                                                    '</li>';
+                            textbold = "";
                         }
-                        urlComunPortaria = data.comunicado[i].urlProfile.replace("http://","https://");
-                        datacomunicado += '<li date-date="'+data.comunicado[i].dataComunicado+'">'+
-                                                  '<a href="#comunicadocont" onclick="comunportariacont('+data.comunicado[i].idComunicado+')" class="item-link item-content">'+
-                                                    '<div class="item-media">'+
-                                                      '<img src="'+urlComunPortaria+'" >'+
-                                                    '</div>'+
-                                                    '<div class="item-inner">'+
-                                                      '<div class="item-title-row no-arrow">'+
-                                                        '<div class="item-title">'+data.comunicado[i].name+'</div>'+
-                                                        '<div class="item-after"><i class="fa fa-lg fa-arrow-circle-'+send+colorsend+'"></i></div>'+
-                                                      '</div>'+
-                                                      '<div class="item-subtitle">'+data.comunicado[i].dataComunicado+'</div>'+
-                                                      '<div class="item-text">'+data.comunicado[i].tituloComunicado+'</div>'+
-                                                    '</div>'+
-                                                  '</a>'+
-                                                '</li>';
+                        //atualizar listagem só quando houver diferença
+                        /*var qtddatacomunicado = $('#comunportariahome-cont li').length;
+                        if (qtd!=qtddatacomunicado) {
+                            //console.log("qtddatacomunicado = "+qtddatacomunicado);
+                            //console.log("qtd = "+ qtd);
+                            $('#comunportariahome-cont').append(datacomunicado);
+                            
+                            ////// reordenar lista por data decrescente ///////
+                            var mylist = $('#comunportariahome-cont');
+                            var listitems = mylist.children('li').get();
+                            listitems.sort(function(a, b) {
+                                var date1 = new Date(convertToDateCount($(a).attr('date-date')));
+                                var dateMsec1 = date1.getTime();
+
+                                var date2 = new Date(convertToDateCount($(b).attr('date-date')));
+                                var dateMsec2 = date2.getTime();
+
+                                var compA = dateMsec1;
+                                var compB = dateMsec2;
+
+                                return (compB < compA) ? -1 : (compB > compA) ? 1 : 0;
+                            })
+                            $.each(listitems, function(idx, itm) { mylist.append(itm); });  
+                        }*/
+                        if (lastIndex==0) {
+                            console.log("lastIndex html");
+                            $('#comunportariahome-cont').html(datacomunicado);
+                        }else{
+                            console.log("lastIndex append");
+                            $('#comunportariahome-cont').append(datacomunicado);
+                        }
+
+                        //setTimeout(comunportariahome, 5000);
+                    }else{
+
+                        $('#comunportariahome-cont').html("<li class='semregistro'>Nenhum registro cadastrado</li>");
+                        //setTimeout(comunportariahome, 5000);
+                    }            
+                },error: function(data) {
+
+                    if (lastIndex==0) {
+                        //console.log("error lastIndex = "+lastIndex);
+                        $('#comunportariahome-cont').html("<li class='semregistro'>Nenhum registro cadastrado</li>");
+                        //setTimeout(comunportariahome, 5000);
+                    }else{
+                        //console.log("error lastIndex = "+lastIndex);
+                        $$('.infinite-scroll-preloader').hide();
                     }
-                    //atualizar listagem só quando houver diferença
-                    var qtddatacomunicado = $('#comunportariahome-cont li').length;
-                    if (qtd!=qtddatacomunicado) {
-                        //console.log("qtddatacomunicado = "+qtddatacomunicado);
-                        //console.log("qtd = "+ qtd);
-                        $('#comunportariahome-cont').html(datacomunicado);
-                        
-                        ////// reordenar lista por data decrescente ///////
-                        var mylist = $('#comunportariahome-cont');
-                        var listitems = mylist.children('li').get();
-                        listitems.sort(function(a, b) {
-                            var date1 = new Date(convertToDateCount($(a).attr('date-date')));
-                            var dateMsec1 = date1.getTime();
+                }
+            });
 
-                            var date2 = new Date(convertToDateCount($(b).attr('date-date')));
-                            var dateMsec2 = date2.getTime();
 
-                            var compA = dateMsec1;
-                            var compB = dateMsec2;
+    }
 
-                            return (compB < compA) ? -1 : (compB > compA) ? 1 : 0;
-                        })
-                        $.each(listitems, function(idx, itm) { mylist.append(itm); });  
-                    }
+    // Attach 'infinite' event handler
+    $$('.infinite-scroll').on('infinite', function () {
+    console.log("infinite-scroll");
+        $(".infinite-scroll-preloader").show();
+        console.log(loading);
+        // Exit, if loading in progress
+        if (loading) return;
 
-                    //setTimeout(comunportariahome, 5000);
-                }else{
+        // Set loading flag
+        loading = true;
 
-                    $('#comunportariahome-cont').html("<li class='semregistro'>Nenhum registro cadastrado</li>");
-                    //setTimeout(comunportariahome, 5000);
-                }            
-            },error: function(data) {
-
-                $('#comunportariahome-cont').html("<li class='semregistro'>Nenhum registro cadastrado</li>");
-                    //setTimeout(comunportariahome, 5000);
+        // Emulate 1s loading
+        setTimeout(function () {
+            // Reset loading flag
+            loading = false;
+            console.log("lastIndex = "+lastIndex);
+            if (lastIndex >= maxItems-1) {
+                console.log("remove scroll");
+              // Nothing more to load, detach infinite scroll events to prevent unnecessary loadings
+              myApp.detachInfiniteScroll($$('.comunportariahome.infinite-scroll'));
+              // Remove preloader
+              $$('.infinite-scroll-preloader').hide();
+              return;
             }
-        });
-    //alert("Entrei");
-    return false;
+
+            // Update last loaded index
+            lastIndex = $$('.comunportariahome .list-block li').length;
+            comunportariaload(lastIndex);
+        }, 1000);
+    });
 }
 
 ///////////////////////////////////// Comunicado comunportaria ///////////////////////////
 
 function comunportaria(alvo){
+
+    if (alvo=="refresh") {
+        console.log("alvo");
+        $('#comunportaria-cont').html("");
+    }
 
     myApp.showIndicator();
     //var datatransparencia;
@@ -8178,30 +9409,82 @@ function comunportaria(alvo){
         var iddestino = "";
     }
 
+    // Loading flag
+    var loading = false;
+     
+    // Last loaded index
+    var lastIndex = 0;
+    
+    var maxItems = 0;
+    // Max items to load
+    /*$.ajax({
+        url: $server+"functionAppComunPortaria.php?idcondominio="+localStorage.getItem("condominioId")+"&idadministradora="+idadministradora+"&iddestino="+iddestino+"&idmorador="+idmorador+"&idbloco="+idbloco+"&iddomicilio="+iddomicilio+"&idsindico="+idsindico+"&idportaria="+idportaria+"&action=count",
+        dataType : "json",
+        success: function(data) {
+            if (data!=null) {
+                console.log("maxItems = "+data);
+                maxItems = data;
+            }            
+        },error: function(data) {
+
+        }
+    });*/
+
+    // Append items per load
+    var itemsPerLoad = 20;    
+
+    comunportariaload(lastIndex);
+
+    function comunportariaload(lastIndex) {
+        console.log("comunportariaload");  
+
         $.ajax({
-            url: $server+"functionAppComunPortaria.php?idcondominio="+localStorage.getItem("condominioId")+"&idadministradora="+idadministradora+"&iddestino="+iddestino+"&idmorador="+idmorador+"&idbloco="+idbloco+"&iddomicilio="+iddomicilio+"&idsindico="+idsindico+"&idportaria="+idportaria+"&action=list",
+            url: $server+"functionAppComunPortaria.php?idcondominio="+localStorage.getItem("condominioId")+"&limit="+itemsPerLoad+"&offset="+lastIndex+"&idadministradora="+idadministradora+"&iddestino="+iddestino+"&idmorador="+idmorador+"&idbloco="+idbloco+"&iddomicilio="+iddomicilio+"&idsindico="+idsindico+"&idportaria="+idportaria+"&action=list",
             dataType : "json",
             success: function(data) {
+                console.log(data);
                 if (data!=null) {
                     myApp.hideIndicator();
                     var datacomunicado = "";
+                    var delcomunportaria = "";
+                    var swipeout = "";
+                    var invisivel = "invisivel";
                     var qtd = data.comunicado.length;
+                    var view = "";
+                    var textbold = "";
+
                     for (var i = 0; i < qtd; i++) {
 
                         if ((data.comunicado[i].name==localStorage.getItem("portariaNome")) || (data.comunicado[i].name==localStorage.getItem("moradorNome"))) {
                             send = 'right';
                             colorsend = ' color-green';
+
+                            swipeout = "swipeout";
+                            invisivel= "";
+
                         } else {
                             send = 'left';
                             colorsend = ' color-red';
+
+                            swipeout = "";
+                            invisivel= "invisivel";
                         }
 
-                        datacomunicado += '<li date-date="'+data.comunicado[i].dataComunicado+'">'+
-                                                  '<a href="#comunicadocont" onclick="comunportariacont('+data.comunicado[i].idComunicado+')" class="item-link item-content">'+
+
+                        // deixa negrito comunicados nao lidos
+                        if (data.comunicado[i].view==0) {
+                            textbold = " textbold";
+                        }else{
+                            view = "";
+                        }
+
+                        delcomunportaria = "onclick = delcomunportaria('"+data.comunicado[i].guid+"',"+i+");"
+                        datacomunicado += '<li date-date="'+data.comunicado[i].dataComunicado+'" class="'+swipeout+' swipeout-comunportaria" data-index="'+i+'">'+
+                                                  '<a href="#comunicadocont" onclick="comunportariacont('+data.comunicado[i].idComunicado+','+false+','+i+')" class="swipeout-content item-link item-content">'+
                                                     '<div class="item-media">'+
                                                       '<img src="'+data.comunicado[i].urlProfile+'" >'+
                                                     '</div>'+
-                                                    '<div class="item-inner">'+
+                                                    '<div class="item-inner'+textbold+'">'+
                                                       '<div class="item-title-row no-arrow">'+
                                                         '<div class="item-title">'+data.comunicado[i].name+'</div>'+
                                                         '<div class="item-after"><i class="fa fa-lg fa-arrow-circle-'+send+colorsend+'"></i></div>'+
@@ -8210,12 +9493,16 @@ function comunportaria(alvo){
                                                       '<div class="item-text">'+data.comunicado[i].tituloComunicado+'</div>'+
                                                     '</div>'+
                                                   '</a>'+
+                                                  '<div class="'+invisivel+' swipeout-actions-right">'+
+                                                    '<a href="#" '+delcomunportaria+' class="action1 bg-red">Apagar</a>'+
+                                                  '</div>'+
                                                 '</li>';
-                        $('#comunportaria-cont').html(datacomunicado);
+                        textbold = "";
+
                     }
 
                     ////// reordenar lista por data decrescente ///////
-                    var mylist = $('#comunportaria-cont');
+                    /*var mylist = $('#comunportaria-cont');
                     var listitems = mylist.children('li').get();
                     listitems.sort(function(a, b) {
                         var date1 = new Date(convertToDateCount($(a).attr('date-date')));
@@ -8229,7 +9516,14 @@ function comunportaria(alvo){
 
                         return (compB < compA) ? -1 : (compB > compA) ? 1 : 0;
                     })
-                    $.each(listitems, function(idx, itm) { mylist.append(itm); });  
+                    $.each(listitems, function(idx, itm) { mylist.append(itm); });*/
+                    if (lastIndex==0) {
+                        console.log("lastIndex html");
+                        $('#comunportaria-cont').html(datacomunicado);
+                    }else{
+                        console.log("lastIndex append");
+                        $('#comunportaria-cont').append(datacomunicado);
+                    }
 
                 }else{
                     myApp.hideIndicator();
@@ -8237,14 +9531,81 @@ function comunportaria(alvo){
                 }            
             },error: function(data) {
                 myApp.hideIndicator();
-                $('#comunportaria-cont').html("<li class='semregistro'>Nenhum registro cadastrado</li>");
+                    if (lastIndex==0) {
+                        //console.log("error lastIndex = "+lastIndex);
+                        $('#comunportaria-cont').html("<li class='semregistro'>Nenhum registro cadastrado</li>");
+                        //setTimeout(comunportariahome, 5000);
+                    }else{
+                        //console.log("error lastIndex = "+lastIndex);
+                        $$('.infinite-scroll-preloader').hide();
+                    }
             }
         });
-    //alert("Entrei");
+
+    }
+    // Attach 'infinite' event handler
+    $$('.infinite-scroll').on('infinite', function () {
+    console.log("infinite-scroll");
+        $(".infinite-scroll-preloader").show();
+        console.log(loading);
+        // Exit, if loading in progress
+        if (loading) return;
+
+        // Set loading flag
+        loading = true;
+
+        // Emulate 1s loading
+        setTimeout(function () {
+            // Reset loading flag
+            loading = false;
+
+            if (lastIndex >= maxItems-1) {
+                console.log("remove scroll");
+              // Nothing more to load, detach infinite scroll events to prevent unnecessary loadings
+              myApp.detachInfiniteScroll($$('.infinite-scroll'));
+              // Remove preloader
+              $$('.infinite-scroll-preloader').hide();
+              return;
+            }
+
+            // Update last loaded index
+            lastIndex = $$('.comunportaria .list-block li').length;
+            comunportariaload(lastIndex);
+        }, 1000);
+    });
+}
+
+/////////////////////////////////////  deletar comunicado portaria ///////////////////////////
+function delcomunportaria(guid,eq){
+
+    myApp.confirm('Deseja apagar esse item?', function () {
+
+        myApp.showIndicator();
+
+        $.ajax({
+            url: $server+"functionAppComunPortaria.php?guid="+guid+"&action=deletar",
+            data : "get",
+            success: function(data) {
+            if (data!="ok") {
+                myApp.hideIndicator();
+                myApp.alert('Erro! Tente novamente ='+data);
+            } else {
+                myApp.hideIndicator();
+                console.log($("li.swipeout-comunportaria[data-index="+eq+"]").index());
+                myApp.swipeoutDelete($$('li.swipeout-comunportaria').eq($("li.swipeout-comunportaria[data-index="+eq+"]").index()));
+            }
+            
+            },error: function(data) {
+                myApp.hideIndicator();
+                myApp.alert('Erro! Tente novamente.');
+            }
+        });
+    });
+
 }
 
 ///////////////////////////////////// comunportariacont conteudo ///////////////////////////
-function comunportariacont(id){
+function comunportariacont(id,push,eq){
        
     myApp.showIndicator();
     //var datatransparencia;
@@ -8252,7 +9613,8 @@ function comunportariacont(id){
     $('#comunicadorespcont-cont').html("");
 
         $.ajax({
-            url: $server+"functionAppComunPortaria.php?idcomunportaria="+id+"&action=listcont",
+            url: $server+"functionAppComunPortaria.php?idcomuncondominio="+id+"&idmorador="+localStorage.getItem("moradorIdmorador")+"&idsindico="+localStorage.getItem("sindicoIdsindico")+"&idportaria="+localStorage.getItem("portariaIdportaria")+"&idadministradora="+localStorage.getItem("administradoraIdadministradora")+"&action=listcont",
+
             dataType : "json",
             success: function(data) {
             myApp.hideIndicator();
@@ -8261,11 +9623,69 @@ function comunportariacont(id){
                 var pdfView;
                 var imgComunicado = "";
                 var imgZoom;
-                var imgTitle = "Aptohome";
+
+                var imgTitle = $nameapp;
+                var viewComun = "";
+                var listView = "";
 
                 for (var i = 0; i < qtd; i++) {
 
+                    var qtdview = data.comunicado[i].view.length;
+                    
+                    if (qtdview>0) {
+
+                        var listView = '<div class="page" data-page="listView">'+
+                                        '<div class="navbar">'+
+                                            '<div class="navbar-inner">'+
+                                              '<div class="left"><a href="#" class="open-panel link icon-only"><i class="icon icon-bars"></i></a></div>'+
+                                                '<div class="center">VISUALIZADO POR</div>'+
+                                                '<div class="right"><a href="#" class="back link icon-only"><i class="icon icon-back"></i></a></div>'+
+                                                '<div class="right no-margin"><a href="#index" class="link icon-only"><i class="icon fa fa-home"></i></a></div>'+
+                                            '</div>'+
+                                        '</div>'+
+                                          '<div class="page-content">'+
+                                            '<div class="list-block media-list tablet">'+
+                                              '<ul>';
+                        var domicilio = "";
+                        $$.each(data.comunicado[i].view, function (chave,dados)
+                        {
+                                    if (dados.domicilioView!="null" && dados.domicilioView!=null) {
+                                        domicilio = dados.domicilioView;
+                                    }
+                                    listView += '<li class="data-index="'+i+'">'+
+                                                      '<a href="#" class="item-link item-content">'+
+                                                        '<div class="item-media">'+
+                                                          '<img src="'+dados.urlProfileView+'" >'+
+                                                        '</div>'+
+                                                        '<div class="item-inner">'+
+                                                          '<div class="item-title-row no-arrow">'+
+                                                            '<div class="item-title">'+dados.nameView+'</div>'+
+                                                          '</div>'+
+                                                          '<div class="item-subtitle">'+dados.dataView+'</div>'+
+                                                          '<div class="item-text">'+domicilio+'</div>'+
+                                                        '</div>'+
+                                                      '</a>'+
+                                                    '</li>';
+                                    domicilio = "";
+                        });
+                                listView +=  '</ul>'+
+                                            '</div>'+
+                                          '</div>'+
+                                        '</div>';
+                        localStorage.setItem("listView", listView);
+
+                        viewComun = '<div class="ks-facebook-view"><a href="#" onClick="listView()");">'+qtdview+' <i class="fa fa-lg fa-eye color-blue"></i></a></div>';
+                    }
+
                     idpostdestino = data.comunicado[i].idComunicado;
+
+                    //atualizar condominio logado
+                    if (push==true && localStorage.getItem("sindicoIdsindico")) {
+                        updateCond(data.comunicado[i].idCondominio,true);
+                    }
+                    if (push==true && localStorage.getItem("administradoraIdadministradora")) {
+                        updateCondAdministradora(data.comunicado[i].idCondominio,true);
+                    }
 
                     if (data.comunicado[i].urlComunicado!="images/sem_foto_icone.jpg") {
 
@@ -8307,15 +9727,40 @@ function comunportariacont(id){
                                                     '</div>'+
                                                     '<div class="ks-facebook-name">'+data.comunicado[i].name+'</div>'+
                                                     '<div class="ks-facebook-date">'+data.comunicado[i].dataComunicado+'</div>'+
+                                                    viewComun+
                                                 '</div>'+
                                                 '<div class="card-content-inner">'+
                                                     '<p class="facebook-title">'+data.comunicado[i].tituloComunicado+'</p>'+
-                                                    '<p class="facebook-date">'+data.comunicado[i].descricaoComunicado+'</p>'+
+                                                    '<p class="facebook-date">'+nl2br(data.comunicado[i].descricaoComunicado)+'</p>'+
                                                 '</div>'+
                                             '</div>'+
                                         '</li>';
                         imgComunicado = "";
                     $('#comunicadocont-cont').html(datacomunicado);
+
+                    //marcar comunicado como lido
+                    $('#comunportaria-cont li[data-index='+eq+'] a .item-inner').removeClass("textbold");
+                    //marcar comunicado portaria como lido
+                    $('#comunportariahome-cont li[data-index='+eq+'] a .item-inner').removeClass("textbold");
+                    
+
+                    if (data.comunicado[i].moradorview==true || data.comunicado[i].portariaview==true || data.comunicado[i].sindicoview==true || data.comunicado[i].adminview==true) {
+                        console.log("subtratir badges comunicado condominio");
+                        //subtrair badges
+                        if ($(".badgecomunportaria span").html()!="") {
+                            //subtrair badge tab
+                            $(".badgecomunportaria span").html(parseInt($(".badgecomunportaria span").text())-1);
+                        }
+                        if ($(".badgecomunicado span").html()!="") {
+                            //subtrair badge icon
+                            $(".badgecomunicado span").html(parseInt($(".badgecomunicado span").text())-1);
+                        }
+                        //subtrair badges comunicado portaria home
+                        if ($(".badgecomunportariahome span").html()!="") {
+                            //subtrair badge tab
+                            $(".badgecomunportariahome span").html(parseInt($(".badgecomunportariahome span").text())-1);
+                        }
+                    }
                 }
 
             },error: function(data) {
@@ -8334,7 +9779,8 @@ function comunportariacont(id){
                 var qtd = data.resposta.length;
                 var imgResposta = "";
                 var imgZoom;
-                var imgTitle = "Aptohome";
+                var imgTitle = $nameapp;
+
                 var dataresp;
 
                 for (var i = 0; i < qtd; i++) {
@@ -8369,7 +9815,7 @@ function comunportariacont(id){
                                                     '<div class="ks-facebook-date">'+data.resposta[i].dataResposta+'</div>'+
                                                 '</div>'+
                                                 '<div class="card-content-inner">'+
-                                                    '<p class="facebook-date">'+data.resposta[i].descricaoResposta+'</p>'+
+                                                    '<p class="facebook-date">'+nl2br(data.resposta[i].descricaoResposta)+'</p>'+
                                                 '</div>'+
                                             '</div>'+
                                         '</li>';
@@ -8379,6 +9825,8 @@ function comunportariacont(id){
                 $('#comunicadorespcont-cont').append(dataresposta);
 
             },error: function(data) {
+                /*myApp.hideIndicator();
+                myApp.alert('Erro! Tente novamente.');*/
             }
         });
 
@@ -8420,18 +9868,15 @@ function comunportariacont(id){
 }
 
 
-
 ///////////////////////////// camera resp ///////////////////////////
 
 function cameraResp() {
 // Take picture using device camera and retrieve image as base64-encoded string
     navigator.camera.getPicture(onSuccessResp, onFailResp, {
     quality: 80,
-    allowEdit : true,
     targetWidth: 1500,
     correctOrientation: true,
-    destinationType: Camera.DestinationType.DATA_URL,
-    saveToPhotoAlbum: true
+    destinationType: Camera.DestinationType.DATA_URL
     });
 }
 
@@ -8440,7 +9885,6 @@ function cameraFileResp(source) {
 // Retrieve image file location from specified source
     navigator.camera.getPicture(onSuccessResp, onFailResp, {
     quality: 50,
-    allowEdit: true,
     targetWidth: 1000,
     destinationType: Camera.DestinationType.DATA_URL,
     sourceType: Camera.PictureSourceType.PHOTOLIBRARY
@@ -8592,11 +10036,9 @@ function cameraComunportaria() {
 // Take picture using device camera and retrieve image as base64-encoded string
     navigator.camera.getPicture(onSuccessComunportaria, onFailComunportaria, {
     quality: 80,
-    allowEdit : true,
     targetWidth: 1500,
     correctOrientation: true,
-    destinationType: Camera.DestinationType.DATA_URL,
-    saveToPhotoAlbum: true
+    destinationType: Camera.DestinationType.DATA_URL
     });
 }
 
@@ -8605,7 +10047,6 @@ function cameraFileComunportaria(source) {
 // Retrieve image file location from specified source
     navigator.camera.getPicture(onSuccessComunportaria, onFailComunportaria, {
     quality: 50,
-    allowEdit: true,
     targetWidth: 1000,
     destinationType: Camera.DestinationType.DATA_URL,
     sourceType: Camera.PictureSourceType.PHOTOLIBRARY
@@ -8734,6 +10175,7 @@ $$('#pdfFileComunportaria').on('change', function (e) {
         }
     }else{
         myApp.alert('Formato inválido! Escolha um arquivo no formato PDF.');
+        myApp.hideIndicator();
     }
 
 });
@@ -8778,7 +10220,12 @@ function enviarcomunportaria()
         if (localStorage.getItem("moradorIdbloco")) {
             $$idbloco = localStorage.getItem("moradorIdbloco");
         } else{
-            $$idbloco = $$('#blocolistportaria').val();
+
+            if ($$('#blocolistportaria').val()!="") {
+                $$idbloco = $$('#blocolistportaria').val();
+            }else if ($$('#blocolistportaria.sembloco').val()!="") {
+                $$idbloco = $$('#blocolistportaria.sembloco').val();
+            }
         }
 
         if (localStorage.getItem("moradorIddomicilio")) {
@@ -8875,7 +10322,7 @@ ptrContent.on('refresh', function (e) {
         myApp.pullToRefreshDone();
 });
 
-///////////////////////////////////// Comunicado morador ///////////////////////////
+///////////////////////////////////// Comunicado comunmorador ///////////////////////////
 
 function comunmorador(alvo){
 
@@ -8922,32 +10369,52 @@ function comunmorador(alvo){
     badgecomunicado=0;
 
         $.ajax({
-            url: $server+"functionAppComunMorador.php?idcondominio="+idcondominio+"&iddomicilio="+iddomicilio+"&iddestino="+iddestino+"&idbloco="+idbloco+"&idmorador="+idmorador+"&action=list",
+            url: $server+"functionAppComunMorador.php?idcondominio="+idcondominio+"&iddomicilio="+iddomicilio+"&iddestino="+iddestino+"&idbloco="+idbloco+"&idmorador="+idmorador+"&apiKey="+$apiKey+"&action=list",
             dataType : "json",
             success: function(data) {
                 if (data!=null) {
                     myApp.hideIndicator();
                     var datacomunicado = "";
+                    var delcomunmorador = "";
+                    var swipeout = "";
+                    var invisivel = "invisivel";
                     var qtd = data.comunicado.length;
                     var send = "";
                     var colorsend = "";
+                    var view = "";
+                    var textbold = "";
 
                     for (var i = 0; i < qtd; i++) {
 
                         if (data.comunicado[i].name==localStorage.getItem("moradorNome")) {
                             send = 'right';
                             colorsend = ' color-green';
+
+                            swipeout = "swipeout";
+                            invisivel= "";
                         } else {
                             send = 'left';
                             colorsend = ' color-red';
+
+                            swipeout = "";
+                            invisivel= "invisivel";
                         }
 
-                        datacomunicado += '<li date-date="'+data.comunicado[i].dataComunicado+'">'+
-                                                  '<a href="#comunicadocont" onclick="comunmoradorcont('+data.comunicado[i].idComunicado+','+alvo+')" class="item-link item-content">'+
+
+                        // deixa negrito comunicados nao lidos
+                        if (data.comunicado[i].view==0) {
+                            textbold = " textbold";
+                        }else{
+                            view = "";
+                        }
+
+                        delcomunmorador = "onclick = delcomunmorador('"+data.comunicado[i].guid+"',"+i+");"
+                        datacomunicado += '<li date-date="'+data.comunicado[i].dataComunicado+'" class="'+swipeout+' swipeout-comunmorador" data-index="'+i+'">'+
+                                                  '<a href="#comunicadocont" onclick="comunmoradorcont('+data.comunicado[i].idComunicado+','+false+','+i+')" class="swipeout-content item-link item-content">'+
                                                     '<div class="item-media">'+
                                                       '<img src="'+data.comunicado[i].urlProfile+'" >'+
                                                     '</div>'+
-                                                    '<div class="item-inner">'+
+                                                    '<div class="item-inner'+textbold+'">'+
                                                         '<div class="item-title-row no-arrow">'+
                                                             '<div class="item-title">'+data.comunicado[i].name+'</div>'+
                                                             '<div class="item-after"><i class="fa fa-lg fa-arrow-circle-'+send+colorsend+'"></i></div>'+
@@ -8956,8 +10423,12 @@ function comunmorador(alvo){
                                                       '<div class="item-text">'+data.comunicado[i].tituloComunicado+'</div>'+
                                                     '</div>'+
                                                   '</a>'+
+                                                  '<div class="'+invisivel+' swipeout-actions-right">'+
+                                                    '<a href="#" '+delcomunmorador+' class="action1 bg-red">Apagar</a>'+
+                                                  '</div>'+
                                                 '</li>';
                         $('#comunmorador-cont').html(datacomunicado);
+                        textbold = "";
                     }
 
                     ////// reordenar lista por data decrescente ///////
@@ -8990,8 +10461,37 @@ function comunmorador(alvo){
     //alert("Entrei");
 }
 
+/////////////////////////////////////  deletar comunicado morador ///////////////////////////
+function delcomunmorador(guid,eq){
+
+    myApp.confirm('Deseja deletar esse item?', function () {
+
+        myApp.showIndicator();
+
+        $.ajax({
+            url: $server+"functionAppComunMorador.php?guid="+guid+"&action=deletar",
+            data : "get",
+            success: function(data) {
+            if (data!="ok") {
+                myApp.hideIndicator();
+                myApp.alert('Erro! Tente novamente ='+data);
+            } else {
+                myApp.hideIndicator();
+                console.log($("li.swipeout-comunmorador[data-index="+eq+"]").index());
+                myApp.swipeoutDelete($$('li.swipeout-comunmorador').eq($("li.swipeout-comunmorador[data-index="+eq+"]").index()));
+            }
+            
+            },error: function(data) {
+                myApp.hideIndicator();
+                myApp.alert('Erro! Tente novamente.');
+            }
+        });
+    });
+
+}
+
 ///////////////////////////////////// comunmoradorcont conteudo ///////////////////////////
-function comunmoradorcont(id){
+function comunmoradorcont(id,push,eq){
 
     myApp.showIndicator();
 
@@ -8999,7 +10499,8 @@ function comunmoradorcont(id){
     $('#comunicadorespcont-cont').html("");
 
         $.ajax({
-            url: $server+"functionAppComunMorador.php?idcomunmorador="+id+"&action=listcont",
+            url: $server+"functionAppComunMorador.php?idcomunmorador="+id+"&idmorador="+localStorage.getItem("moradorIdmorador")+"&idsindico="+localStorage.getItem("sindicoIdsindico")+"&idportaria="+localStorage.getItem("portariaIdportaria")+"&idadministradora="+localStorage.getItem("administradoraIdadministradora")+"&action=listcont",
+
             dataType : "json",
             success: function(data) {
             myApp.hideIndicator();
@@ -9007,58 +10508,134 @@ function comunmoradorcont(id){
                 var qtd = data.comunicado.length;
                 var imgZoom;
                 var imgComunicado = "";
-                var imgTitle = "Aptohome";
+
+                var imgTitle = $nameapp;
+                var viewComun = "";
+                var listView = "";
+
                 for (var i = 0; i < qtd; i++) {
 
-                if (data.comunicado[i].urlComunicado!="images/sem_foto_icone.jpg") {
 
-                myPhotoBrowserComunicadocont = myApp.photoBrowser({
-                    theme: 'dark',
-                    ofText: 'de',
-                    backLinkText: '',
-                    spaceBetween: 0,
-                    navbar: true,
-                    toolbar: false,
-                    photos : [data.comunicado[i].urlComunicado],
-                    type: 'popup'
-                });
+                    var qtdview = data.comunicado[i].view.length;
+                    
+                    if (qtdview>0) {
 
-                    if (data.comunicado[i].urlComunicado.indexOf(".pdf")!=-1 || data.comunicado[i].urlComunicado.indexOf(".PDF")!=-1) {
-                        pdfView = "onclick=openURLBrowser('"+data.comunicado[i].urlComunicado+"');";
-
-                            imgComunicado = '<div class="card-content-cont bg-red" '+pdfView+'><i class="fa fa-file-pdf-o fa-3x"></i>'+
-                                                        //'<img src="images/icon_pdf.png" '+pdfView+' width="100%">'+
-                                                        '<div class="view-pdf">Clique para visualizar</div>'+
-                                                    '</div>';
-                    }else{
-                        imgZoom = "onclick=myPhotoBrowserComunicadocont.open();";
-
-                        if (data.comunicado[i].urlComunicado!="images/sem_foto_icone.jpg") {
-                            imgComunicado = '<div class="card-content-cont"><i '+imgZoom+' class="fa fa-search-plus fa-3x"></i>'+
-                                                        '<img src="'+data.comunicado[i].urlComunicado+'" '+imgZoom+' width="100%">'+
-                                                    '</div>';
-                        }
-                    }
-
-                }
-
-                datacomunicado += '<li>'+
-                                        '<div class="card-cont ks-facebook-card">'+ imgComunicado +
-                                            '<div class="card-header">'+
-                                                '<div class="ks-facebook-avatar">'+
-                                                    '<img src="'+data.comunicado[i].urlProfile+'" width="34">'+
-                                                '</div>'+
-                                                '<div class="ks-facebook-name">'+data.comunicado[i].name+'</div>'+
-                                                '<div class="ks-facebook-date">'+data.comunicado[i].dataComunicado+'</div>'+
-                                            '</div>'+
-                                            '<div class="card-content-inner">'+
-                                                '<p class="facebook-title">'+data.comunicado[i].tituloComunicado+'</p>'+
-                                                '<p class="facebook-date">'+data.comunicado[i].descricaoComunicado+'</p>'+
+                        var listView = '<div class="page" data-page="listView">'+
+                                        '<div class="navbar">'+
+                                            '<div class="navbar-inner">'+
+                                              '<div class="left"><a href="#" class="open-panel link icon-only"><i class="icon icon-bars"></i></a></div>'+
+                                                '<div class="center">VISUALIZADO POR</div>'+
+                                                '<div class="right"><a href="#" class="back link icon-only"><i class="icon icon-back"></i></a></div>'+
+                                                '<div class="right no-margin"><a href="#index" class="link icon-only"><i class="icon fa fa-home"></i></a></div>'+
                                             '</div>'+
                                         '</div>'+
-                                    '</li>';
-                    imgComunicado = "";
-                $('#comunicadocont-cont').html(datacomunicado);
+                                          '<div class="page-content">'+
+                                            '<div class="list-block media-list tablet">'+
+                                              '<ul>';
+                        var domicilio = "";
+                        $$.each(data.comunicado[i].view, function (chave,dados)
+                        {
+                                    if (dados.domicilioView!="null" && dados.domicilioView!=null) {
+                                        domicilio = dados.domicilioView;
+                                    }
+                                    listView += '<li class="data-index="'+i+'">'+
+                                                      '<a href="#" class="item-link item-content">'+
+                                                        '<div class="item-media">'+
+                                                          '<img src="'+dados.urlProfileView+'" >'+
+                                                        '</div>'+
+                                                        '<div class="item-inner">'+
+                                                          '<div class="item-title-row no-arrow">'+
+                                                            '<div class="item-title">'+dados.nameView+'</div>'+
+                                                          '</div>'+
+                                                          '<div class="item-subtitle">'+dados.dataView+'</div>'+
+                                                          '<div class="item-text">'+domicilio+'</div>'+
+                                                        '</div>'+
+                                                      '</a>'+
+                                                    '</li>';
+                                    domicilio = "";
+                        });
+                                listView +=  '</ul>'+
+                                            '</div>'+
+                                          '</div>'+
+                                        '</div>';
+                        localStorage.setItem("listView", listView);
+
+                        viewComun = '<div class="ks-facebook-view"><a href="#" onClick="listView()");">'+qtdview+' <i class="fa fa-lg fa-eye color-blue"></i></a></div>';
+                    }
+
+                    //atualizar condominio logado
+                    if (push==true && localStorage.getItem("sindicoIdsindico")) {
+                        updateCond(data.comunicado[i].idCondominio,true);
+                    }
+                    if (push==true && localStorage.getItem("administradoraIdadministradora")) {
+                        updateCondAdministradora(data.comunicado[i].idCondominio,true);
+                    }
+
+                    if (data.comunicado[i].urlComunicado!="images/sem_foto_icone.jpg") {
+
+                        myPhotoBrowserComunicadocont = myApp.photoBrowser({
+                            theme: 'dark',
+                            ofText: 'de',
+                            backLinkText: '',
+                            spaceBetween: 0,
+                            navbar: true,
+                            toolbar: false,
+                            photos : [data.comunicado[i].urlComunicado],
+                            type: 'popup'
+                        });
+
+                        if (data.comunicado[i].urlComunicado.indexOf(".pdf")!=-1 || data.comunicado[i].urlComunicado.indexOf(".PDF")!=-1) {
+                            pdfView = "onclick=openURLBrowser('"+data.comunicado[i].urlComunicado+"');";
+
+                                imgComunicado = '<div class="card-content-cont bg-red" '+pdfView+'><i class="fa fa-file-pdf-o fa-3x"></i>'+
+                                                            //'<img src="images/icon_pdf.png" '+pdfView+' width="100%">'+
+                                                            '<div class="view-pdf">Clique para visualizar</div>'+
+                                                        '</div>';
+                        }else{
+                            imgZoom = "onclick=myPhotoBrowserComunicadocont.open();";
+
+                            if (data.comunicado[i].urlComunicado!="images/sem_foto_icone.jpg") {
+                                imgComunicado = '<div class="card-content-cont"><i '+imgZoom+' class="fa fa-search-plus fa-3x"></i>'+
+                                                            '<img src="'+data.comunicado[i].urlComunicado+'" '+imgZoom+' width="100%">'+
+                                                        '</div>';
+                            }
+                        }
+
+                    }
+
+                    datacomunicado += '<li>'+
+                                            '<div class="card-cont ks-facebook-card">'+ imgComunicado +
+                                                '<div class="card-header">'+
+                                                    '<div class="ks-facebook-avatar">'+
+                                                        '<img src="'+data.comunicado[i].urlProfile+'" width="34">'+
+                                                    '</div>'+
+                                                    '<div class="ks-facebook-name">'+data.comunicado[i].name+'</div>'+
+                                                    '<div class="ks-facebook-date">'+data.comunicado[i].dataComunicado+'</div>'+
+                                                    viewComun+
+                                                '</div>'+
+                                                '<div class="card-content-inner">'+
+                                                    '<p class="facebook-title">'+data.comunicado[i].tituloComunicado+'</p>'+
+                                                    '<p class="facebook-date">'+nl2br(data.comunicado[i].descricaoComunicado)+'</p>'+
+                                                '</div>'+
+                                            '</div>'+
+                                        '</li>';
+                        imgComunicado = "";
+                    $('#comunicadocont-cont').html(datacomunicado);
+
+                    //marcar comunicado como lido
+                    $('#comunmorador-cont li[data-index='+eq+'] a .item-inner').removeClass("textbold");
+                    
+                    //subtrair badges
+                    if (data.comunicado[i].moradorview==true || data.comunicado[i].portariaview==true || data.comunicado[i].sindicoview==true || data.comunicado[i].adminview==true) {
+                        if ($(".badgecomunmorador span").html()!="") {
+                            //subtrair badge tab
+                            $(".badgecomunmorador span").html(parseInt($(".badgecomunmorador span").text())-1);
+                        }
+                        if ($(".badgecomunicado span").html()!="") {
+                            //subtrair badge icon
+                            $(".badgecomunicado span").html(parseInt($(".badgecomunicado span").text())-1);
+                        }
+                    }
                 }
             
             },error: function(data) {
@@ -9077,7 +10654,8 @@ function comunmoradorcont(id){
                 var qtd = data.resposta.length;
                 var imgResposta = "";
                 var imgZoom;
-                var imgTitle = "Aptohome";
+                var imgTitle = $nameapp;
+
                 var dataresp;
 
                 for (var i = 0; i < qtd; i++) {
@@ -9112,7 +10690,7 @@ function comunmoradorcont(id){
                                                     '<div class="ks-facebook-date">'+data.resposta[i].dataResposta+'</div>'+
                                                 '</div>'+
                                                 '<div class="card-content-inner">'+
-                                                    '<p class="facebook-date">'+data.resposta[i].descricaoResposta+'</p>'+
+                                                    '<p class="facebook-date">'+nl2br(data.resposta[i].descricaoResposta)+'</p>'+
                                                 '</div>'+
                                             '</div>'+
                                         '</li>';
@@ -9123,6 +10701,8 @@ function comunmoradorcont(id){
 
             },error: function(data) {
 
+                /*myApp.hideIndicator();
+                myApp.alert('Erro! Tente novamente.');*/
             }
         });
 
@@ -9169,11 +10749,9 @@ function cameraComunmorador() {
 // Take picture using device camera and retrieve image as base64-encoded string
     navigator.camera.getPicture(onSuccessComunmorador, onFailComunmorador, {
     quality: 80,
-    allowEdit : true,
     targetWidth: 1500,
     correctOrientation: true,
-    destinationType: Camera.DestinationType.DATA_URL,
-    saveToPhotoAlbum: true
+    destinationType: Camera.DestinationType.DATA_URL
     });
 }
 
@@ -9182,7 +10760,6 @@ function cameraFileComunmorador(source) {
 // Retrieve image file location from specified source
     navigator.camera.getPicture(onSuccessComunmorador, onFailComunmorador, {
     quality: 50,
-    allowEdit: true,
     targetWidth: 1000,
     destinationType: Camera.DestinationType.DATA_URL,
     sourceType: Camera.PictureSourceType.PHOTOLIBRARY
@@ -9251,7 +10828,7 @@ $('#inserircomunmorador').on('click', function(){
 $('#butinserircomunmorador').on('click', function(){
     //alert("enviar");
 
-    if (($$('#txttitcomunmorador').val()!="") &&  ($$('#txtdescricaocomunmorador').val()!="")) {
+    if (($$('#blocolistmorador').val()!="" || $$('#blocolistmorador.sembloco').val()!="") && ($$('#domiciliolistmorador').val()!="") && ($$('#moradorlistmorador').val()!="") && ($$('#txttitcomunmorador').val()!="") && ($$('#txtdescricaocomunmorador').val()!="")) {
 
             enviarcomunmorador();
 
@@ -9291,6 +10868,7 @@ $$('#pdfFileComunmorador').on('change', function (e) {
         }
     }else{
         myApp.alert('Formato inválido! Escolha um arquivo no formato PDF.');
+        myApp.hideIndicator();
     }
 
 });
@@ -9436,7 +11014,7 @@ function interfone(){
                                                             '<div class="item-title">'+data.morador[i].name+'</div>'+
                                                             '<div class="item-after"><i class="fa fa-lg fa-2x fa-phone color-green"></i></div>'+
                                                           '</div>'+
-                                                          '<div class="item-text">Apto: '+data.morador[i].num_domicilio+num_bloco+'</div>'+
+                                                          '<div class="item-text">'+localStorage.getItem("labelapto")+': '+data.morador[i].num_domicilio+num_bloco+'</div>'+
                                                         '</div>'+
                                                       '</a>'+
                                                     '</li>';
@@ -9459,7 +11037,7 @@ function interfonecont(idmorador,urlMorador,nome,apto){
 
         // seleciona som da notificação
         var sound;
-        sound = "http://www.aptohome.com.br/sounds/ton.mp3";
+        sound = "https://www.aptohome.com.br/sounds/ton.mp3";
 
         var media = new Media(sound, mediaSuccess, mediaError, mediaStatus);
 
@@ -9505,7 +11083,7 @@ function interfonecont(idmorador,urlMorador,nome,apto){
                             '</div>'+
                             '<div class="item-text-call">Realizando chamanda...</div>'+
                             '<div class="item-title-call">'+namecond+'</div>'+
-                            '<div class="item-text-call">Apto: '+apto+'</div>'+
+                            '<div class="item-text-call">'+localStorage.getItem("labelapto")+': '+apto+'</div>'+
                             '<div class="call-action-but">'+
                                 '<span class="fa-stack fa-lg" id="endcall">'+
                                   '<i class="fa fa-circle fa-stack-2x bg-red-call"></i>'+
@@ -9530,9 +11108,9 @@ function interfonecont(idmorador,urlMorador,nome,apto){
             //remoteVideosEl: '',
             //autoRequestMedia: true,
             //detectSpeakingEvents: true,
-            adjustPeerVolume: false,
+            adjustPeerVolume: 1,
             peerVolumeWhenSpeaking: 1,
-            autoAdjustMic: false,
+            autoAdjustMic: 1,
             media: {
               audio: {
                 optional: [
@@ -9640,7 +11218,7 @@ function interfonecont(idmorador,urlMorador,nome,apto){
                     });
                         //window.location = "index.html";
                 }
-            }, 40000);
+            }, 50000);
 
             // desligar a transmissao da camera
             var mute = 0;
@@ -9660,7 +11238,7 @@ function interfonecont(idmorador,urlMorador,nome,apto){
             // if local or remote stream is muted
             connection.onmute = function(e) {
                 console.log("onmute");
-                e.mediaElement.setAttribute('poster', 'http://www.qygjxz.com/data/out/32/4365897-black-picture.jpg');
+                e.mediaElement.setAttribute('poster', 'https://www.qygjxz.com/data/out/32/4365897-black-picture.jpg');
             };
 
             // if local or remote stream is unmuted
@@ -9870,9 +11448,9 @@ function chamadamorador(idmorador,apto,namefrom,urlprofile){
             //remoteVideosEl: '',
             //autoRequestMedia: true,
             //detectSpeakingEvents: true,
-            adjustPeerVolume: false,
+            adjustPeerVolume: 1,
             peerVolumeWhenSpeaking: 1,
-            autoAdjustMic: false,
+            autoAdjustMic: 1,
             media: {
               audio: {
                 optional: [
@@ -9947,7 +11525,7 @@ function chamadamorador(idmorador,apto,namefrom,urlprofile){
             // if local or remote stream is muted
             connection.onmute = function(e) {
                 console.log("onmute");
-                e.mediaElement.setAttribute('poster', 'http://www.qygjxz.com/data/out/32/4365897-black-picture.jpg');
+                e.mediaElement.setAttribute('poster', 'https://www.qygjxz.com/data/out/32/4365897-black-picture.jpg');
             };
 
             // if local or remote stream is unmuted
@@ -10127,9 +11705,9 @@ function chamadamoradorpush(idmorador,apto,namefrom,urlprofile){
             //remoteVideosEl: '',
             //autoRequestMedia: true,
             //detectSpeakingEvents: true,
-            adjustPeerVolume: false,
+            adjustPeerVolume: 1,
             peerVolumeWhenSpeaking: 1,
-            autoAdjustMic: false,
+            autoAdjustMic: 1,
             media: {
               audio: {
                 optional: [
@@ -10204,7 +11782,7 @@ function chamadamoradorpush(idmorador,apto,namefrom,urlprofile){
             // if local or remote stream is muted
             connection.onmute = function(e) {
                 //console.log("onmute");
-                e.mediaElement.setAttribute('poster', 'http://www.qygjxz.com/data/out/32/4365897-black-picture.jpg');
+                e.mediaElement.setAttribute('poster', 'https://www.qygjxz.com/data/out/32/4365897-black-picture.jpg');
             };
 
             // if local or remote stream is unmuted
@@ -10366,7 +11944,7 @@ console.log("alertadechegadahome");
                     } else {
                         tipo = "";
                     }
-                    if (data.alerta[i].urlVeiculo!="http://www.aptohome.com.br/img/sem_foto_icone.jpg") {
+                    if (data.alerta[i].urlVeiculo!="https://www.aptohome.com.br/img/sem_foto_icone.jpg" || data.alerta[i].urlVeiculo!="http://www.aptohome.com.br/img/sem_foto_icone.jpg") {
                         alertaveiculo = '<div class="alertaveiculohome">'+
                                             '<div class="item-media" style="border:solid 4px '+data.alerta[i].corVeiculo+'">'+
                                                 '<img src="'+data.alerta[i].urlVeiculo+'" >'+
@@ -10557,7 +12135,7 @@ function alertadechegadacont(id){
                         } else {
                             tipo = "";
                         }
-                        if (data.alerta[i].urlVeiculo!="http://www.aptohome.com.br/img/sem_foto_icone.jpg") {
+                        if (data.alerta[i].urlVeiculo!="https://www.aptohome.com.br/img/sem_foto_icone.jpg" || data.alerta[i].urlVeiculo!="http://www.aptohome.com.br/img/sem_foto_icone.jpg") {
                             alertaveiculo = '<div class="alertaveiculohome">'+
                                                 '<div class="item-media" style="border:solid 4px '+data.alerta[i].corVeiculo+'">'+
                                                     '<img src="'+data.alerta[i].urlVeiculo+'" >'+
@@ -10708,7 +12286,7 @@ function alertadechegadacont(id){
 
             function locError(error) {
                 // the current position could not be located
-                //alert("The current position could not be found!");
+                console.log("locError = The current position could not be found!");
             }
 
             function setCurrentPosition(pos) {
@@ -10801,7 +12379,7 @@ myApp.onPageReinit('alertadechegadacont', function (page) {
         myApp.confirm('Deseja realmente concluir o Aviso de Chegada?', function () {
 
                 $.ajax({
-                    url: $server+"functionAppAlerta.php?guid="+localStorage.getItem('guidalertadechegadacont')+"&action=deltracking",
+                    url: $server+"functionAppAlerta.php?guid="+localStorage.getItem('guidalertadechegadacont')+"&apiKey="+$apiKey+"&action=deltracking",
                     data : "get",
                     success: function(data) {
                         console.log("del tracking");
@@ -10813,7 +12391,8 @@ myApp.onPageReinit('alertadechegadacont', function (page) {
                         localStorage.removeItem('idveiculoalerta');
                         localStorage.removeItem('trackingactive');
                     },error: function(data) {
-
+                        /*myApp.hideIndicator();
+                        myApp.alert('Erro! Tente novamente.');*/
                     }
                 });
             mainView.router.load({pageName: 'index'});
@@ -10900,7 +12479,7 @@ function banner(){
 
 
 function delbanner(guid) {
-    myApp.confirm('Deseja deletar esse Banner?', function () {
+    myApp.confirm('Deseja apagar esse item?', function () {
 
         myApp.showIndicator();
 
@@ -10913,7 +12492,7 @@ function delbanner(guid) {
                 myApp.alert('Erro! Tente novamente ='+data);
             } else {
                 myApp.hideIndicator();
-                myApp.alert('Banner excluido com sucesso!', function () { mainView.router.load({pageName: 'banner'}); banner(); myApp.closeModal('.popup.modal-in');});
+                myApp.alert('Item excluido com sucesso!', function () { mainView.router.load({pageName: 'banner'}); banner(); myApp.closeModal('.popup.modal-in');});
                 //myApp.swipeoutDelete($$('li.img-banner').eq($$("li.img-banner[data-index="+$$(this).attr("data-index").val()+"]").index()));
                 //myApp.swipeoutDelete($$('li.swipeout-cronograma').eq(eq));
             }
@@ -10943,7 +12522,7 @@ function bannercont(id){
         }
 
         $.ajax({
-            url: $server+"functionAppBanner.php?idbanner="+id+"&action=list",
+            url: $server+"functionAppBanner.php?idbanner="+id+"&idmorador="+localStorage.getItem("moradorIdmorador")+"&idsindico="+localStorage.getItem("sindicoIdsindico")+"&idportaria="+localStorage.getItem("portariaIdportaria")+"&idadministradora="+localStorage.getItem("administradoraIdadministradora")+"&action=list",
             dataType : "json",
             success: function(data) {
             myApp.hideIndicator();
@@ -10958,7 +12537,7 @@ function bannercont(id){
                         imgBanner = '<img src="'+data.banner[i].urlBanner+'">';
                     }
                     if (data.banner[i].url!="") {
-                        linkurl = "onclick=openURLBrowser('"+data.banner[i].url+"');";
+                        linkurl = "onclick=clickbanner('"+data.banner[i].idBanner+"');openURLBrowser('"+data.banner[i].url+"');";
                     }
                     databanner = '<a href="#" '+linkurl+'>'+imgBanner+'</a>';
                     imgBanner = "";
@@ -11002,8 +12581,7 @@ function cameraBanner() {
     targetWidth: 1500,
     targetHeight: 2500,
     correctOrientation: true,
-    destinationType: Camera.DestinationType.DATA_URL,
-    saveToPhotoAlbum: true
+    destinationType: Camera.DestinationType.DATA_URL
     });
 }
 
@@ -11136,10 +12714,101 @@ function enviarbanner()
 
 
 ///////////////////////////// agendamento espaço /////////////////////////////
+    myApp.onPageReinit('agendamentodeespaco', function (page) {
+        espaco(dataSelected,localSelected);
+    });
+    myApp.onPageInit('agendamentodeespaco', function (page) {
+        var today = new Date();
+        var minDate = new Date().setDate(today.getDate() - 1);
+        var monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto' , 'Setembro' , 'Outubro', 'Novembro', 'Dezembro'];
+        var dayNamesShort = ['Dom', 'Seg', 'Ter', 'Quar', 'Quin', 'Sex', 'Sáb']
+
+        var calendarInline = myApp.calendar({
+            container: '#calendar-inline-container',
+            input: '#calendar-agendamentodeespaco',
+            value: [new Date()],
+            dayNamesShort: dayNamesShort,
+            dateFormat: 'dd-mm-yyyy',
+            //minDate: minDate,
+            toolbarTemplate: 
+                '<div class="toolbar calendar-custom-toolbar">' +
+                    '<div class="toolbar-inner">' +
+                        '<div class="left">' +
+                            '<a href="#" class="link icon-only"><i class="icon icon-back"></i></a>' +
+                        '</div>' +
+                        '<div class="center"></div>' +
+                        '<div class="right">' +
+                            '<a href="#" class="link icon-only"><i class="icon icon-forward"></i></a>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>',
+            onOpen: function (p) {
+                $$('.calendar-custom-toolbar .center').text(monthNames[p.currentMonth] +',' + p.currentYear);
+                $$('.calendar-custom-toolbar .left .link').on('click', function () {
+                    calendarInline.prevMonth();
+                });
+                $$('.calendar-custom-toolbar .right .link').on('click', function () {
+                    calendarInline.nextMonth();
+                });
+                
+            },
+            onChange: function (picker, values, displayValues) {
+                mesSelected = $('#calendar-inline-container .picker-calendar-day-selected').attr("data-month");
+                mesSelected = mesSelected+++1;
+                diaSelected = $('#calendar-inline-container .picker-calendar-day-selected').attr("data-day");
+                
+                if (diaSelected<10) {
+                    diaSelected = "0"+diaSelected;
+                }
+                if (mesSelected<10) {
+                    mesSelected = "0"+mesSelected;
+                }
+                anoSelected = $('#calendar-inline-container .picker-calendar-day-selected').attr("data-year");
+                dataSelected = anoSelected+"-"+mesSelected+"-"+diaSelected;
+                
+                var dataSelectedBr = diaSelected+"/"+mesSelected+"/"+anoSelected;
+                console.log("onChange = "+dataSelectedBr);
+                //$('.selecionarespaco').html(localDescSelected);
+                $("#dataagendamento").val(dataSelectedBr);
+                
+                //espera 1seg para que a mudança de mês atualize primeiro
+                setTimeout(function () {
+                    espaco(dataSelected,localSelected);
+                }, 500);
+
+            },
+            onMonthYearChangeStart: function (p) {
+                $$('.calendar-custom-toolbar .center').text(monthNames[p.currentMonth] +', ' + p.currentYear);
+                
+                mesSelected = $('#calendar-inline-container .picker-calendar-day-selected').attr("data-month");
+                mesSelected = mesSelected+++1;
+                diaSelected = $('#calendar-inline-container .picker-calendar-day-selected').attr("data-day");
+                
+                if (diaSelected<10) {
+                    diaSelected = "0"+diaSelected;
+                }
+                if (mesSelected<10) {
+                    mesSelected = "0"+mesSelected;
+                }
+                //diaSelected ="01";
+                anoSelected = $('#calendar-inline-container .picker-calendar-day-selected').attr("data-year");
+                dataSelected = anoSelected+"-"+mesSelected+"-"+diaSelected;
+                
+                var dataSelectedBr = diaSelected+"/"+mesSelected+"/"+anoSelected;
+                //console.log("onMonthYearChangeStart = "+dataSelectedBr);
+                //$('.selecionarespaco').html(localDescSelected);
+                $("#dataagendamento").val(dataSelectedBr);
+                espaco(dataSelected,localSelected);
+            }
+        });
+    });
+
 var localSelected = "";
 var localDescSelected = "";
+var dataSelected = "";
 function agendamentodeespaco() {
-        //console.log("entrei");
+
+
         var mesSelected = $('#calendar-inline-container .picker-calendar-day-selected').attr("data-month");
         mesSelected = mesSelected+++1;
         var diaSelected = $('#calendar-inline-container .picker-calendar-day-selected').attr("data-day");
@@ -11147,8 +12816,11 @@ function agendamentodeespaco() {
         if (diaSelected<10) {
             diaSelected = "0"+diaSelected;
         }
+        if (mesSelected<10) {
+            mesSelected = "0"+mesSelected;
+        }
         var anoSelected = $('#calendar-inline-container .picker-calendar-day-selected').attr("data-year");
-        var dataSelected = anoSelected+"-"+mesSelected+"-"+diaSelected;
+        dataSelected = anoSelected+"-"+mesSelected+"-"+diaSelected;
         
         var dataSelectedBr = diaSelected+"/"+mesSelected+"/"+anoSelected;
 
@@ -11162,8 +12834,19 @@ function agendamentodeespaco() {
                 if (data!=null) {
                     var datataxa = "";
                     var qtd = data.taxa.length;
-                    var popoverTaxa = '<div class="popover">'+
-                                      '<div class="popover-inner">'+
+
+
+
+                    var popoverTaxa = '<div class="page" data-page="espacoListCond">'+
+                                    '<div class="navbar">'+
+                                        '<div class="navbar-inner">'+
+                                            '<div class="left"><a href="#" class="open-panel link icon-only"><i class="icon icon-bars"></i></a></div>'+
+                                            '<div class="center">SELECIONE UMA OPÇÃO</div>'+
+                                            '<div class="right"><a href="#" class="back link icon-only"><i class="icon icon-back"></i></a></div>'+
+                                            '<div class="right no-margin"><a href="#index" class="link icon-only"><i class="icon fa fa-home"></i></a></div>'+
+                                        '</div>'+
+                                    '</div>'+
+                                      '<div class="page-content">'+
                                         '<div class="list-block">'+
                                           '<ul>';
 
@@ -11173,7 +12856,7 @@ function agendamentodeespaco() {
 
                     for (var i = 0; i < qtd; i++) {
 
-                        popoverTaxa += '<li><a href="#" onClick="espaco(\''+dataSelected+'\',\''+data.taxa[i].idTaxa+'\'), $(\'.selecionarespaco\').html(\''+data.taxa[i].nomeTaxa+'\'),localSelected='+data.taxa[i].idTaxa+',localDescSelected=\''+data.taxa[i].nomeTaxa+'\',myApp.closeModal();" class="item-link list-button">'+data.taxa[i].nomeTaxa+'</li>';
+                        popoverTaxa += '<li><a href="#" onClick="espaco(\''+dataSelected+'\',\''+data.taxa[i].idTaxa+'\'), $(\'.selecionarespaco\').html(\''+data.taxa[i].nomeTaxa+'\'),localSelected='+data.taxa[i].idTaxa+',localDescSelected=\''+data.taxa[i].nomeTaxa+'\',mainView.router.back();" class="item-link list-button"><div class="item-inner">'+data.taxa[i].nomeTaxa+'</div></li>';
 
                     }
                         popoverTaxa +='</ul>'+
@@ -11182,22 +12865,24 @@ function agendamentodeespaco() {
                                 '</div>';
 
                     localStorage.setItem("arrEspaco", popoverTaxa);
-                    console.log("arrEspaco = "+popoverTaxa);
+                    //console.log("arrEspaco = "+popoverTaxa);
                     $('.selecionarespaco').html(localDescSelected);
                     
-                    espaco(dataSelected,localSelected);
+                    //espaco(dataSelected,localSelected);
 
                 }              
             },error: function(data) {
-                //myApp.hideIndicator();
-                //$('#banner-cont').html("<li class='semregistro'>Nenhum registro cadastrado</li>");
+
+
+
             }
         });
     $$('.actionOptionAgendamento').on('click', function (e) {
-        var clickedLinkTaxa = $(".selecionarespaco");
-        /*var groups = [actionOptionAgendamentoGrup1, actionOptionAgendamentoGrup2, actionOptionAgendamentoGrup3];
-        myApp.actions(groups);*/
-        myApp.popover(localStorage.getItem("arrEspaco"), clickedLinkTaxa);
+        mainView.router.loadContent(localStorage.getItem("arrEspaco"));
+
+
+
+
     });
     
 }
@@ -11215,14 +12900,23 @@ console.log("dia = "+dia+" local = "+idlocalespaco);
                 if (data!=null) {
                     var datataxa = "";
                     var qtd = data.taxa.length;
-                    var popoverTaxa = '<div class="popover">'+
-                                      '<div class="popover-inner">'+
+
+                    var popoverTaxa = '<div class="page" data-page="espacoListCond">'+
+                                    '<div class="navbar">'+
+                                        '<div class="navbar-inner">'+
+                                            '<div class="left"><a href="#" class="open-panel link icon-only"><i class="icon icon-bars"></i></a></div>'+
+                                            '<div class="center">SELECIONE UMA OPÇÃO</div>'+
+                                            '<div class="right"><a href="#" class="back link icon-only"><i class="icon icon-back"></i></a></div>'+
+                                            '<div class="right no-margin"><a href="#index" class="link icon-only"><i class="icon fa fa-home"></i></a></div>'+
+                                        '</div>'+
+                                    '</div>'+
+                                      '<div class="page-content">'+
                                         '<div class="list-block">'+
                                           '<ul>';
 
                     for (var i = 0; i < qtd; i++) {
 
-                        popoverTaxa += '<li><a href="#" onClick="espaco(\''+dia+'\',\''+data.taxa[i].idTaxa+'\'), $(\'.selecionarespaco\').html(\''+data.taxa[i].nomeTaxa+'\'),localSelected='+data.taxa[i].idTaxa+',localDescSelected=\''+data.taxa[i].nomeTaxa+'\',myApp.closeModal();" class="item-link list-button">'+data.taxa[i].nomeTaxa+'</li>';
+                        popoverTaxa += '<li><a href="#" onClick="espaco(\''+dia+'\',\''+data.taxa[i].idTaxa+'\'), $(\'.selecionarespaco\').html(\''+data.taxa[i].nomeTaxa+'\'),localSelected='+data.taxa[i].idTaxa+',localDescSelected=\''+data.taxa[i].nomeTaxa+'\',mainView.router.back();" class="item-link list-button"><div class="item-inner">'+data.taxa[i].nomeTaxa+'</div></li>';
 
                     }
                         popoverTaxa +='</ul>'+
@@ -11231,20 +12925,22 @@ console.log("dia = "+dia+" local = "+idlocalespaco);
                                 '</div>';
 
                     localStorage.setItem("arrEspaco", popoverTaxa);
-                    console.log("arrEspaco = "+popoverTaxa);
+                    //console.log("arrEspaco = "+popoverTaxa);
                     //$('.selecionarespaco').html(localDescSelected);
 
                 }              
             },error: function(data) {
-                //myApp.hideIndicator();
-                //$('#banner-cont').html("<li class='semregistro'>Nenhum registro cadastrado</li>");
+
+
+
             }
         });
     $$('.actionOptionAgendamento').on('click', function (e) {
-        var clickedLinkTaxa = $(".selecionarespaco");
-        /*var groups = [actionOptionAgendamentoGrup1, actionOptionAgendamentoGrup2, actionOptionAgendamentoGrup3];
-        myApp.actions(groups);*/
-        myApp.popover(localStorage.getItem("arrEspaco"), clickedLinkTaxa);
+        mainView.router.loadContent(localStorage.getItem("arrEspaco"));
+
+
+
+
     });
 
 
@@ -11291,6 +12987,7 @@ console.log("dia = "+dia+" local = "+idlocalespaco);
             
             },error: function(data) {
                 myApp.hideIndicator();
+                //myApp.alert('Erro! Tente novamente.');
             }
         });
 
@@ -11311,10 +13008,42 @@ console.log("dia = "+dia+" local = "+idlocalespaco);
                 $('.inseriragendamentodeespaco').addClass('invisivel');
             }
         }*/
-        if (localStorage.getItem("sindicoCondominioId") || localStorage.getItem("administradoraCondominioId")) {
+        if (localStorage.getItem("sindicoCondominioId") || localStorage.getItem("administradoraCondominioId") || localStorage.getItem("portariaIdportaria")) {
             $('.inseriragendamentodeespaco').removeClass('invisivel');
         }
+        
+        //se data marcada menor que data atual
+        var strData = dia;
+        var partesData = strData.split("-");
+        var dataaux = new Date();
 
+        var mes;
+        var diaaux;
+        if ((dataaux.getMonth()+1)<10) {
+            mes = "0"+(dataaux.getMonth()+1);
+        }else{
+            mes = (dataaux.getMonth()+1);
+        }
+        if (dataaux.getDate()<10) {
+            diaaux = "0"+(dataaux.getDate());
+        }else{
+            diaaux = (dataaux.getDate());
+        }
+        var ano = dataaux.getFullYear();
+
+        console.log("data = "+partesData[0] +"-"+ partesData[1] +"-"+ partesData[2]);
+        console.log("datahoje = "+ano+"-"+mes+"-"+diaaux);
+        
+        var data = new Date(partesData[0], partesData[1], partesData[2]);
+        var datahoje = new Date(ano, mes, diaaux);
+
+        console.log("data = "+data.getTime());
+        console.log("datahoje = "+datahoje.getTime());
+
+        if (data.getTime()<datahoje.getTime()) {
+            console.log("entrei");
+            $('.inseriragendamentodeespaco').addClass('invisivel');
+        }
 
         $.ajax({
             url: $server+"functionAppEspaco.php?idcondominio="+localStorage.getItem("condominioId")+"&dia="+dia+"&idlocalespaco="+idlocalespaco+"&action=list",
@@ -11332,8 +13061,10 @@ console.log("dia = "+dia+" local = "+idlocalespaco);
                 for (var i = 0; i < qtd; i++) {
 
                     if (data.espaco[i].vazio=="vazio") {
+                        console.log("não tem agendamento");
                         $('#espaco-cont').html('<li><div class="item-content">Nenhuma reserva para data selecionada</div></li>');
                     } else{
+                        console.log("tem agendamento");
 
                         var splithoraini = data.espaco[i].horaIni;
                         splithoraini = splithoraini.split(" ");
@@ -11364,18 +13095,25 @@ console.log("dia = "+dia+" local = "+idlocalespaco);
                         } else {
                             cor="#ffc107";
                             invisivel="invisivel ";
-                            if (localStorage.getItem("sindicoIdsindico") || localStorage.getItem("administradoraIdadministradora") || (data.espaco[i].idMorador==localStorage.getItem("moradorIdmorador"))) {
-                                swipeout = "swipeout ";
-                                invisivel="";
-                            }
-                            
                         }
+
+                        // verifica quem pode aprovar ou cancelar agendamento
+                        if (localStorage.getItem("sindicoIdsindico") || localStorage.getItem("administradoraIdadministradora") || (data.espaco[i].idMorador==localStorage.getItem("moradorIdmorador"))) {
+                            swipeout = "swipeout ";
+                            invisivel="";
+                        }
+
+                        // verifica quem pode cancelar agendamento
+
 
                         if (localStorage.getItem("sindicoIdsindico") || localStorage.getItem("administradoraIdadministradora") || (data.espaco[i].idMorador==localStorage.getItem("moradorIdmorador"))) {
                             //confespaco = "<a href='#' onclick = confespaco('"+data.espaco[i].guid+"',"+i+") class='action1 bg-green'>Confirmar</a>";
-                            delespaco = "onclick = delespaco('"+data.espaco[i].guid+"',"+i+");";
+                            delespaco = "onclick = delespaco('"+data.espaco[i].guid+"','"+i+"','"+localStorage.getItem("sindicoIdsindico")+"','"+localStorage.getItem("administradoraIdadministradora")+"','"+localStorage.getItem("moradorIdmorador")+"');";
+
                         }
-                        if (localStorage.getItem("sindicoIdsindico") || localStorage.getItem("administradoraIdadministradora")) {
+
+                        // verifica quem pode aprovar agendamento
+                        if ((data.espaco[i].active=="0") && (localStorage.getItem("sindicoIdsindico") || localStorage.getItem("administradoraIdadministradora"))) {
                             confespaco = "<a href='#' onclick = confespaco('"+data.espaco[i].guid+"',"+i+") class='action1 bg-green'>Confirmar</a>";
                             //delespaco = "onclick = delespaco('"+data.espaco[i].guid+"',"+i+");";
                         }
@@ -11407,6 +13145,7 @@ console.log("dia = "+dia+" local = "+idlocalespaco);
             
             },error: function(data) {
                 myApp.hideIndicator();
+                //myApp.alert('Erro! Tente novamente.');
             }
         });
         //console.log(dia+","+idlocalespaco);
@@ -11449,7 +13188,7 @@ function confespaco(guid,eq){
             success: function(data) {
             if (data!="ok") {
                 myApp.hideIndicator();
-                myApp.alert('Erro! Tente novamente ='+data);
+                myApp.alert('Erro! Tente novamente.');
             } else {
                 myApp.hideIndicator();
                 myApp.alert('Agendamento confirmado com sucesso!', function () { mainView.router.load({pageName: 'agendamentodeespaco'});agendamentodeespaco();});
@@ -11465,29 +13204,35 @@ function confespaco(guid,eq){
 }
 
 ///////////////////////////// deletar espaco ///////////////////////////
-function delespaco(guid,eq){
+function delespaco(guid,eq,idsindico,idadministradora,idmorador){
 
-    myApp.confirm('Deseja deletar esse item?', function () {
 
-        myApp.showIndicator();
+    myApp.confirm('Deseja cancelar esse agendamento?', function () {
 
-        $.ajax({
-            url: $server+"functionAppEspaco.php?guid="+guid+"&apiKey="+$apiKey+"&action=deletar",
-            data : "get",
-            success: function(data) {
-            if (data!="ok") {
-                myApp.hideIndicator();
-                myApp.alert('Erro! Tente novamente ='+data);
-            } else {
-                myApp.hideIndicator();
-                myApp.swipeoutDelete($$('li.swipeout-espaco').eq($("li.swipeout-espaco[data-index="+eq+"]").index()));
-                //myApp.swipeoutDelete($$('li.swipeout-espaco').eq(eq));
-            }
-            
-            },error: function(data) {
-                myApp.hideIndicator();
-                myApp.alert('Erro! Tente novamente.');
-            }
+        myApp.prompt('Qual motivo do cancelamento?', function (motivo) {
+
+            myApp.showIndicator();
+
+            $.ajax({
+                url: $server+"functionAppEspaco.php?guid="+guid+"&motivo="+motivo+"&idsindico="+idsindico+"&idadministradora="+idadministradora+"&idmorador="+idmorador+"&apiKey="+$apiKey+"&action=deletar",
+
+                data : "get",
+                success: function(data) {
+                if (data!="ok") {
+                    myApp.hideIndicator();
+                    myApp.alert(data);
+
+                } else {
+                    myApp.hideIndicator();
+                    myApp.swipeoutDelete($$('li.swipeout-espaco').eq($("li.swipeout-espaco[data-index="+eq+"]").index()));
+                    //myApp.swipeoutDelete($$('li.swipeout-espaco').eq(eq));
+                }
+                
+                },error: function(data) {
+                    myApp.hideIndicator();
+                    myApp.alert('Erro! Tente novamente.');
+                }
+            });
         });
     });
 
@@ -11565,7 +13310,7 @@ function espacocont(id,push){
                                                     '<br>'+data.espaco[i].nomeLocal+
                                                     '<br>'+horaini+" às "+horater+
                                                     '<br>'+
-                                                    '<br>'+descricaoEspaco+
+                                                    '<br>'+nl2br(descricaoEspaco)+
                                                     '</p>'+
                                                 '</div>'+
                                             '</div>'+
@@ -11621,7 +13366,7 @@ $('.inseriragendamentodeespaco').on('click', function(){
                     var selected = "";
                     var adminSind = "";
 
-                        adminSind = '<option value="" selected="selected">Selecione um Bloco</option>';
+                        adminSind = '<option value="" selected="selected">Selecione uma opção</option>';
 
                         blocolistcomunicado += adminSind;
                         
@@ -11671,7 +13416,7 @@ $('.inseriragendamentodeespaco').on('click', function(){
                     var adminSind = "";
                     var idDomicilio = "";
 
-                    adminSind = '<option value="">Selecione um Apto</option>';
+                    adminSind = '<option value="">Selecione uma opção</option>';
 
                     var selected = "";
                     domiciliolistcomunicado += adminSind;
@@ -11763,10 +13508,20 @@ function valorestaxasagendamento(){
                     }else{
                         $('.descricaoTaxa').hide();
                     }
+                }
+                if (data.taxa[0].periactive==1) {
+                    $(".agenhoraini").hide();
+                    $(".agenhorater").hide();
+                    $(".agenhorainiperi").show();
+                }else{
+                    $(".agenhoraini").show();
+                    $(".agenhorater").show();
+                    $(".agenhorainiperi").hide();
                 }              
             },error: function(data) {
                 //myApp.hideIndicator();
                 //$('#banner-cont').html("<li class='semregistro'>Nenhum registro cadastrado</li>");
+                //myApp.alert('Erro! Tente novamente.');
             }
         });
 }
@@ -11776,27 +13531,46 @@ function valorestaxasagendamento(){
 $$('#butinseriragendamento').on('click', function(){
 
     $$okportsind = true;
-    if (localStorage.getItem("portariaIdportaria") || localStorage.getItem("sindicoCondominioId") || localStorage.getItem("administradoraCondominioId")) {
-        if ($$("#domiciliolistagendamento").val()!="" && $$("#moradorlistagendamento").val()!=""){
-            $$okportsind = true;
-        }else{
-            myApp.alert('Selecione um Bloco, Apto e Morador.'); 
-            $$okportsind = false;
+
+    //verifica se o agendamento por periodo não está visivel
+    if(!$('.agenhorainiperi').is(':visible')){
+        if (localStorage.getItem("portariaIdportaria") || localStorage.getItem("sindicoCondominioId") || localStorage.getItem("administradoraCondominioId")) {
+            if ($$("#domiciliolistagendamento").val()!="" && $$("#moradorlistagendamento").val()!=""){
+                $$okportsind = true;
+            }else{
+                myApp.alert('Preencha todos os campos!'); 
+
+                $$okportsind = false;
+            }
         }
-    }
-    if (($$('#horainicoagendamento').val()!="00:00") &&  ($$('#horaterminoagendamento').val()!="00:00")) {
-        if ($$('#horaterminoagendamento').val()<$$('#horainicoagendamento').val()) {
-            myApp.alert('Hora término deve ser maior que hora início.');
-            $$ok = false;
-        } else if ($$('#horaterminoagendamento').val()==$$('#horainicoagendamento').val()) {
-            myApp.alert('Hora início e término devem ser diferentes.'); 
-            $$ok = false;
+        if (($$('#horainicoagendamento').val()!="00:00") &&  ($$('#horaterminoagendamento').val()!="00:00")) {
+            if ($$('#horaterminoagendamento').val()<$$('#horainicoagendamento').val()) {
+                myApp.alert('Hora término deve ser maior que hora início.');
+                $$ok = false;
+            } else if ($$('#horaterminoagendamento').val()==$$('#horainicoagendamento').val()) {
+                myApp.alert('Hora início e término devem ser diferentes.'); 
+                $$ok = false;
+            }else{
+                $$ok = true;
+            }
         }else{
-            $$ok = true;
+            myApp.alert('Selecione a Hora de início e término.'); 
+            $$ok = false;
         }
     }else{
-        myApp.alert('Selecione a Hora de início e término.'); 
-        $$ok = false;
+        if ($$('#turnoinicoagendamento').val()!="") {
+            if ($$('#turnoinicoagendamento').val()=="08:00") {
+                $$('#horainicoagendamento').val("08:00");
+                $$('#horaterminoagendamento').val("12:00");
+            }else{
+                $$('#horainicoagendamento').val("14:00");
+                $$('#horaterminoagendamento').val("18:00");
+            }
+            $$ok = true;
+        }else{
+            myApp.alert('Preencha todos os campos!');
+            $$ok = false;
+        }        
     }
 
     if ($$ok==true && $$okportsind==true) {
@@ -11853,81 +13627,12 @@ function enviarespaco()
           });
 }
 
+myApp.onPageInit('agendamentodeespaco', function (page) {
 
-    var today = new Date();
-    var minDate = new Date().setDate(today.getDate() - 1);
-    var monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto' , 'Setembro' , 'Outubro', 'Novembro', 'Dezembro'];
-    var dayNamesShort = ['Dom', 'Seg', 'Ter', 'Quar', 'Quin', 'Sex', 'Sáb']
+    //espaco();
 
-    var calendarInline = myApp.calendar({
-        container: '#calendar-inline-container',
-        input: '#calendar-agendamentodeespaco',
-        value: [new Date()],
-        dayNamesShort: dayNamesShort,
-        dateFormat: 'dd-mm-yyyy',
-        minDate: minDate,
-        toolbarTemplate: 
-            '<div class="toolbar calendar-custom-toolbar bg-indigo">' +
-                '<div class="toolbar-inner">' +
-                    '<div class="left">' +
-                        '<a href="#" class="link icon-only"><i class="icon icon-back"></i></a>' +
-                    '</div>' +
-                    '<div class="center"></div>' +
-                    '<div class="right">' +
-                        '<a href="#" class="link icon-only"><i class="icon icon-forward"></i></a>' +
-                    '</div>' +
-                '</div>' +
-            '</div>',
-        onOpen: function (p) {
-            $$('.calendar-custom-toolbar .center').text(monthNames[p.currentMonth] +', ' + p.currentYear);
-            $$('.calendar-custom-toolbar .left .link').on('click', function () {
-                calendarInline.prevMonth();
-            });
-            $$('.calendar-custom-toolbar .right .link').on('click', function () {
-                calendarInline.nextMonth();
-            });
-            
-        },
-        onChange: function (picker, values, displayValues) {
-            mesSelected = $('#calendar-inline-container .picker-calendar-day-selected').attr("data-month");
-            mesSelected = mesSelected+++1;
-            diaSelected = $('#calendar-inline-container .picker-calendar-day-selected').attr("data-day");
-            
-            if (diaSelected<10) {
-                diaSelected = "0"+diaSelected;
-            }
-            anoSelected = $('#calendar-inline-container .picker-calendar-day-selected').attr("data-year");
-            dataSelected = anoSelected+"-"+mesSelected+"-"+diaSelected;
-            
-            var dataSelectedBr = diaSelected+"/"+mesSelected+"/"+anoSelected;
+});
 
-            //$('.selecionarespaco').html(localDescSelected);
-            $("#dataagendamento").val(dataSelectedBr);
-
-            espaco(dataSelected,localSelected);
-
-        },
-        onMonthYearChangeStart: function (p) {
-            $$('.calendar-custom-toolbar .center').text(monthNames[p.currentMonth] +' - ' + p.currentYear);
-            
-            mesSelected = $('#calendar-inline-container .picker-calendar-day-selected').attr("data-month");
-            mesSelected = mesSelected+++1;
-            diaSelected = $('#calendar-inline-container .picker-calendar-day-selected').attr("data-day");
-            
-            if (diaSelected<10) {
-                diaSelected = "0"+diaSelected;
-            }
-            //diaSelected ="01";
-            anoSelected = $('#calendar-inline-container .picker-calendar-day-selected').attr("data-year");
-            dataSelected = anoSelected+"-"+mesSelected+"-"+diaSelected;
-            
-            var dataSelectedBr = diaSelected+"/"+mesSelected+"/"+anoSelected;
-
-            //$('.selecionarespaco').html(localDescSelected);
-            $("#dataagendamento").val(dataSelectedBr);
-            espaco(dataSelected,localSelected);
-        }
-    });
 
 
 /*
@@ -11965,7 +13670,10 @@ function limpar()
 
 /////////////////////////// push ///////////////////////////
 
-        document.addEventListener('app.Ready', onDeviceReady, true);
+        // habilita teste local
+        if ($$testelocal==false) {
+            document.addEventListener('app.Ready', onDeviceReady, true);
+        }
         function onDeviceReady() {
 
             //window.ga.startTrackerWithId("UA-122480317-1", 10);
@@ -11995,15 +13703,17 @@ function limpar()
 
             cordova.getAppVersion.getVersionNumber(function (version) {
                 $$(".version").html("Versão: "+version);
+                localStorage.setItem("version", version);
             });
 
             var push = PushNotification.init({
                 android: {
-                    senderID: "975722403631",
+                    senderID: $$senderID,
+                    icon: "iconnotification"
                 },
                 ios: {
-                    senderID: "975722403631",
-                    gcmSandbox: "false", // false para producao true para desenvolvimento
+                    senderID: $$senderID,
+                    gcmSandbox: "true", // false para producao true para desenvolvimento
                     alert: "true",
                     sound: "true",
                     badge: "false"
@@ -12050,13 +13760,13 @@ function limpar()
                     var sound;
                     if(device.platform.toLowerCase() === "android"){
                         //sound = "/android_asset/www/sounds/notification-android.mp3";
-                        sound = "http://www.aptohome.com.br/sounds/notification-android.mp3";
+                        sound = "https://www.aptohome.com.br/sounds/notification-android.mp3";
                         console.log("sound android: " + sound);
                     }else{
                         /*var path = window.location.pathname;
                         var sizefilename = path.length - (path.lastIndexOf("/")+1);
                         path = path.substr( path, path.length - sizefilename );*/
-                        sound = "http://www.aptohome.com.br/sounds/notification-ios.mp3";
+                        sound = "https://www.aptohome.com.br/sounds/notification-ios.mp3";
                         console.log("sound ios: " + sound);
                     }
                     var media = new Media(sound, mediaSuccess, mediaError);
@@ -12086,17 +13796,17 @@ function limpar()
 
                                 case 'comunmorador':
                                 mainView.router.load({pageName: 'comunicadocont'});
-                                comunmoradorcont(data.additionalData.id);
+                                comunmoradorcont(data.additionalData.id,true);
                                 break;
 
                                 case 'comunportaria':
                                 mainView.router.load({pageName: 'comunicadocont'});
-                                comunportariacont(data.additionalData.id);
+                                comunportariacont(data.additionalData.id,true);
                                 break;
 
                                 case 'transparenciadecontas':
                                 mainView.router.load({pageName: 'transparenciadecontascont'});
-                                transparenciadecontascont(data.additionalData.id);
+                                transparenciadecontascont(data.additionalData.id,true);
                                 break;
 
                                 case 'livroocorrencias':
@@ -12125,6 +13835,10 @@ function limpar()
                                 mainView.router.load({pageName: 'enquetescont'});
                                 enquetescont(data.additionalData.id,true);
                                 break;
+
+                                case 'banner':
+                                bannercont(data.additionalData.id,true);
+                                break;                                
                             }
                         }
                     });
@@ -12134,22 +13848,22 @@ function limpar()
                             switch( data.additionalData.info ){
                                 case 'comuncomunicado':
                                 mainView.router.load({pageName: 'comunicadocont'});
-                                comuncomunicadocont(data.additionalData.id);
+                                comuncomunicadocont(data.additionalData.id,true);
                                 break;
 
                                 case 'comunmorador':
                                 mainView.router.load({pageName: 'comunicadocont'});
-                                comunmoradorcont(data.additionalData.id);
+                                comunmoradorcont(data.additionalData.id,true);
                                 break;
 
                                 case 'comunportaria':
                                 mainView.router.load({pageName: 'comunicadocont'});
-                                comunportariacont(data.additionalData.id);
+                                comunportariacont(data.additionalData.id,true);
                                 break;
 
                                 case 'transparenciadecontas':
                                 mainView.router.load({pageName: 'transparenciadecontascont'});
-                                transparenciadecontascont(data.additionalData.id);
+                                transparenciadecontascont(data.additionalData.id,true);
                                 break;
 
                                 case 'livroocorrencias':
@@ -12175,6 +13889,10 @@ function limpar()
                                 case 'enquete':
                                 mainView.router.load({pageName: 'enquetescont'});
                                 enquetescont(data.additionalData.id,true);
+                                break;
+
+                                case 'banner':
+                                bannercont(data.additionalData.id,true);
                                 break;
                             }
 
@@ -12183,22 +13901,22 @@ function limpar()
                             switch( data.additionalData.info ){
                                 case 'comuncomunicado':
                                 mainView.router.load({pageName: 'comunicadocont'});
-                                comuncomunicadocont(data.additionalData.id);
+                                comuncomunicadocont(data.additionalData.id,true);
                                 break;
 
                                 case 'comunmorador':
                                 mainView.router.load({pageName: 'comunicadocont'});
-                                comunmoradorcont(data.additionalData.id);
+                                comunmoradorcont(data.additionalData.id,true);
                                 break;
 
                                 case 'comunportaria':
                                 mainView.router.load({pageName: 'comunicadocont'});
-                                comunportariacont(data.additionalData.id);
+                                comunportariacont(data.additionalData.id,true);
                                 break;
 
                                 case 'transparenciadecontas':
                                 mainView.router.load({pageName: 'transparenciadecontascont'});
-                                transparenciadecontascont(data.additionalData.id);
+                                transparenciadecontascont(data.additionalData.id,true);
                                 break;
 
                                 case 'livroocorrencias':
@@ -12224,6 +13942,10 @@ function limpar()
                                 case 'enquete':
                                 mainView.router.load({pageName: 'enquetescont'});
                                 enquetescont(data.additionalData.id,true);
+                                break;
+
+                                case 'banner':
+                                bannercont(data.additionalData.id,true);
                                 break;
 
                             }
@@ -12406,7 +14128,7 @@ $('.buttonshare').hide();
             myApp.confirm('Deseja realmente cancelar o Aviso de Chegada?', function () {
 
                     $.ajax({
-                        url: $server+"functionAppAlerta.php?guid="+localStorage.getItem('guidtracking')+"&action=deltracking",
+                        url: $server+"functionAppAlerta.php?guid="+localStorage.getItem('guidtracking')+"&apiKey="+$apiKey+"&action=deltracking",
                         data : "get",
                         success: function(data) {
                             console.log("del tracking");
@@ -12567,7 +14289,7 @@ $('.buttonshare').hide();
             myApp.confirm('Deseja realmente cancelar o modo pânico?', function () {
 
                     $.ajax({
-                        url: $server+"functionAppAlerta.php?guid="+localStorage.getItem('guidtracking')+"&action=deltracking",
+                        url: $server+"functionAppAlerta.php?guid="+localStorage.getItem('guidtracking')+"&apiKey="+$apiKey+"&action=deltracking",
                         data : "get",
                         success: function(data) {
                             console.log("del tracking");
@@ -12780,7 +14502,7 @@ $('.buttonshare').hide();
                                 $.ajax($server+'functionAppAlerta.php?', {
                                     type: "post",
                                     dataType: "json",
-                                    data: "idcondominio="+$$idcondominio+"&idbloco="+$$idbloco+"&iddomicilio="+$$iddomicilio+"&idmorador="+$$idmorador+"&idveiculo="+$$idveiculo+"&panico="+localStorage.getItem("panico")+"&action=add",
+                                    data: "idcondominio="+$$idcondominio+"&idbloco="+$$idbloco+"&iddomicilio="+$$iddomicilio+"&idmorador="+$$idmorador+"&idveiculo="+$$idveiculo+"&panico="+localStorage.getItem("panico")+"&apiKey="+$apiKey+"&action=add",
                                      async: false,
                                      beforeSend: function(x) {
                                       if(x && x.overrideMimeType) {
@@ -12958,7 +14680,7 @@ $('.buttonshare').hide();
                                 console.log("panico = "+auxPanico);
                                 $.ajax($server+'functionAppAlerta.php?', {
                                     type: "post",
-                                    data: "guid="+localStorage.getItem("guidtracking")+"&panico="+localStorage.getItem("panico")+"&action=add",
+                                    data: "guid="+localStorage.getItem("guidtracking")+"&panico="+localStorage.getItem("panico")+"&apiKey="+$apiKey+"&action=add",
                                 })
                                   .fail(function() {
 
@@ -13006,12 +14728,13 @@ $('.buttonshare').hide();
             function setCurrentPosition(pos) {
                 console.log("setCurrentPosition ");
 
-                var image = 'http://iconizer.net/files/Brightmix/orig/monotone_location_pin_marker.png';
+                var image = new google.maps.MarkerImage('http://iconizer.net/files/Brightmix/orig/monotone_location_pin_marker.png');
                 currentPositionMarker = new google.maps.Marker({
                     position: new google.maps.LatLng(
                         pos.coords.latitude,
                         pos.coords.longitude
-                    )
+                    ),
+                    icon: image
 
                     //map: map,
                 });
@@ -13374,3 +15097,8 @@ $(".selcor").spectrum({
     ["#600","#783f04","#7f6000","#274e13","#0c343d","#073763","#20124d","#4c1130"]
     ]
 });
+
+function nl2br(str, is_xhtml) {
+    var breakTag = (is_xhtml || typeof is_xhtml === 'undefined') ? '<br />'   : '<br>';
+    return (str + '').replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, '$1' + breakTag   + '$2');
+}
